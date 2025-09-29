@@ -19,6 +19,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <style>
+        .quitarbarra {
+            width: 100%;
+            clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 37px), 0% calc(100% - 37px));
+        }
+    </style>
 
 <?php
     $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276);
@@ -26,7 +32,7 @@
     if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         // El usuario tiene permiso para ver la página
     } else {
-        //header("Location: seguimiento_incidencias");        
+        header("Location: seguimiento_actividades.php");
     }
 ?>
 </head>
@@ -53,42 +59,31 @@
                         <div class="col-xl-12">
                             <div class="card shadow">
                                 <!-- Card Body -->
-                                <div class="card-body">
-                                    <div class="row"> 
-                                        <div class="col-xl-4" style="text-align: center">
-                                            <img class="sidebar-card-illustration" src="img/MESS_05_Imagotipo_1.png" width="160">
-                                        </div>
-                                        <div class="col-xl-4">
+                                <div class="card-body   card-header">
+                                    <div class="row">   
+                                        <div class="col-xl-12 mb-0" style="text-align: center">
                                             <center>
-                                                <p class="fs-4"><b>REGISTRO DE ACTIVIDADES</b></p>
+                                                <h4>REGISTRO DE ACTIVIDADES</h4>
                                             </center>
-                                        </div>
-                                        <div class="col-xl-4" style="text-align: center">
-                                            <b>Fecha: </b>
-                                            <b>
-                                                <?php
-                                                    print_r(date("d-m-Y")); 
-                                                ?>
-                                            </b>
                                         </div>
                                     </div>
                                     <form id="formPlaneacion" name="formPlaneacion">
-                                        <div class="row card-footer border-left-primary">
+                                        <div class="row">
                                             <div class="col-sm-6 mb-0">
                                                 <label for="slcRespoonsable">Ingeniero</label>
                                                 <div id="Divsolicita" name="Divsolicita">
                                                     <select id="slcRespoonsable" name="slcRespoonsable">
-                                                        <option value="">Selecciona...</option>
+                                                        <option value="0">Selecciona...</option>
                                                     </select>                                                    
                                                 </div>
                                                 <div id="Divsolicita2" name="Divsolicita2" style="display: none;">
                                                     <select id="slcRespoonsable2" name="slcRespoonsable2">
-                                                        <option value="">Selecciona...</option>
+                                                        <option value="0">Selecciona...</option>
                                                     </select>
                                                 </div>
                                                 <div id="Divsolicita3" name="Divsolicita3" style="display: none;">
                                                     <select id="slcRespoonsable3" name="slcRespoonsable3">
-                                                        <option value="">Selecciona...</option>
+                                                        <option value="0">Selecciona...</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -168,7 +163,7 @@
                                             </div>                                                                                        
                                         </div>
 
-                                        <div class="row card-footer border-left-primary">
+                                        <div class="row">
                                             <div class="col-sm-4 mb-0">
                                                 <label for="txtCliente">Cliente</label>
                                                 <div id="DivCliente" name="DivCliente">
@@ -188,7 +183,7 @@
                                                 <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT">
                                             </div>
                                         </div>
-                                        <div class="row card-footer border-left-primary">
+                                        <div class="row">
                                             <div class="col-sm-3 mb-0">
                                                 <label for="datefechaCierre">Fecha planeada</label>
                                                 <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
@@ -203,7 +198,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="row card-header border-left-primary">                                           
+                                        <div class="row">
                                             <div class="col-sm-5">
                                                 <label for="slcAutomovil">Automovil</label>
                                                 <div id="DivAutomovil" name="DivAutomovil">
@@ -230,7 +225,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="row  card-header border-left-success">
+                                        <div class="row">
                                             <div class="col-xl-3"></div>
                                             <div class="col-xl-6">
                                                 <center>
@@ -244,7 +239,7 @@
                                 <div class="card-footer">
                                     <div class="row">
                                         <div class="col-sm-12 mb-0">
-                                            <embed id="vistaPrevia" src='https://app.powerbi.com/view?r=eyJrIjoiODJkZWY0MjQtODQxNC00YWJmLWIzOWMtMThhYTEyODdmZmMwIiwidCI6ImZlMGNmZmU4LTkxMjYtNGRmYS1iNjE2LTU3MGM2YWViYTdiNiJ9&pageName=4c96c5accec6d9000806' type="application/pdf" width="100%" height="500px" />
+                                            <embed class="quitarbarra" id="vistaPrevia" src='https://app.powerbi.com/view?r=eyJrIjoiODJkZWY0MjQtODQxNC00YWJmLWIzOWMtMThhYTEyODdmZmMwIiwidCI6ImZlMGNmZmU4LTkxMjYtNGRmYS1iNjE2LTU3MGM2YWViYTdiNiJ9&pageName=4c96c5accec6d9000806' type="application/pdf" width="100%" height="500px" />
                                         </div>
                                     </div>
                                 </div>

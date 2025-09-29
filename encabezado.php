@@ -13,14 +13,14 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
-<!-- Sidebar Toggle (Topbar) -->
-<button id = "sidebarToggleTop" class = "btn btn-link d-md-none rounded-circle mr-3">
-    <i class = "fa fa-bars"></i>
-</button>
 
+<div class = "topbar-divider d-none d-sm-block">
+    <div class="col-xl-4 mb-0" style="text-align: center">
+        <img class="sidebar-card-illustration" src="img/MESS_05_Imagotipo_1.png" width="160">
+    </div>
+</div>
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
-
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->
     <li class = "nav-item dropdown no-arrow d-sm-none">
         <a class = "nav-link dropdown-toggle" href = "#" id = "searchDropdown" role = "button"
@@ -28,8 +28,7 @@
             <i class = "fas fa-search fa-fw"></i>
         </a>
         
-    </li>
-    <div class = "topbar-divider d-none d-sm-block"></div>
+    </li>    
     <!-- Nav Item - User Information -->
     <li class = "nav-item dropdown no-arrow">
         <a class = "nav-link dropdown-toggle" href = "#" id = "userDropdown" role = "button"
@@ -147,8 +146,8 @@
         
         if (this.checked) {
           // Mostrar contraseñas (tipo 'text')
-          passwordField.type = 'text';
-          confirmPasswordField.type = 'text';
+            passwordField.type = 'text';
+            confirmPasswordField.type = 'text';
         } else {
           // Ocultar contraseñas (tipo 'password')
           passwordField.type = 'password';

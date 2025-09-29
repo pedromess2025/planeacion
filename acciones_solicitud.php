@@ -30,12 +30,15 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
 //FUNCION PARA GENERAR LA SOLICITUD
     if($opcion == "generarSolicitud"){
         $responsable = $_POST["responsable"];
+        $responsable2 = $_POST["responsable2"];
+        $responsable3 = $_POST["responsable3"];
         $area = $_POST["area"];
         $ciudad = $_POST["ciudad"];
         $cliente = $_POST["cliente"];
         $ot = $_POST["ot"];
         $fechaPlaneada = $_POST["fechaPlaneada"];
         $duracion = $_POST["duracion"];
+        $duracionViaje = $_POST["duracionViaje"];
         $automovil = $_POST["automovil"];
         $estatus = $_POST["estatus"];
         
@@ -43,8 +46,8 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         
         $noEmpleado = $noEmpleado_cookie;
 
-        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por)
-                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado')";
+        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3)
+                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3')";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
             $response = array('status' => 'success', 'message' => 'Incidencia registrada con éxito.');

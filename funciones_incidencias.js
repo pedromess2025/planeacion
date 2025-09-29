@@ -168,30 +168,3 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
-function aplicarEstiloDataTable(tablaId, ordenColumna) {
-    
-        $(tablaId).DataTable({
-            order: [ordenColumna, 'desc'],
-            responsive: true,
-            language: {
-                decimal: ",",
-                thousands: ".",
-                processing: "Procesando...",
-                loadingRecords: "Cargando...",
-                zeroRecords: "No se encontraron resultados",
-                emptyTable: "No hay datos disponibles en la tabla",
-                info: "Mostrando _START_ a _END_ de _TOTAL_ registros",
-                infoEmpty: "Mostrando 0 a 0 de 0 registros",
-                infoFiltered: "(filtrado de _MAX_ registros totales)",
-                search: "Buscar:",
-                paginate: {
-                    first: "Primero",
-                    last: "Último",
-                    next: "Siguiente",
-                    previous: "Anterior"
-                },
-                lengthMenu: "Mostrar _MENU_ registros"                
-            }
-        });
-    
-}

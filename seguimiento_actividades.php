@@ -116,7 +116,7 @@
                     </div>
                     <div class="modal-body">
                         <div class="row card-footer border-left-primary">
-                            <input type="text" class="form-control form-control-sm" id="idActividad" name="idActividad">
+                            <input type="hidden" class="form-control form-control-sm" id="idActividad" name="idActividad">
                             <div class="col-sm-12 mb-0">
                                 <label for="slcRespoonsable">Ingeniero</label>
                                 <div id="Divsolicita" name="Divsolicita">
@@ -156,6 +156,7 @@
                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
                                         <option value="Sevicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
                                         <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                        <option value="Cancelar">Cancelar</option>
                                     </select>
                                 </div>
                             </div>
@@ -218,7 +219,15 @@
                 });
                 
                 // Aplica el estilo a ambas tablas
-                aplicarEstiloDataTable('#TSolAbiertas', 1);
+                $('#TSolAbiertas').DataTable({
+                    "language": {
+                        "url": "//cdn.datatables.net/plug-ins/1.10.15/i18n/Spanish.json"
+                    },
+                    "order": [[ 3, "desc" ]],
+                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                    "pageLength": 10,
+                    responsive: true
+                }); 
 
                 // Mostrar inicialmente las solicitudes abiertas
                 SolicitudesAbiertas();

@@ -74,15 +74,32 @@
                                     </div>
                                     <form id="formPlaneacion" name="formPlaneacion">
                                         <div class="row card-footer border-left-primary">
-                                            <div class="col-sm-4 mb-0">
+                                            <div class="col-sm-6 mb-0">
                                                 <label for="slcRespoonsable">Ingeniero</label>
                                                 <div id="Divsolicita" name="Divsolicita">
                                                     <select id="slcRespoonsable" name="slcRespoonsable">
                                                         <option value="">Selecciona...</option>
+                                                    </select>                                                    
+                                                </div>
+                                                <div id="Divsolicita2" name="Divsolicita2" style="display: none;">
+                                                    <select id="slcRespoonsable2" name="slcRespoonsable2">
+                                                        <option value="">Selecciona...</option>
+                                                    </select>
+                                                </div>
+                                                <div id="Divsolicita3" name="Divsolicita3" style="display: none;">
+                                                    <select id="slcRespoonsable3" name="slcRespoonsable3">
+                                                        <option value="">Selecciona...</option>
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4">
+                                            <div class="col-sm-2 mb-0">
+                                                <label for="">+ Ing</label>
+                                                <div class="input-group">
+                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-0">
                                                 <label for="slcAreas">Área:</label>
                                                 <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
                                                     <option value="">Todas las áreas</option> 
@@ -148,7 +165,16 @@
                                                     <option value="ME">ME Mediciones Especiales</option>                                                    
                                                     <option value="TF">TF Tiempo y Frecuencia</option> -->
                                                 </select>
-                                            </div>                                            
+                                            </div>                                                                                        
+                                        </div>
+
+                                        <div class="row card-footer border-left-primary">
+                                            <div class="col-sm-4 mb-0">
+                                                <label for="txtCliente">Cliente</label>
+                                                <div id="DivCliente" name="DivCliente">
+                                                    <input type="text" class="form-control form-control-sm" oninput="convertirTexto(this)" id="txtCliente" name="txtCliente" placeholder="Cliente">
+                                                </div>
+                                            </div>
                                             <div class="col-sm-4 mb-0">
                                                 <label for="txtCiudad">Ciudad</label>
                                                 <div id="DivCiudad" name="DivCiudad">
@@ -157,26 +183,23 @@
                                                     </select>                                                    
                                                 </div>
                                             </div>
-                                        </div>
-
-                                        <div class="row card-footer border-left-primary">
-                                            <div class="col-sm-3 mb-0">
-                                                <label for="txtCliente">Cliente</label>
-                                                <div id="DivCliente" name="DivCliente">
-                                                    <input type="text" class="form-control form-control-sm" oninput="convertirTexto(this)" id="txtCliente" name="txtCliente" placeholder="Cliente">
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-3 mb-0">
+                                            <div class="col-sm-4 mb-0">
                                                 <label for="txtOT">OT</label>
                                                 <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT">
                                             </div>
+                                        </div>
+                                        <div class="row card-footer border-left-primary">
                                             <div class="col-sm-3 mb-0">
                                                 <label for="datefechaCierre">Fecha planeada</label>
                                                 <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
                                             </div>
                                             <div class="col-sm-3 mb-0">
                                                 <label for="txtDuracion">Dur. Estimada</label>
-                                                <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas">
+                                                <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas servicio">
+                                            </div>
+                                            <div class="col-sm-3 mb-0">
+                                                <label for="txtDuracion">Duración Viaje</label>
+                                                <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
                                             </div>
                                         </div>
 
@@ -201,6 +224,11 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                            <div class="col-sm-3">
+                                                <div class="alert alert-secondary" role="alert">
+                                                    A simple info alert—check it out!
+                                                </div>
+                                            </div>
                                         </div>
                                         <div class="row  card-header border-left-success">
                                             <div class="col-xl-3"></div>
@@ -212,6 +240,13 @@
                                             </div>
                                         </div>
                                     </form>
+                                </div>
+                                <div class="card-footer">
+                                    <div class="row">
+                                        <div class="col-sm-12 mb-0">
+                                            <embed id="vistaPrevia" src='https://app.powerbi.com/view?r=eyJrIjoiODJkZWY0MjQtODQxNC00YWJmLWIzOWMtMThhYTEyODdmZmMwIiwidCI6ImZlMGNmZmU4LTkxMjYtNGRmYS1iNjE2LTU3MGM2YWViYTdiNiJ9&pageName=4c96c5accec6d9000806' type="application/pdf" width="100%" height="500px" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -288,12 +323,22 @@
             //cargar ciudades
             cargarCiudades();
             //cargar empleados
-            empleadoSolicita();
+            empleadoSolicita('#slcRespoonsable');
+            empleadoSolicita('#slcRespoonsable2');
+            empleadoSolicita('#slcRespoonsable3');
             //cargar automoviles
             cargarVehiculos();
 
             // Inicializa Select2 en el campo de responsable
             $('#slcRespoonsable').select2({            
+                placeholder: "Seleccione...",
+                width: '100%'
+            });
+            $('#slcRespoonsable2').select2({            
+                placeholder: "Seleccione...",
+                width: '100%'
+            });
+            $('#slcRespoonsable3').select2({            
                 placeholder: "Seleccione...",
                 width: '100%'
             });
@@ -325,12 +370,16 @@
             
             var formData = getFormData('formPlaneacion');
             var responsable = formData["slcRespoonsable"];
+            var responsable2 = formData["slcRespoonsable2"];
+            var responsable3 = formData["slcRespoonsable3"];
+
             var area = formData["slcAreas"];
             var ciudad = formData["txtCiudad"];
             var cliente = formData["txtCliente"];
             var ot = formData["txtOT"];
             var fechaPlaneada = formData["datefechaCierre"];
             var duracion = formData["txtDuracion"];
+            var duracionViaje = formData["txtDuracionViaje"];
             var automovil = formData["slcAutomovil"];
             var estatus = formData["slcEstatus"];
             
@@ -341,12 +390,15 @@
                 data: {
                     opcion: 'generarSolicitud',
                     responsable: responsable,
+                    responsable2: responsable2,
+                    responsable3: responsable3,
                     area: area,
                     ciudad: ciudad,
                     cliente: cliente,
                     ot: ot,
                     fechaPlaneada: fechaPlaneada,
                     duracion: duracion,
+                    duracionViaje: duracionViaje,
                     automovil: automovil,
                     estatus: estatus
                 },
@@ -388,7 +440,7 @@
             return formData;
         }        
 
-        function empleadoSolicita() {
+        function empleadoSolicita(seleccionado) {
             opcion = "empleados";
             $.ajax({
                 url: 'acciones_solicitud.php',
@@ -396,7 +448,7 @@
                 dataType: 'json',
                 data: {opcion},
                 success: function(data) {
-                    var select = $('#slcRespoonsable');
+                    var select = $(seleccionado);
                     data.forEach(function(usuarios) {
                         var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
                         select.append(option);
@@ -488,6 +540,36 @@
                     });
                 }
             });
+        }
+
+        function divsIng(accion) {
+            if (accion === 'agrega') {
+                if ($('#Divsolicita2').is(':hidden')) {
+                    $('#Divsolicita2').show();
+                } else if ($('#Divsolicita3').is(':hidden')) {
+                    $('#Divsolicita3').show();
+                } else {
+                    Swal.fire({
+                        title: "Solo puedes agregar hasta 3 ingenieros",
+                        icon: "warning",
+                        draggable: true
+                    });
+                }
+            } else if (accion === 'elimina') {
+                if ($('#Divsolicita3').is(':visible')) {
+                    $('#Divsolicita3').hide();
+                    $('#slcRespoonsable3').val('');
+                } else if ($('#Divsolicita2').is(':visible')) {
+                    $('#Divsolicita2').hide();
+                    $('#slcRespoonsable2').val('');
+                } else {
+                    Swal.fire({
+                        title: "No hay más ingenieros para eliminar",
+                        icon: "warning",
+                        draggable: true
+                    });
+                }
+            }
         }
     </script>
 </body>

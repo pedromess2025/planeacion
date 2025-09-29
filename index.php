@@ -85,19 +85,33 @@
                                             <div class="col-md-4">
                                                 <label for="slcAreas">Área:</label>
                                                 <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
-                                                    <option value="">Todas las áreas</option>                                
-                                                    <option value="PT">PT Servicios Par Torsional</option>
-                                                    <option value="FZ">FZ Servicios Fuerza</option>
+                                                    <option value="">Todas las áreas</option> 
+                                                    <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
+                                                    <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                                                    <option value="DIMENSIONAL">Servicios Dimensional</option>
+                                                    <option value="SFG">Servicios SFG</option>
+                                                    <option value="MITUTOYO">Servicios Mitutoyo</option>
+                                                    <option value="DUREZA">Servicios Dureza</option>
+                                                    <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                                                    <option value="ELECTRICA">Servicios Electrica</option>
+                                                    <option value="TEMPERATURA">Servicios Temperatura</option>
+                                                    <option value="PRESION">Servicios Presion</option>
+                                                    <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                    <option value="MT">Servicios MT</option>
+                                                    <option value="MTS">Servicios MTS</option>
+                                                    <option value="ZEISS">Servicios Zeiss</option>
+                                                    <option value="MASA">Servicios Masa</option>
+                                                    <option value="FUERZA">Servicios Fuerza</option>
+                                                    <option value="PAR TORSIONAL">Servicios Par Torsional</option>
+                                                    
+                                                    <!---
                                                     <option value="FM">FM Ensayos de Torque</option>
                                                     <option value="PTSL">PTSL Par Torsional SLP</option>
                                                     <option value="FZSL">FZSL Fuerza SLP</option>
-                                                    <option value="MMM">MMM Servicios Mitutoyo</option>
-                                                    <option value="MIM">MIM Mitutoyo</option>
+                                                    <option value="MMM">MMM Servicios Mitutoyo</option>                                                    
                                                     <option value="BR">BR Servicios Movil</option>
                                                     <option value="LS">LS Laser Tracker</option>
-                                                    <option value="MT">MT Servicios MT</option>
-                                                    <option value="MMZ">MMZ Servicios Zeiss</option>
-                                                    <option value="SFG">SFG Servicios SFG</option>
+                                                    <option value="MT">MT Servicios MT</option>                                                                                                        
                                                     <option value="OPT">OPT Servicios SFG</option>
                                                     <option value="MO">MO Servicio de Microscopio</option>
                                                     <option value="SFGM">SFGM Servicios SFG</option>
@@ -106,19 +120,11 @@
                                                     <option value="OPTM">OPTM Calibración Comparador</option>
                                                     <option value="MV">MV Conteo de Partículas</option>
                                                     <option value="EVM">EVM Equipos de Visión</option>
-                                                    <option value="SC">SC Servicio a ScanMax</option>
-                                                    <option value="MA">MA Mantenimiento</option>
-                                                    <option value="AX">AX Alta Exactitud</option>
-                                                    <option value="AE">AE Alta Exactitud</option>
-                                                    <option value="LC">LC Laboratorio Calibraciones</option>
-                                                    <option value="LD">LD Laboratorio Dimensional</option>
+                                                    <option value="SC">SC Servicio a ScanMax</option>                                                                                                        
+                                                    <option value="AE">AE Alta Exactitud</option>                                                    
                                                     <option value="DISL">DISL Dimensional SLP</option>
                                                     <option value="FIX">FIX Fixtures</option>
-                                                    <option value="AM">AM Dimensional Sitio</option>
-                                                    <option value="DU">DU Servicios Dureza</option>
-                                                    <option value="EL">EL Servicios Electrica</option>
-                                                    <option value="TE">TE Servicios Temperatura</option>
-                                                    <option value="PR">PR Servicios Presion</option>
+                                                    <option value="AM">AM Dimensional Sitio</option>                                                                                                        
                                                     <option value="QU">QU Medidor de PH</option>
                                                     <option value="ELC">ELC Electrica</option>
                                                     <option value="TI">TI Temperatura</option>
@@ -129,8 +135,7 @@
                                                     <option value="VF">VF Volumen</option>
                                                     <option value="PRSL">PRSL Presión SLP</option>
                                                     <option value="ZEISS">ZEISS Servicio Zeiss</option>
-                                                    <option value="LE">LE Laboratorio especialidades</option>
-                                                    <option value="APP">APP APLICACIONES</option>
+                                                    <option value="LE">LE Laboratorio especialidades</option>                                                    
                                                     <option value="BW">BW BW</option>
                                                     <option value="D">D D</option>
                                                     <option value="DINL">DINL Dimensional SLP</option>
@@ -140,10 +145,8 @@
                                                     <option value="II">II Ingenieria Inversa</option>
                                                     <option value="LDISL">LDISL Dimensional SLP</option>
                                                     <option value="LDM">LDM LDM</option>
-                                                    <option value="ME">ME Mediciones Especiales</option>
-                                                    <option value="MIT">MIT MIT</option>
-                                                    <option value="MTS">MTS Dimensional MTS</option>
-                                                    <option value="TF">TF Tiempo y Frecuencia</option>
+                                                    <option value="ME">ME Mediciones Especiales</option>                                                    
+                                                    <option value="TF">TF Tiempo y Frecuencia</option> -->
                                                 </select>
                                             </div>                                            
                                             <div class="col-sm-4 mb-0">
@@ -193,7 +196,7 @@
                                                         <option value="">Selecciona...</option>
                                                         <option value="Pendientedeinformacion">Pendiente de información</option>
                                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                                        <option value="Sevicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                                        <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                                         <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                     </select>
                                                 </div>

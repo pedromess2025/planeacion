@@ -7,7 +7,7 @@ $opcion = $_POST["opcion"];
 $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noEmpleado_cookie;
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {
-        
+        include '../ControlVehicular/conn.php';
         $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
         $result = $conn->query($sql);
         
@@ -16,13 +16,14 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         while ($row = $result->fetch_assoc()) {
             $usuarios[] = array(
                 'nombre' => $row['nombre'],
-                'noEmpleado' => $row['noEmpleado']            
+                'noEmpleado' => $row['id_usuario']            
             );
         }
         
         // Devolver los eventos en formato JSON
         
         echo json_encode($usuarios);
+        $conn->close();
     }
 
 

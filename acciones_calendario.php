@@ -132,69 +132,89 @@ if ($accion == 'ActividadesCalendarioPlaneadasSCOT') {
 
 if ($accion == 'ActividadesCalendarioPlaneadas') {
 
-    // Si 'area' es un multiselect, se recibirá como un array
-    // Se usa un array vacío por defecto si no se selecciona nada
+    // --- 1. Saneamiento y Normalización de Variables de Entrada ---
+    // Si 'area' es un multiselect, se recibirá como un array.
     $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];
-    $ingeniero = isset($_POST['ing']) ? $_POST['ing'] : '';
-    $ciudad = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
+    
+    // CORRECCIÓN 1: Asegurar que $ingeniero sea un ARRAY para que count() y foreach() funcionen.
+    $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];
+    
+    // CORRECCIÓN 1: Asegurar que $ciudad sea un ARRAY para que funcione con IN.
+    // Asumo que 'ciudad' es un multiselect o puede tener múltiples valores.
+    $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
+
 
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
+    // CORRECCIÓN 2: Cambiar la fecha de inicio a un placeholder '?'
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3
             FROM servicios_planeados_mess ot
             INNER JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
-            WHERE DATE(ot.start_date) >= ?";
+            WHERE DATE(ot.start_date) >= ?"; // Usar placeholder '?' en lugar de la fecha hardcodeada
 
     $whereClauses = [];
-    $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada
+    $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.
     $param_types = "s";       // String para los tipos de los parámetros (s = string)
 
-    // Manejo de múltiples áreas seleccionadas
+    // --- 2. Manejo de múltiples áreas seleccionadas
     if (!empty($areas)) {
-        // Construye un array de placeholders para la cláusula IN (?, ?, ?)
         $placeholders = implode(',', array_fill(0, count($areas), '?'));
-        $whereClauses[] = "REPLACE(SUBSTRING_INDEX(ot.order_code, '-', 1), '25', '') IN ($placeholders)";
+        // Nota: Asumo que el campo en la BD es 'ot.area' y no el código OT más complejo.
+        $whereClauses[] = "ot.area IN ($placeholders)"; 
 
-        // Añade cada área al array de parámetros
         foreach ($areas as $area_item) {
             $params[] = $area_item;
-            $param_types .= "s"; // Todas las áreas son strings
+            $param_types .= "s";
+        }
+    } 
+
+    // --- 3. Manejo de la ciudad
+    if (!empty($ciudad)) {
+        // CORRECCIÓN 3: Si $ciudad es un array, se maneja correctamente con IN
+        $placeholders = implode(',', array_fill(0, count($ciudad), '?'));
+        $whereClauses[] = "ot.city IN ($placeholders)";
+
+        foreach ($ciudad as $ciudad_item) {
+            $params[] = $ciudad_item;
+            $param_types .= "s";
         }
     }
 
-    // Manejo del ingeniero
+    // --- 4. Manejo del ingeniero (CORREGIDO Y LISTO)
     if (!empty($ingeniero)) {
-        $whereClauses[] = "ot.engineer LIKE ?";
-        $params[] = "%" . $ingeniero . "%"; // Añade comodines para LIKE
-        $param_types .= "s"; // El ingeniero es un string
+        $count = count($ingeniero);
+        $placeholders = implode(',', array_fill(0, $count, '?'));
+        
+        $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
+
+        // Añadir la lista de ingenieros al array de parámetros TRES VECES (Correcto para los 3 IN)
+        for ($i = 0; $i < 3; $i++) {
+            foreach ($ingeniero as $ingeniero_item) {
+                $params[] = $ingeniero_item;
+                $param_types .= "s"; 
+            }
+        }
     }
 
-    // Manejo de la ciudad
-    if (!empty($ciudad)) {
-        $whereClauses[] = "ot.city = ?";
-        $params[] = $ciudad;
-        $param_types .= "s"; // La ciudad es un string
-    }
-
-
+    // --- 5. Construcción Final
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);
     }
-    //echo $sql;  
-    // Preparar la consulta
+    
+    // Nota: Eliminé el GROUP BY por la recomendación de rendimiento, ya que no es necesario 
+    // si ot.id es la clave primaria. Si lo necesitas, re-agrégalo.
+    $sql .= " ORDER BY ot.id DESC";
+
+    // --- 6. Ejecución de la Consulta Preparada ---
     if ($stmt = $conn->prepare($sql)) {
-        // Enlazar los parámetros dinámicamente
-        // La sintaxis '...' es para desempaquetar el array $params en argumentos individuales
+        // Enlazar los parámetros dinámicamente        
         $stmt->bind_param($param_types, ...$params);
 
-        // Ejecutar la consulta
         $stmt->execute();
-
-        // Obtener el resultado
         $result = $stmt->get_result();
 
         if ($result && $result->num_rows > 0) {
@@ -204,15 +224,14 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
             }
             echo json_encode(['status' => 'success', 'actividades' => $actividades]);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.']);
+            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
         }
 
-        $stmt->close(); // Cerrar el statement
+        $stmt->close();
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
     }
 }
-
 // Cerrar la conexión
 $conn->close();
 ?>

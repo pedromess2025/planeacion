@@ -88,12 +88,14 @@
                         </div>
                         <div class="col-md-3">
                             <label for="filtro-ingeniero" class="mr-2">Filtrar por Ingeniero:</label>
-                            <input type="text" id="filtro-ingeniero" class="form-control form-control-sm mr-3" placeholder="Buscar ingeniero...">
+                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-3" multiple="multiple">
+                                <option value="0">Selecciona...</option>
+                            </select>                             
                         </div>
                         <div class="col-sm-4 mb-0">
                             <label for="txtCiudad">Ciudad</label>
                             <div id="DivCiudad" name="DivCiudad">
-                                <select id="slcCiudad" name="slcCiudad">
+                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
                                     <option value="">Selecciona...</option>
                                 </select>                                                    
                             </div>
@@ -160,13 +162,19 @@
         $(document).ready(function() {            
             filtrar();
             cargarCiudades();
+            cargarIngenieros();
+            // Inicializar Select2
             $('#filtro-area').select2({
                 placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
                 allowClear: true // Opcional: permite deseleccionar todo
             });
-            $('#slcCiudad').select2({            
-                placeholder: "Seleccione...",
-                width: '100%'
+            $('#filtro-ciudad').select2({            
+                placeholder: "Seleccione una o varias ciudades", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-ingeniero').select2({            
+                placeholder: "Seleccione uno o varios ingenieros", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
             });
         });        
         
@@ -307,7 +315,7 @@
                 data: { opcion: "consultarCiudades" },
                 dataType: "json",
                 success: function (respuesta) {
-                    var select = $("#slcCiudad");
+                    var select = $("#filtro-ciudad");
                     var i = 0;
                     respuesta.forEach(function (ciudad) {
                         if (i == 0) {
@@ -331,11 +339,42 @@
                 }
             });
         }
+
+        //funcion para cargar los ingenieros
+        function cargarIngenieros() {
+            //FUNCION PARA CARGAR INFORMACIÓN DE LOS INGENIEROS
+            $.ajax({
+                type: "POST",
+                url: "acciones_solicitud.php",
+                data: { opcion: "empleados" },
+                dataType: "json",
+                success: function (respuesta) {
+                    var select = $("#filtro-ingeniero");
+                    var i = 0;
+                    respuesta.forEach(function (ingeniero) {                        
+                        var option = `<option value="${ingeniero.noEmpleado}">${ingeniero.nombre}</option>`;
+                        select.append(option);
+                        i++;
+                    });
+                },
+                error: function (xhr, status, error) {
+                    
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Hubo un problema al cargar los ings.",
+                        confirmButtonText: "Aceptar"
+                    });
+                }
+            });
+        }
+
+
         //Funcion para Enviar los datos
         function filtrar() {
             var ing = $('#filtro-ingeniero').val();
             var area = $('#filtro-area').val();
-            var ciudad = $('#slcCiudad').val();
+            var ciudad = $('#filtro-ciudad').val();
             var accion = "ActividadesCalendarioPlaneadas";
             
             $.ajax({
@@ -457,7 +496,7 @@
                     }
                     
                 }, error: function (jqXHR, textStatus, errorThrown) {
-                    console.error('Error al aplicar el filtro', error);
+                    console.error('Error al aplicar el filtro'.textStatus   );
                 }
             });
 

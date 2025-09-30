@@ -153,8 +153,8 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
             FROM servicios_planeados_mess ot
             INNER JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
-            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
-            WHERE DATE(ot.start_date) >= ?"; // Usar placeholder '?' en lugar de la fecha hardcodeada
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario
+            WHERE ot.estatus NOT IN ('Cancelada', 'Cerrada') AND DATE(ot.start_date) >= ?"; // Usar placeholder '?' en lugar de la fecha hardcodeada
 
     $whereClauses = [];
     $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.

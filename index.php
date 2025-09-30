@@ -365,6 +365,16 @@
             var responsable = formData["slcRespoonsable"];
             var responsable2 = formData["slcRespoonsable2"];
             var responsable3 = formData["slcRespoonsable3"];
+            
+            //validacion de que no se repitan los responsables
+            if (responsable !== "0" && (responsable === responsable2 || responsable === responsable3 || (responsable2 !== "0" && responsable2 === responsable3))) {
+                Swal.fire({
+                    title: "Los ingenieros seleccionados no pueden ser los mismos. Por favor, elige ingenieros diferentes.",
+                    icon: "warning",
+                    draggable: true
+                });
+                return; // Detiene la ejecución del código de envío/guardado.
+            }
 
             var area = formData["slcAreas"];
             var ciudad = formData["txtCiudad"];

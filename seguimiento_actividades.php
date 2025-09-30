@@ -183,7 +183,7 @@ header('Access-Control-Allow-Origin: *');
                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
                                         <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
                                         <option value="Fechareservadasininformación">Fecha reservada sin información</option>
-                                        <option value="Cancelar">Cancelar</option>
+                                        <option value="Cancelada">Cancelar</option>
                                     </select>
                                 </div>
                             </div>

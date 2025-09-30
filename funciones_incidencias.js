@@ -21,7 +21,8 @@ function ActualizarActividad() {
             ot: ot,
             automovil: automovil,
             fechaActividad: fechaActividad,
-            idActividad: idActividad
+            idActividad: idActividad,
+            estatus: estatus
         },
         success: function(data) {
             $('#actualizarActividadModal').modal('hide');
@@ -99,6 +100,10 @@ function renderizarTabla(selectorTabla, data) {
         if(solicitud.estatus == 'Fechareservadasininformación'){
             estatus = '<span class="badge text-bg-dark">Fecha reservada sin información</span>';
         }
+        if(solicitud.estatus == 'Cancelada'){
+            estatus = '<span class="badge text-bg-danger">Cancelada</span>';
+        }
+        
 
         nombre2 = '';
         nombre3 = '';

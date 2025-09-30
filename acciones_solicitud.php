@@ -68,6 +68,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $automovil = $_POST["automovil"];
         $fechaActividad = $_POST["fechaActividad"];
         $idActividad = $_POST["idActividad"];
+        $estatus = $_POST["estatus"];
         
         $sqlUpdate = "UPDATE servicios_planeados_mess 
                         SET engineer = '$ingeniero',
@@ -76,7 +77,8 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
                             service_order_id = '$ot', 
                             order_code = '$ot', 
                             start_date = '$fechaActividad', 
-                            vehiculo = '$automovil'
+                            vehiculo = '$automovil',
+                            estatus = '$estatus'
                         WHERE id = $idActividad";
         //echo $sqlUpdate;
         
@@ -146,7 +148,7 @@ if ($opcion == "solicitudesAbiertas") {
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario     
             GROUP BY ot.id
-            ORDER BY ot.fecha_captura DESC";
+            ORDER BY ot.id DESC";
         
     //echo $sql;
 

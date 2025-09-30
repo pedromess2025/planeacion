@@ -222,10 +222,10 @@ function divsIng(accion) {
     } else if (accion === 'elimina') {
         if ($('#Divsolicita3').is(':visible')) {
             $('#Divsolicita3').hide();
-            $('#slcRespoonsable3').val('');
+            $('#slcRespoonsable3').val('0');
         } else if ($('#Divsolicita2').is(':visible')) {
             $('#Divsolicita2').hide();
-            $('#slcRespoonsable2').val('');
+            $('#slcRespoonsable2').val('0');
         } else {
             Swal.fire({
                 title: "No hay más ingenieros para eliminar",

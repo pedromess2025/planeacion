@@ -516,6 +516,10 @@
                 success: function(data) {
                     var select = $(seleccionado);
                     data.forEach(function(usuarios) {
+                        if (i == 0) {
+                            var option = $('<option></option>').attr('value', '0').text('Selecciona...');
+                            select.append(option);
+                        }
                         var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
                         select.append(option);
                     });

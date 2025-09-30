@@ -1,6 +1,8 @@
 //FUNCION PARA RESPONDER LA SOLICITUD
 function ActualizarActividad() {
     ingeniero = $('#slcRespoonsable').val();
+    ingeniero2 = $('#slcRespoonsable2').val();
+    ingeniero3 = $('#slcRespoonsable3').val();
     ot = $('#txtOT').val();    
     automovil =$('#slcAutomovil').val();
     fechaActividad = $('#datefechaCierre').val();
@@ -14,6 +16,8 @@ function ActualizarActividad() {
         data: {
             opcion: 'actualizarActividad',
             ingeniero: ingeniero,
+            ingeniero2: ingeniero2,
+            ingeniero3: ingeniero3,
             ot: ot,
             automovil: automovil,
             fechaActividad: fechaActividad,
@@ -89,15 +93,27 @@ function renderizarTabla(selectorTabla, data) {
         if(solicitud.estatus == 'Programadasinconfirmar'){
             estatus = '<span class="badge text-bg-info">Programada sin confirmar</span>';
         }
-        if(solicitud.estatus == "Sevicioconfirmadoparasuejecucion"){
+        if(solicitud.estatus == "Servicioconfirmadoparasuejecucion"){
             estatus = '<span class="badge text-bg-warning">Servicio confirmado para ejecución</span>';
         }
         if(solicitud.estatus == 'Fechareservadasininformación'){
             estatus = '<span class="badge text-bg-dark">Fecha reservada sin información</span>';
         }
+
+        nombre2 = '';
+        nombre3 = '';
+        if(solicitud.nombre2 != ''){
+            nombre2 = '<br><i class="fas fa-user"></i>'+solicitud.nombre2;
+        }
+        if(solicitud.nombre3 != ''){
+            nombre3 = '<br><i class="fas fa-user"></i>'+solicitud.nombre3;
+        }
         const fila = `
             <tr>
-                <td>${solicitud.nombre}</td>
+                <td><i class="fas fa-user"></i>${solicitud.nombre}
+                    ${nombre2}
+                    ${nombre3}                                        
+                </td>
                 <td>${solicitud.area}</td>
                 <td>${solicitud.order_code}</td>
                 <td>${solicitud.start_date}</td>
@@ -106,7 +122,7 @@ function renderizarTabla(selectorTabla, data) {
                 <td>${solicitud.vehiculo}</td>
                 <td>${estatus}</td>
                 <td><button id="btnSolicitar" type="button" class="btn btn-success" 
-                onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar</button></td>
+                onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar</button></td>
             </tr>`;
         tabla.append(fila);
     });
@@ -122,17 +138,39 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ot, vehiculo, fechaActividad, idActividad, estatus) {    
-    
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus) {    
+    $('#Divsolicita2').show();
+    $('#Divsolicita3').show();
+
     $('#slcRespoonsable').val(ingeniero);
+    $('#slcRespoonsable2').val(ingeniero2);
+    $('#slcRespoonsable3').val(ingeniero3);
+    
     $('#txtOT').val(ot);    
     $('#slcAutomovil').val(vehiculo);
     $('#datefechaCierre').val(fechaActividad);
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
 
+    if(ingeniero2 == '0'){
+        $('#Divsolicita2').hide();
+    }
+    if(ingeniero3 == '0'){
+        $('#Divsolicita3').hide();
+    }
+
     // Inicializa Select2 en el campo de responsable
         $('#slcRespoonsable').select2({
+            dropdownParent: $('#actualizarActividadModal'),
+            placeholder: "Seleccione...",
+            width: '100%'
+        });
+        $('#slcRespoonsable2').select2({
+            dropdownParent: $('#actualizarActividadModal'),
+            placeholder: "Seleccione...",
+            width: '100%'
+        });
+        $('#slcRespoonsable3').select2({
             dropdownParent: $('#actualizarActividadModal'),
             placeholder: "Seleccione...",
             width: '100%'
@@ -166,5 +204,35 @@ function getCookie(name) {
     let value = "; " + document.cookie;
     let parts = value.split("; " + name + "=");
     if (parts.length === 2) return parts.pop().split(";").shift();
+}
+
+function divsIng(accion) {
+    if (accion === 'agrega') {
+        if ($('#Divsolicita2').is(':hidden')) {
+            $('#Divsolicita2').show();
+        } else if ($('#Divsolicita3').is(':hidden')) {
+            $('#Divsolicita3').show();
+        } else {
+            Swal.fire({
+                title: "Solo puedes agregar hasta 3 ingenieros",
+                icon: "warning",
+                draggable: true
+            });
+        }
+    } else if (accion === 'elimina') {
+        if ($('#Divsolicita3').is(':visible')) {
+            $('#Divsolicita3').hide();
+            $('#slcRespoonsable3').val('');
+        } else if ($('#Divsolicita2').is(':visible')) {
+            $('#Divsolicita2').hide();
+            $('#slcRespoonsable2').val('');
+        } else {
+            Swal.fire({
+                title: "No hay más ingenieros para eliminar",
+                icon: "warning",
+                draggable: true
+            });
+        }
+    }
 }
 

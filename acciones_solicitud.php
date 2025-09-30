@@ -6,8 +6,7 @@ $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : nu
 $opcion = $_POST["opcion"];
 $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noEmpleado_cookie;
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
-    if ($opcion == "empleados") {
-        include '../ControlVehicular/conn.php';
+    if ($opcion == "empleados") {        
         $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
         $result = $conn->query($sql);
         
@@ -23,7 +22,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         // Devolver los eventos en formato JSON
         
         echo json_encode($usuarios);
-        $conn->close();
+        
     }
 
 
@@ -62,17 +61,22 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
 
     if($opcion == "actualizarActividad"){
         $ingeniero = $_POST["ingeniero"];
+        $ingeniero2 = $_POST["ingeniero2"];
+        $ingeniero3 = $_POST["ingeniero3"];
+
         $ot = $_POST["ot"];
         $automovil = $_POST["automovil"];
         $fechaActividad = $_POST["fechaActividad"];
         $idActividad = $_POST["idActividad"];
         
         $sqlUpdate = "UPDATE servicios_planeados_mess 
-                        SET engineer = '$ingeniero', 
+                        SET engineer = '$ingeniero',
+                            engineer2 = '$ingeniero2',
+                            engineer3 = '$ingeniero3',
                             service_order_id = '$ot', 
                             order_code = '$ot', 
                             start_date = '$fechaActividad', 
-                            vehiculo = '$automovil' 
+                            vehiculo = '$automovil'
                         WHERE id = $idActividad";
         //echo $sqlUpdate;
         
@@ -93,8 +97,10 @@ if ($opcion == "consultarInventarioGeneral") {
     
     // Conexion a la base de datos
     include '../ControlVehicular/conn.php';
-    $rol = $_COOKIE['rol'];
+    $rol = $_COOKIE['rol'] ?? $_COOKIE['rolL'];
     $id_usuario = $_COOKIE['id_usuarioL'];
+    
+    $sqlConsultaVehiculosG = "";
     if ($rol == '3' || $rol == '4'  || $rol == '2') { // 3: Gerente, 4: Administrador
         $sqlConsultaVehiculosG ="SELECT inv.id_vehiculo, inv.placa, inv.modelo, inv.marca, inv.color, inv.anio, inv.usuario, inv.id_usuario, 'AREA' as tipo
                             FROM inventario inv
@@ -134,10 +140,12 @@ if ($opcion == "solicitudesAbiertas") {
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3
             FROM servicios_planeados_mess ot
-            inner join usuarios u on ot.engineer = u.noEmpleado
-            WHERE DATE(ot.start_date) >= $fechaInicio
+            inner join usuarios u on ot.engineer = u.id_usuario 
+            LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario     
+            GROUP BY ot.id
             ORDER BY ot.fecha_captura DESC";
         
     //echo $sql;

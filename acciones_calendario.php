@@ -136,14 +136,17 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     // Se usa un array vacío por defecto si no se selecciona nada
     $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];
     $ingeniero = isset($_POST['ing']) ? $_POST['ing'] : '';
+    $ciudad = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
 
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3
             FROM servicios_planeados_mess ot
-            INNER JOIN usuarios u ON ot.engineer = u.noEmpleado
+            INNER JOIN usuarios u ON ot.engineer = u.id_usuario
+            LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
             WHERE DATE(ot.start_date) >= ?";
 
     $whereClauses = [];
@@ -169,6 +172,14 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         $params[] = "%" . $ingeniero . "%"; // Añade comodines para LIKE
         $param_types .= "s"; // El ingeniero es un string
     }
+
+    // Manejo de la ciudad
+    if (!empty($ciudad)) {
+        $whereClauses[] = "ot.city = ?";
+        $params[] = $ciudad;
+        $param_types .= "s"; // La ciudad es un string
+    }
+
 
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);

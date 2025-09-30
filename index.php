@@ -88,10 +88,10 @@
                                                 </div>
                                             </div>
                                             <div class="col-sm-2 mb-0">
-                                                <label for="">+ Ing</label>
+                                                <label for="">+ Ing.</label>
                                                 <div class="input-group">
                                                     <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
-                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                                                 </div>
                                             </div>
                                             <div class="col-md-4 mb-0">
@@ -180,7 +180,7 @@
                                             </div>
                                             <div class="col-sm-4 mb-0">
                                                 <label for="txtOT">OT</label>
-                                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT">
+                                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" oninput="convertirTexto(this)" placeholder="Ej. EL25-01E-1">
                                             </div>
                                         </div>
                                         <div class="row">
@@ -198,7 +198,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="row">
+                                        <div class="row mb-3">
                                             <div class="col-sm-5">
                                                 <label for="slcAutomovil">Automovil</label>
                                                 <div id="DivAutomovil" name="DivAutomovil">
@@ -210,7 +210,7 @@
                                             <div class="col-sm-4">
                                                 <label for="slcEstatus">Estatus</label>
                                                 <div id="DivEstatus" name="DivEstatus">
-                                                    <select id="slcEstatus" name="slcEstatus" class="form-select">
+                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onchange="mostrarMensajeEstatus()">
                                                         <option value="">Selecciona...</option>
                                                         <option value="Pendientedeinformacion">Pendiente de información</option>
                                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
@@ -220,14 +220,12 @@
                                                 </div>
                                             </div>
                                             <div class="col-sm-3">
-                                                <div class="alert alert-secondary" role="alert">
-                                                    A simple info alert—check it out!
-                                                </div>
+                                                <span class="badge text-bg-secondary" id="mensajeEstatus" style="display: none" name="mensajeEstatus"></span>
                                             </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-xl-3"></div>
-                                            <div class="col-xl-6">
+                                            <div class="col-xl-6 mb-1   ">
                                                 <center>
                                                     <button id="btnSolicitar" type="button" class="btn btn-success" onclick="generarSolicitud()">Registrar</button><br>
                                                     <p id="mensaje" class="badge text-bg-primary"></p>
@@ -376,7 +374,12 @@
             var duracion = formData["txtDuracion"];
             var duracionViaje = formData["txtDuracionViaje"];
             var automovil = formData["slcAutomovil"];
-            var estatus = formData["slcEstatus"];
+            var estatus = formData["slcEstatus"];    
+            
+            if (!validarFormularioConsolidado(formData)) {
+                // La función ya mostró la alerta con todos los errores.
+                return; // Detiene la ejecución del código de envío/guardado.
+            }
             
             $.ajax({
                 url: 'acciones_solicitud.php',
@@ -424,6 +427,74 @@
                 }
             });
             
+        }
+
+        // Validaciones consolidadas
+        function validarFormularioConsolidado(formData) {
+    
+            // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
+            // Define todos los campos que requieren validación.
+            const camposAValidar = [
+                // Campos que no pueden ser cadena vacía ("")
+                { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
+                { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
+                //{ valor: formData["txtDuracion"],       mensaje: "Ingresa la duración estimada" },
+                //{ valor: formData["txtDuracionViaje"],  mensaje: "Ingresa la duración del viaje" },
+                { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
+                { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
+                { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
+                
+                // Campos de texto que deben validarse con .trim() para evitar solo espacios
+                { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",     esTexto: true },
+                //{ valor: formData["txtOT"],             mensaje: "Ingresa una OT",         esTexto: true },
+            ];
+
+            const mensajesDeError = [];
+            
+            // --- 2. Validar Responsables (Lógica Especial) ---
+            // Regla: Al menos uno de los tres campos de responsable debe tener un valor diferente de "0" o "".
+            const resp1 = formData["slcRespoonsable"];
+            const resp2 = formData["slcRespoonsable2"];
+            const resp3 = formData["slcRespoonsable3"];
+            
+            // La condición 'esVacio' es TRUE si TODOS están vacíos o en "0"
+            const responsablesVacios = (resp1 === "0" || resp1 === "") && 
+                                    (resp2 === "0" || resp2 === "") && 
+                                    (resp3 === "0" || resp3 === "");
+
+            if (responsablesVacios) {
+                mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
+            }
+
+            // --- 3. Validar Campos Generales ---
+            for (const campo of camposAValidar) {
+                let valor = campo.valor || ""; // Asegura que el valor sea una cadena para la comprobación
+                
+                if (campo.esTexto) {
+                    // Validar campos de texto con trim()
+                    if (valor.trim() === "") {
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                } else {
+                    // Validar selects y otros campos por cadena vacía
+                    if (valor === "" || valor === "0") { // Incluimos "0" por si son selects de IDs
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                }
+            }
+
+            // --- 4. Mostrar Alerta Única o Continuar ---
+            if (mensajesDeError.length > 0) {
+                Swal.fire({
+                    title: "Campos Incompletos",
+                    html: "Por favor, corrige lo siguiente:<br><br>• " + mensajesDeError.join('<br>• '),
+                    icon: "warning",
+                    draggable: true
+                });
+                return false; // Validación fallida
+            }
+
+            return true; // Validación exitosa
         }
 
         function getFormData(formId) {
@@ -535,6 +606,27 @@
                     });
                 }
             });
+        }
+        //Funcion para mostrar mensaje segun estatus
+        function mostrarMensajeEstatus() {
+            var estatus = $('#slcEstatus').val();
+            var mensajeEstatus = $('#mensajeEstatus');
+
+            if (estatus === 'Pendientedeinformacion') {
+                mensajeEstatus.text('Espera información del cliente');
+                mensajeEstatus.show();
+            } else if (estatus === 'Programadasinconfirmar') {
+                mensajeEstatus.text('Fecha tentativa, espera confirmación del cliente');
+                mensajeEstatus.show();
+            } else if (estatus === 'Servicioconfirmadoparasuejecucion') {
+                mensajeEstatus.text('Servicio confirmado, listo para ejecutar');
+                mensajeEstatus.show();
+            } else if (estatus === 'Fechareservadasininformación') {
+                mensajeEstatus.text('Fecha reservada, falta información del cliente(OV/OT/PO)');
+                mensajeEstatus.show();
+            } else {
+                mensajeEstatus.hide();
+            }
         }
 
         function divsIng(accion) {

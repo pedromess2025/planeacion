@@ -1,3 +1,7 @@
+<?php
+header('Access-Control-Allow-Origin: *');
+?>
+<!DOCTYPE html>
 
 <html>
 <head>
@@ -43,7 +47,7 @@
                                 <div class="card-body">
                                     <div class="row"> 
                                         <div class="col-sm-4" style="text-align: center">
-                                            <img class="sidebar-card-illustration" src="img/MESS_05_Imagotipo_1.png" width="160">
+                                            
                                         </div>
                                         <div class="col-sm-8">                                            
                                                 <p class="fs-4"><b>SEGUIMIENTO ACTIVIDADES</b></p>                                            
@@ -115,22 +119,45 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="row card-footer border-left-primary">
+                        <div class="row card-footer border-left-primary mb-3">
                             <input type="hidden" class="form-control form-control-sm" id="idActividad" name="idActividad">
-                            <div class="col-sm-12 mb-0">
+                            <div class="col-sm-9 mb-0">
                                 <label for="slcRespoonsable">Ingeniero</label>
                                 <div id="Divsolicita" name="Divsolicita">
                                     <select id="slcRespoonsable" name="slcRespoonsable">
                                         <option value="">Selecciona...</option>
                                     </select>
                                 </div>
-                            </div>                                                                       
+                            </div>
+                            <div class="col-sm-3 mb-0">
+                                <label for="slcRespoonsable">Ing.</label>
+                                <div class="input-group">
+                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
+                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 mb-0">                                
+                                <div id="Divsolicita2" name="Divsolicita2">
+                                    <label for="slcRespoonsable2">Ingeniero 2</label>
+                                    <select id="slcRespoonsable2" name="slcRespoonsable2">
+                                        <option value="">Selecciona...</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 mb-0">                                
+                                <div id="Divsolicita3" name="Divsolicita3">
+                                    <label for="slcRespoonsable3">Ingeniero 3</label>
+                                    <select id="slcRespoonsable3" name="slcRespoonsable3">
+                                        <option value="">Selecciona...</option>
+                                    </select>
+                                </div>
+                            </div>  
                         </div>
 
                         <div class="row card-footer border-left-primary">
                             <div class="col-sm-6 mb-0">
                                 <label for="txtOT">OT</label>
-                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT">
+                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" placeholder="Ej. EL25-01E-1">
                             </div>
                             <div class="col-sm-6 mb-0">
                                 <label for="datefechaCierre">Fecha planeada</label>
@@ -154,7 +181,7 @@
                                         <option value="">Selecciona...</option>
                                         <option value="Pendientedeinformacion">Pendiente de información</option>
                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                        <option value="Sevicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                        <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
                                         <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                         <option value="Cancelar">Cancelar</option>
                                     </select>
@@ -233,15 +260,17 @@
                 SolicitudesAbiertas();
 
                 // Cargar los vehículos en el select        
-                cargarVehiculos();
-                // Cargar los empleados en el select            
-                empleadoSolicita(); 
+                cargarVehiculos('#slcAutomovil');
 
+                // Cargar los empleados en el select            
+                empleadoSolicita('#slcRespoonsable');
+                empleadoSolicita('#slcRespoonsable2');
+                empleadoSolicita('#slcRespoonsable3');
 
 
         });
 
-        function empleadoSolicita() {
+        function empleadoSolicita(selectIng) {
             opcion = "empleados";
             $.ajax({
                 url: 'acciones_solicitud.php',
@@ -249,10 +278,16 @@
                 dataType: 'json',
                 data: {opcion},
                 success: function(data) {
-                    var select = $('#slcRespoonsable');
+                    var select = $(selectIng);
+                    i = 0;
                     data.forEach(function(usuarios) {
+                        if (i == 0) {
+                            var option = $('<option></option>').attr('value', '').text('Selecciona...');
+                            select.append(option);
+                        }
                         var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
                         select.append(option);
+                        i++;
                     });
 
                 },
@@ -276,7 +311,7 @@
             .replace(/[\u0300-\u036f]/g, "");
         }
         
-        function cargarVehiculos() {
+        function cargarVehiculos(selectVehiculos) {
         //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS        
             $.ajax({
                 type: "POST",
@@ -284,7 +319,7 @@
                 data: { opcion: "consultarInventarioGeneral" },
                 dataType: "json",
                 success: function (respuesta) {
-                    var select = $("#slcAutomovil");
+                    var select = $(selectVehiculos);
                     
                     respuesta.forEach(function (vehiculo) {
                         // Define el color según el valor de vehiculo.usuario

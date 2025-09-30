@@ -63,73 +63,40 @@
                     <h1>Calendario de Actividades Planeadas</h1>
 
                     <div class="row mb-3">
-                        <div class="col-md-4">
+                        <div class="col-md-3">
                             <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
                             <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
-                                <option value="">Todas las áreas</option>                                
-                                <option value="PT">PT Servicios Par Torsional</option>
-                                <option value="FZ">FZ Servicios Fuerza</option>
-                                <option value="FM">FM Ensayos de Torque</option>
-                                <option value="PTSL">PTSL Par Torsional SLP</option>
-                                <option value="FZSL">FZSL Fuerza SLP</option>
-                                <option value="MMM">MMM Servicios Mitutoyo</option>
-                                <option value="MIM">MIM Mitutoyo</option>
-                                <option value="BR">BR Servicios Movil</option>
-                                <option value="LS">LS Laser Tracker</option>
-                                <option value="MT">MT Servicios MT</option>
-                                <option value="MMZ">MMZ Servicios Zeiss</option>
-                                <option value="SFG">SFG Servicios SFG</option>
-                                <option value="OPT">OPT Servicios SFG</option>
-                                <option value="MO">MO Servicio de Microscopio</option>
-                                <option value="SFGM">SFGM Servicios SFG</option>
-                                <option value="MI">MI Calibración de Microscopio</option>
-                                <option value="EV">EV Equipos de Visión</option>
-                                <option value="OPTM">OPTM Calibración Comparador</option>
-                                <option value="MV">MV Conteo de Partículas</option>
-                                <option value="EVM">EVM Equipos de Visión</option>
-                                <option value="SC">SC Servicio a ScanMax</option>
-                                <option value="MA">MA Mantenimiento</option>
-                                <option value="AX">AX Alta Exactitud</option>
-                                <option value="AE">AE Alta Exactitud</option>
-                                <option value="LC">LC Laboratorio Calibraciones</option>
-                                <option value="LD">LD Laboratorio Dimensional</option>
-                                <option value="DISL">DISL Dimensional SLP</option>
-                                <option value="FIX">FIX Fixtures</option>
-                                <option value="AM">AM Dimensional Sitio</option>
-                                <option value="DU">DU Servicios Dureza</option>
-                                <option value="EL">EL Servicios Electrica</option>
-                                <option value="TE">TE Servicios Temperatura</option>
-                                <option value="PR">PR Servicios Presion</option>
-                                <option value="QU">QU Medidor de PH</option>
-                                <option value="ELC">ELC Electrica</option>
-                                <option value="TI">TI Temperatura</option>
-                                <option value="TEM">TEM Temperatura</option>
-                                <option value="CRF">CRF Servicios Ingenieria Inversa</option>
-                                <option value="CNMD">CNMD Digitalización</option>
-                                <option value="MG">MG Metalografía</option>
-                                <option value="VF">VF Volumen</option>
-                                <option value="PRSL">PRSL Presión SLP</option>
-                                <option value="ZEISS">ZEISS Servicio Zeiss</option>
-                                <option value="LE">LE Laboratorio especialidades</option>
-                                <option value="APP">APP APLICACIONES</option>
-                                <option value="BW">BW BW</option>
-                                <option value="D">D D</option>
-                                <option value="DINL">DINL Dimensional SLP</option>
-                                <option value="DMTY">DMTY Dimensional MTY</option>
-                                <option value="ELSL">ELSL Electrica SLP</option>
-                                <option value="HU">HU Humedad</option>
-                                <option value="II">II Ingenieria Inversa</option>
-                                <option value="LDISL">LDISL Dimensional SLP</option>
-                                <option value="LDM">LDM LDM</option>
-                                <option value="ME">ME Mediciones Especiales</option>
-                                <option value="MIT">MIT MIT</option>
-                                <option value="MTS">MTS Dimensional MTS</option>
-                                <option value="TF">TF Tiempo y Frecuencia</option>
+                                <option value="">Todas las áreas</option> 
+                                <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
+                                <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                                <option value="DIMENSIONAL">Servicios Dimensional</option>
+                                <option value="SFG">Servicios SFG</option>
+                                <option value="MITUTOYO">Servicios Mitutoyo</option>
+                                <option value="DUREZA">Servicios Dureza</option>
+                                <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                                <option value="ELECTRICA">Servicios Electrica</option>
+                                <option value="TEMPERATURA">Servicios Temperatura</option>
+                                <option value="PRESION">Servicios Presion</option>
+                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                <option value="MT">Servicios MT</option>
+                                <option value="MTS">Servicios MTS</option>
+                                <option value="ZEISS">Servicios Zeiss</option>
+                                <option value="MASA">Servicios Masa</option>
+                                <option value="FUERZA">Servicios Fuerza</option>
+                                <option value="PAR TORSIONAL">Servicios Par Torsional</option>
                             </select>
                         </div>
                         <div class="col-md-3">
                             <label for="filtro-ingeniero" class="mr-2">Filtrar por Ingeniero:</label>
-                            <input type="text" id="filtro-ingeniero" class="form-control mr-3" placeholder="Buscar ingeniero...">
+                            <input type="text" id="filtro-ingeniero" class="form-control form-control-sm mr-3" placeholder="Buscar ingeniero...">
+                        </div>
+                        <div class="col-sm-4 mb-0">
+                            <label for="txtCiudad">Ciudad</label>
+                            <div id="DivCiudad" name="DivCiudad">
+                                <select id="slcCiudad" name="slcCiudad">
+                                    <option value="">Selecciona...</option>
+                                </select>                                                    
+                            </div>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="filtrar()">Aplicar filtro</button>
@@ -192,9 +159,14 @@
     <script type="text/javascript">
         $(document).ready(function() {            
             filtrar();
+            cargarCiudades();
             $('#filtro-area').select2({
                 placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
                 allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#slcCiudad').select2({            
+                placeholder: "Seleccione...",
+                width: '100%'
             });
         });        
         
@@ -327,10 +299,43 @@
             }
         }
 
+        function cargarCiudades() {
+            //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES        
+            $.ajax({
+                type: "POST",
+                url: "acciones_solicitud.php",
+                data: { opcion: "consultarCiudades" },
+                dataType: "json",
+                success: function (respuesta) {
+                    var select = $("#slcCiudad");
+                    var i = 0;
+                    respuesta.forEach(function (ciudad) {
+                        if (i == 0) {
+                            var option = `<option value="">Selecciona...</option>`;
+                            
+                            select.append(option);
+                        }
+                        var option = `<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`;
+                        select.append(option);
+                        i++;
+                    });
+                },
+                error: function (xhr, status, error) {
+                    
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Hubo un problema al cargar los datos.",
+                        confirmButtonText: "Aceptar"
+                    });
+                }
+            });
+        }
         //Funcion para Enviar los datos
         function filtrar() {
             var ing = $('#filtro-ingeniero').val();
             var area = $('#filtro-area').val();
+            var ciudad = $('#slcCiudad').val();
             var accion = "ActividadesCalendarioPlaneadas";
             
             $.ajax({
@@ -338,7 +343,7 @@
                 method: 'POST',
                 async: false,
                 dataType: 'json',
-                data: { accion, ing, area },
+                data: { accion, ing, area, ciudad },
                 success: function (data) {
                     $('#calendarioActividadesPlaneadas').empty();
                     if (data.status === 'success') {
@@ -394,25 +399,37 @@
                             }                                                        
                             
                             estatus = '';
+                            nombre2 = '';
+                            nombre3 = '';
                             if(actividad.estatus == 'Pendientedeinformacion'){
                                 estatus = '<span class="badge text-bg-primary">Pendiente de información</span>';
                             }
                             if(actividad.estatus == 'Programadasinconfirmar'){
                                 estatus = '<span class="badge text-bg-info">Programada sin confirmar</span>';
                             }
-                            if(actividad.estatus == "Sevicioconfirmadoparasuejecucion"){
+                            if(actividad.estatus == "Servicioconfirmadoparasuejecucion"){
                                 estatus = '<span class="badge text-bg-warning">Servicio confirmado<br> para ejecución</span>';
                             }
                             if(actividad.estatus == 'Fechareservadasininformación'){
                                 estatus = '<span class="badge text-bg-dark">Fecha reservada sin <br>información</span>';
                             }
 
+                            if(actividad.nombre2 != null && actividad.nombre2 != ''){
+                                nombre2 = '<i class="fas fa-user"></i> <b>' + actividad.nombre2 + '</b>\n';
+                            }
+                            if(actividad.nombre3 != null && actividad.nombre3 != ''){
+                                nombre3 = '<i class="fas fa-user"></i> <b>' + actividad.nombre3 + '</b>\n';
+                            }
+
                             // Construir la descripción con todos los campos
                             var descripcionCompleta = 
                                 '<i class="fas fa-user"></i> <b>' + actividad.nombre + '</b>\n' +
+                                nombre2 +
+                                nombre3 +
                                 'Area: ' + areaOT + '\n' +
                                 'OT: ' + actividad.order_code + '\n' +
                                 'Cliente: ' + (actividad.ds_cliente || '') + '\n'+
+                                'Ciudad: ' + (actividad.city || '') + '\n'+
                                 estatus+'\n' +
                                 '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:black; border-style:solid;">';
 

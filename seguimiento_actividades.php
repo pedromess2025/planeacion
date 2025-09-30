@@ -281,13 +281,13 @@ header('Access-Control-Allow-Origin: *');
                     var select = $(selectIng);
                     i = 0;
                     data.forEach(function(usuarios) {
-                        if (i == 0) {
-                            var option = $('<option></option>').attr('value', '').text('Selecciona...');
+                        if (i = 0) {
+                            var option = $('<option></option>').attr('value', '0').text('Selecciona...');
                             select.append(option);
                         }
                         var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
                         select.append(option);
-                        i++;
+                        
                     });
 
                 },

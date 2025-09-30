@@ -27,7 +27,7 @@
     </style>
 
 <?php
-    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276);
+    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276,523);
 
     if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         // El usuario tiene permiso para ver la página
@@ -88,9 +88,9 @@
                                                 </div>
                                             </div>
                                             <div class="col-sm-2 mb-0">
-                                                <label for="">+ Ing.</label>
+                                                <label for="btnAgregar">+ Ing.</label>
                                                 <div class="input-group">
-                                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
+                                                    <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
                                                     <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                                                 </div>
                                             </div>
@@ -515,8 +515,9 @@
                 data: {opcion},
                 success: function(data) {
                     var select = $(seleccionado);
+                    i = 0;
                     data.forEach(function(usuarios) {
-                        if (i == 0) {
+                        if (i = 0) {
                             var option = $('<option></option>').attr('value', '0').text('Selecciona...');
                             select.append(option);
                         }
@@ -649,11 +650,15 @@
             } else if (accion === 'elimina') {
                 if ($('#Divsolicita3').is(':visible')) {
                     $('#Divsolicita3').hide();
-                    $('#slcRespoonsable3').val('');
+                    $('#slcRespoonsable3').val('0');
+                    $('#slcRespoonsable2').val('0');
                 } else if ($('#Divsolicita2').is(':visible')) {
                     $('#Divsolicita2').hide();
-                    $('#slcRespoonsable2').val('');
+                    $('#slcRespoonsable2').val('0');
+                    $('#slcRespoonsable3').val('0');
                 } else {
+                    $('#slcRespoonsable2').val('0');
+                    $('#slcRespoonsable3').val('0');
                     Swal.fire({
                         title: "No hay más ingenieros para eliminar",
                         icon: "warning",

@@ -131,24 +131,18 @@ if ($accion == 'ActividadesCalendarioPlaneadasSCOT') {
 }
 
 if ($accion == 'ActividadesCalendarioPlaneadas') {
-
-    // --- 1. Saneamiento y Normalización de Variables de Entrada ---
-    // Si 'area' es un multiselect, se recibirá como un array.
-    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];
+        
+    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];    
     
-    // CORRECCIÓN 1: Asegurar que $ingeniero sea un ARRAY para que count() y foreach() funcionen.
     $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];
-    
-    // CORRECCIÓN 1: Asegurar que $ciudad sea un ARRAY para que funcione con IN.
-    // Asumo que 'ciudad' es un multiselect o puede tener múltiples valores.
+        
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
 
 
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
-
-    // CORRECCIÓN 2: Cambiar la fecha de inicio a un placeholder '?'
+    // --- 1. Consulta Base ---    
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3
             FROM servicios_planeados_mess ot
             INNER JOIN usuarios u ON ot.engineer = u.id_usuario
@@ -184,7 +178,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         }
     }
 
-    // --- 4. Manejo del ingeniero (CORREGIDO Y LISTO)
+    // --- 4. Manejo del ingeniero
     if (!empty($ingeniero)) {
         $count = count($ingeniero);
         $placeholders = implode(',', array_fill(0, $count, '?'));
@@ -204,9 +198,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);
     }
-    
-    // Nota: Eliminé el GROUP BY por la recomendación de rendimiento, ya que no es necesario 
-    // si ot.id es la clave primaria. Si lo necesitas, re-agrégalo.
+            
     $sql .= " ORDER BY ot.id DESC";
 
     // --- 6. Ejecución de la Consulta Preparada ---

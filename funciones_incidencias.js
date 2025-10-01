@@ -103,6 +103,9 @@ function renderizarTabla(selectorTabla, data) {
         if(solicitud.estatus == 'Cancelada'){
             estatus = '<span class="badge text-bg-danger">Cancelada</span>';
         }
+        if(solicitud.estatus == 'Cerrada'){
+            estatus = '<span class="badge text-bg-success">Cerrada</span>';
+        }
         
 
         nombre2 = '';

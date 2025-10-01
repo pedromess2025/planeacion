@@ -244,3 +244,36 @@ function divsIng(accion) {
     }
 }
 
+function cargarCiudades() {
+            //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES        
+            $.ajax({
+                type: "POST",
+                url: "acciones_solicitud.php",
+                data: { opcion: "consultarCiudades" },
+                dataType: "json",
+                success: function (respuesta) {
+                    var select = $("#filtro-ciudad");
+                    var i = 0;
+                    respuesta.forEach(function (ciudad) {
+                        if (i == 0) {
+                            var option = `<option value="">Selecciona...</option>`;
+                            
+                            select.append(option);
+                        }
+                        var option = `<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`;
+                        select.append(option);
+                        i++;
+                    });
+                },
+                error: function (xhr, status, error) {
+                    
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Hubo un problema al cargar los datos.",
+                        confirmButtonText: "Aceptar"
+                    });
+                }
+            });
+        }
+

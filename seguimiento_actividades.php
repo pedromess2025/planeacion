@@ -53,7 +53,49 @@ header('Access-Control-Allow-Origin: *');
                                                 <p class="fs-4"><b>SEGUIMIENTO ACTIVIDADES</b></p>                                            
                                         </div>
                                     </div>
-                                    <hr>                                    
+                                    <hr>
+                                    <div class="row mb-3" style="display: none;">
+                                        <div class="col-md-3">
+                                            <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
+                                            <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
+                                                <option value="">Todas las áreas</option> 
+                                                <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
+                                                <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                                                <option value="DIMENSIONAL">Servicios Dimensional</option>
+                                                <option value="SFG">Servicios SFG</option>
+                                                <option value="MITUTOYO">Servicios Mitutoyo</option>
+                                                <option value="DUREZA">Servicios Dureza</option>
+                                                <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                                                <option value="ELECTRICA">Servicios Electrica</option>
+                                                <option value="TEMPERATURA">Servicios Temperatura</option>
+                                                <option value="PRESION">Servicios Presion</option>
+                                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                <option value="MT">Servicios MT</option>
+                                                <option value="MTS">Servicios MTS</option>
+                                                <option value="ZEISS">Servicios Zeiss</option>
+                                                <option value="MASA">Servicios Masa</option>
+                                                <option value="FUERZA">Servicios Fuerza</option>
+                                                <option value="PAR TORSIONAL">Servicios Par Torsional</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filtro-ingeniero" class="mr-2">Filtrar por Ingeniero:</label>
+                                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-3" multiple="multiple">
+                                                <option value="0">Selecciona...</option>
+                                            </select>                             
+                                        </div>
+                                        <div class="col-sm-4 mb-0">
+                                            <label for="txtCiudad">Ciudad</label>
+                                            <div id="DivCiudad" name="DivCiudad">
+                                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
+                                                    <option value="">Selecciona...</option>
+                                                </select>                                                    
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="filtrar()">Aplicar filtro</button>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-xl-12">
 
@@ -268,6 +310,23 @@ header('Access-Control-Allow-Origin: *');
                 empleadoSolicita('#slcRespoonsable');
                 empleadoSolicita('#slcRespoonsable2');
                 empleadoSolicita('#slcRespoonsable3');
+                empleadoSolicita('#filtro-ingeniero');
+
+                cargarCiudades();
+                
+                // Inicializar Select2
+                $('#filtro-area').select2({
+                    placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
+                    allowClear: true // Opcional: permite deseleccionar todo
+                });
+                $('#filtro-ciudad').select2({            
+                    placeholder: "Seleccione una o varias ciudades", // Opcional: un texto de ayuda
+                    allowClear: true // Opcional: permite deseleccionar todo
+                });
+                $('#filtro-ingeniero').select2({            
+                    placeholder: "Seleccione uno o varios ingenieros", // Opcional: un texto de ayuda
+                    allowClear: true // Opcional: permite deseleccionar todo
+                });
 
 
         });

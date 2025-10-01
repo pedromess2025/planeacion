@@ -96,7 +96,7 @@
     
     <script>
     // Función para mostrar/ocultar contraseñas
-    document.getElementById('showPassword').addEventListener('change', function () {
+    /*document.getElementById('showPassword').addEventListener('change', function () {
         var passwordField = document.getElementById('nuevapass');
         var confirmPasswordField = document.getElementById('confirmapass');
         
@@ -109,7 +109,7 @@
           passwordField.type = 'password';
           confirmPasswordField.type = 'password';
         }
-    });
+    });*/
     
     //Funcion para validar las contraseñas
     function validarContrasenas() {

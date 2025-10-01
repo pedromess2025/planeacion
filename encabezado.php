@@ -52,14 +52,13 @@
             ?>
         </a>
         <!-- Dropdown - User Information -->
-        <div class = "dropdown-menu dropdown-menu-right shadow animated--grow-in"
-            aria-labelledby = "userDropdown">
-            <button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
+        <div class = "dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby = "userDropdown">
+            <!--<button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
                 <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
                 Cambiar Contraseña
             </button>
 
-            <!--<a class = "dropdown-item" href = "#">
+            <a class = "dropdown-item" href = "#">
                 <i class = "fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
                 Settings
             </a>
@@ -76,49 +75,6 @@
     </li>
 
 </ul>
-    <!-- MODAL PARA CAMBIO DE CONTRASEÑA-->
-    <div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="staticBackdropLabel">Cambiar Contraseña</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-            <div class="modal-body">
-                <div class = "row">
-                    <div class="col-sm-6">
-                        <label>Contraseña Nueva:</label>
-                        <input id="nuevapass" name="nuevapass" class="form-control" type="password" required>
-                    </div>
-                
-                    <div class="col-sm-6">
-                        <label>Confirmar Contraseña:</label>
-                        <input id="confirmapass" name="confirmapass" class="form-control" type="password" required>
-                        <label id="msgPassword" name ="msgPassword"></label>
-                        
-                    </div>
-                </div>
-                <div class = "row">
-                    <div class = "col-sm-1"></div>
-                    <div class = "col-sm-6">
-                        <input class="form-check-input" type="checkbox" id="showPassword">
-                            <label class="form-check-label" for="showPassword">
-                                Ver Contraseña
-                            </label>
-                        </input>
-                    </div>
-                    <div class = "col-sm-1">
-                        <input type="hidden" id="noEmpleado" name ="noEmpleado"> </input>
-                    </div>
-                </div>
-            </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            <button type="button" class="btn btn-primary" OnClick = "validarContrasenas()">Confirmar</button>
-          </div>
-        </div>
-      </div>
-    </div>
     <!-- Logout Modal-->
     <div class = "modal fade" id = "logoutModalN" tabindex = "-1" role = "dialog" aria-labelledby = "exampleModalLabel"aria-hidden = "true">
         <div class = "modal-dialog" role = "document">

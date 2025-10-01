@@ -85,7 +85,7 @@ header('Access-Control-Allow-Origin: *');
                                             </select>                             
                                         </div>
                                         <div class="col-sm-4 mb-0">
-                                            <label for="txtCiudad">Ciudad</label>
+                                            <label for="filtro-ciudad">Ciudad</label>
                                             <div id="DivCiudad" name="DivCiudad">
                                                 <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
                                                     <option value="">Selecciona...</option>
@@ -264,7 +264,9 @@ header('Access-Control-Allow-Origin: *');
     <!-- Bootstrap core JavaScript
     <script src = "vendor/jquery/jquery.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -283,7 +285,14 @@ header('Access-Control-Allow-Origin: *');
     <!--FUNCNIONES JS DE INCIDENCIAS-->
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
-        $(document).ready(function() {                   
+        $(document).ready(function() {     
+            
+            // Inicialización del tooltip con JavaScript vanilla (funciona con Bootstrap 5+)
+            document.addEventListener('DOMContentLoaded', function () {
+                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
+                const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
+            });
+                // Manejar el estado activo de los botones
                 $('#statusBtnGroup .btn').on('click', function() {
                     $('#statusBtnGroup .btn').removeClass('active');
                     $(this).addClass('active');
@@ -390,6 +399,12 @@ header('Access-Control-Allow-Origin: *');
                         } else if(vehiculo.tipo === 'EXTERNO') {
                                 color = "background-color:rgb(186, 201, 255);";
                         }
+
+                        var optionOtro = `<option value="Otro">Otro</option>`;
+                    select.append(optionOtro);
+                    var optionNa = `<option value="N/A">No Aplica</option>`;
+                    select.append(optionNa);
+
                         var option = `<option value="${vehiculo.placa}" style="${color}">${vehiculo.modelo} - ${vehiculo.placa} - Usr: ${vehiculo.usuario}</option>`;
                         select.append(option);
                     });

@@ -40,13 +40,14 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $duracionViaje = $_POST["duracionViaje"];
         $automovil = $_POST["automovil"];
         $estatus = $_POST["estatus"];
+        $comentarios = $_POST["comentarios"];
         
         $fecha = date('Y-m-d H:i:s');
         
         $noEmpleado = $noEmpleado_cookie;
 
-        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3)
-                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3')";
+        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment)
+                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios')";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
             $response = array('status' => 'success', 'message' => 'Incidencia registrada con éxito.');
@@ -142,7 +143,7 @@ if ($opcion == "solicitudesAbiertas") {
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

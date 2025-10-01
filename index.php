@@ -184,22 +184,19 @@
                                             </div>
                                         </div>
                                         <div class="row">
-                                            <div class="col-sm-3 mb-0">
+                                            <div class="col-sm-4 mb-0">
                                                 <label for="datefechaCierre">Fecha planeada</label>
                                                 <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
                                             </div>
-                                            <div class="col-sm-3 mb-0">
+                                            <div class="col-sm-2 mb-0">
                                                 <label for="txtDuracion">Dur. Estimada</label>
                                                 <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas servicio">
                                             </div>
-                                            <div class="col-sm-3 mb-0">
+                                            <div class="col-sm-2 mb-0">
                                                 <label for="txtDuracion">Duración Viaje</label>
                                                 <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
                                             </div>
-                                        </div>
-
-                                        <div class="row mb-3">
-                                            <div class="col-sm-5">
+                                            <div class="col-sm-4">
                                                 <label for="slcAutomovil">Automovil</label>
                                                 <div id="DivAutomovil" name="DivAutomovil">
                                                     <select id="slcAutomovil" name="slcAutomovil" class="form-select">
@@ -207,6 +204,9 @@
                                                     </select>
                                                 </div>
                                             </div>
+                                        </div>
+
+                                        <div class="row mb-3">                                            
                                             <div class="col-sm-4">
                                                 <label for="slcEstatus">Estatus</label>
                                                 <div id="DivEstatus" name="DivEstatus">
@@ -219,13 +219,19 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-3">
-                                                <span class="badge text-bg-secondary" id="mensajeEstatus" style="display: none" name="mensajeEstatus"></span>
+                                            <div class="col-sm-4 mt-4">
+                                                <div class="alert alert-primary" role="alert" style="display: none;">
+                                                    <p class="mb-0" id="mensajeEstatus" style="font-size: 12px;"></p>
+                                                </div>                                                
                                             </div>
+                                            <div class="col-sm-4">
+                                                <label for="txtComentarios">Comentario</label>
+                                                <textarea name="txtComentarios" id="txtComentarios" class="form-control" rows="2"></textarea>
+                                            </div>                                            
                                         </div>
                                         <div class="row">
                                             <div class="col-xl-3"></div>
-                                            <div class="col-xl-6 mb-1   ">
+                                            <div class="col-xl-6 mb-1">
                                                 <center>
                                                     <button id="btnSolicitar" type="button" class="btn btn-success" onclick="generarSolicitud()">Registrar</button><br>
                                                     <p id="mensaje" class="badge text-bg-primary"></p>
@@ -384,7 +390,8 @@
             var duracion = formData["txtDuracion"];
             var duracionViaje = formData["txtDuracionViaje"];
             var automovil = formData["slcAutomovil"];
-            var estatus = formData["slcEstatus"];    
+            var estatus = formData["slcEstatus"];
+            var comentarios = formData["txtComentarios"];
             
             if (!validarFormularioConsolidado(formData)) {
                 // La función ya mostró la alerta con todos los errores.
@@ -408,7 +415,8 @@
                     duracion: duracion,
                     duracionViaje: duracionViaje,
                     automovil: automovil,
-                    estatus: estatus
+                    estatus: estatus,
+                    comentarios: comentarios
                 },
                 success: function(data) {
                     if (data.status === 'success') {
@@ -599,15 +607,14 @@
                 success: function (respuesta) {
                     var select = $("#slcAutomovil");
                     
+                    var optionOtro = `<option value="Otro">Otro</option>`;
+                    select.append(optionOtro);
+                    var optionNa = `<option value="N/A">No Aplica</option>`;
+                    select.append(optionNa);
+
                     respuesta.forEach(function (vehiculo) {
                         // Define el color según el valor de vehiculo.usuario
-                        let color = "";
-                        if(vehiculo.tipo === 'AREA') {
-                                color = "background-color: #ffeeba;";
-                        } else if(vehiculo.tipo === 'EXTERNO') {
-                                color = "background-color:rgb(186, 201, 255);";
-                        }
-                        var option = `<option value="${vehiculo.placa}" style="${color}">${vehiculo.modelo} - ${vehiculo.placa} - Usr: ${vehiculo.usuario}</option>`;
+                        var option = `<option value="${vehiculo.placa}">${vehiculo.modelo} - ${vehiculo.placa} - Usr: ${vehiculo.usuario}</option>`;
                         select.append(option);
                     });
                 },

@@ -1,3 +1,4 @@
+
 //FUNCION PARA RESPONDER LA SOLICITUD
 function ActualizarActividad() {
     ingeniero = $('#slcRespoonsable').val();
@@ -116,6 +117,16 @@ function renderizarTabla(selectorTabla, data) {
         if(solicitud.nombre3 != ''){
             nombre3 = '<br><i class="fas fa-user"></i>'+solicitud.nombre3;
         }
+
+        if(solicitud.capturo == 'SI'){
+            accion = `                
+                <button id="btnSolicitar" type="button" class="btn btn-success" 
+                onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar</button>
+                `;
+        }else{
+            accion = ``;
+        }
+
         const fila = `
             <tr>
                 <td><i class="fas fa-user"></i>${solicitud.nombre}
@@ -129,8 +140,7 @@ function renderizarTabla(selectorTabla, data) {
                 <td>${solicitud.city}</td>
                 <td>${solicitud.vehiculo}</td>
                 <td>${estatus}</td>
-                <td><button id="btnSolicitar" type="button" class="btn btn-success" 
-                onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar</button></td>
+                <td>${accion}</td>
             </tr>`;
         tabla.append(fila);
     });

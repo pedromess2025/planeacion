@@ -252,9 +252,8 @@ header('Access-Control-Allow-Origin: *');
 
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-
-    <script src="https://cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js" defer="defer"></script>
     <script src="https://cdn.datatables.net/2.3.2/js/dataTables.js" defer="defer"></script>
+    <script src="https://cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js" defer="defer"></script>    
     <script src="https://cdn.datatables.net/responsive/3.0.0/js/dataTables.responsive.min.js"></script>
                 
     <!-- Select2 JS -->
@@ -280,7 +279,8 @@ header('Access-Control-Allow-Origin: *');
                     "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                     "pageLength": 10,
                     "responsive": true,
-                    "searching": false                    
+                    "searching": false,
+                    "responsive": true                    
                 }); 
 
                 // Mostrar inicialmente las solicitudes abiertas

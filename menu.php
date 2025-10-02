@@ -64,7 +64,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 </li>
 
 <li class="nav-item">
-    <a class="nav-link" href="">
+    <a class="nav-link" href="Manual Planeacion.pdf">
         <i class="fas fa-fw fa-calendar"></i>
         <span>Manual de usuario</span>
     </a>

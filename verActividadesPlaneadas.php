@@ -392,7 +392,7 @@
                             // Definir color según el estatus
                             var colorEvento = '';
                             // Extraer el área de order_code usando substring antes del primer '-'                            
-                            areaOT = actividad.area; //asdasd
+                            areaOT = actividad.area;
 
                             switch (areaOT) {
                                 case 'ALTA EXACITUD': colorEvento = '#7a5c00'; break;    // Alta Exactitud

@@ -140,29 +140,96 @@ if ($opcion == "consultarInventarioGeneral") {
 
 if ($opcion == "solicitudesAbiertas") {
 
+    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];        
+    $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];        
+    $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
+
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
-
+    // Consulta base
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
-            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario     
-            GROUP BY ot.id
-            ORDER BY ot.id DESC";
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
+            WHERE ot.start_date >= ?"; // 1=Programada, 2=En Proceso, 3=Completada, 4=Cancelada    
+            
         
-    //echo $sql;
+        $whereClauses = [];
+        $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.
+        $param_types = "s";       // String para los tipos de los parámetros (s = string);
 
-    $result = $conn->query($sql);
+        // --- 2. Manejo de múltiples áreas seleccionadas
+        if (!empty($areas)) {
+            $placeholders = implode(',', array_fill(0, count($areas), '?'));
+            // Nota: Asumo que el campo en la BD es 'ot.area' y no el código OT más complejo.
+            $whereClauses[] = "ot.area IN ($placeholders)"; 
 
-    $actividades = [];
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $actividades[] = $row;
+            foreach ($areas as $area_item) {
+                $params[] = $area_item;
+                $param_types .= "s";
+            }
+        } 
+
+        // --- 3. Manejo de la ciudad
+        if (!empty($ciudad)) {
+            // CORRECCIÓN 3: Si $ciudad es un array, se maneja correctamente con IN
+            $placeholders = implode(',', array_fill(0, count($ciudad), '?'));
+            $whereClauses[] = "ot.city IN ($placeholders)";
+
+            foreach ($ciudad as $ciudad_item) {
+                $params[] = $ciudad_item;
+                $param_types .= "s";
+            }
         }
-    }
-    echo json_encode($actividades);
-    $conn->close();
+
+        // --- 4. Manejo del ingeniero
+        if (!empty($ingeniero)) {
+            $count = count($ingeniero);
+            $placeholders = implode(',', array_fill(0, $count, '?'));
+            
+            $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
+
+            // Añadir la lista de ingenieros al array de parámetros TRES VECES (Correcto para los 3 IN)
+            for ($i = 0; $i < 3; $i++) {
+                foreach ($ingeniero as $ingeniero_item) {
+                    $params[] = $ingeniero_item;
+                    $param_types .= "s"; 
+                }
+            }
+        }
+
+        // --- 5. Construcción Final
+        if (!empty($whereClauses)) {
+            $sql .= " AND " . implode(' AND ', $whereClauses);
+        }
+            
+        $sql .= " GROUP BY ot.id
+            ORDER BY ot.id DESC";
+
+        // --- 6. Ejecución de la Consulta Preparada ---
+        if ($stmt = $conn->prepare($sql)) {
+            // Enlazar los parámetros dinámicamente        
+            $stmt->bind_param($param_types, ...$params);
+
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result && $result->num_rows > 0) {
+                $actividades = [];
+                while ($row = $result->fetch_assoc()) {
+                    $actividades[] = $row;
+                }
+                echo json_encode($actividades);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+            }
+
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        }
+
 }
 
 if($opcion == "consultarCiudades"){

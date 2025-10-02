@@ -169,7 +169,7 @@
     
         // Verificar si la cookie existe y asignar el valor al input
         if (cookieValue) {
-            document.getElementById("noEmpleado").value = cookieValue;
+            //document.getElementById("noEmpleado").value = cookieValue;
         }
     };
     </script>

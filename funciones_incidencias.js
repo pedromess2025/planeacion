@@ -66,11 +66,16 @@ function manejarVisibilidadDeTablas(tablaAMostrar) {
 
 // FUNCIÓN PARA OBTENER Y RENDERIZAR LAS SOLICITUDES
 function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
+
+    var ing = $('#filtro-ingeniero').val();
+    var area = $('#filtro-area').val();
+    var ciudad = $('#filtro-ciudad').val();
+
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
         dataType: 'json',
-        data: {opcion},
+        data: {opcion, ing, area, ciudad},
         success: function(data) {
             // Lógica de Renderizado: Procesa los datos y los inserta en la tabla
             renderizarTabla(tablaSeleccionada, data);
@@ -119,12 +124,22 @@ function renderizarTabla(selectorTabla, data) {
         }
 
         if(solicitud.capturo == 'SI'){
-            accion = `                
-                <button id="btnSolicitar" type="button" class="btn btn-success" 
-                onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar</button>
+            accion = `
+                <div class="btn-group" role="group">       
+                    <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
+                        <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
+                    </button>         
+                    <button id="btnSolicitar" type="button" class="btn btn-success" 
+                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar
+                    </button>
+                </div>
                 `;
         }else{
-            accion = ``;
+            accion = `
+                <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
+                    <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
+                </button>
+            `;
         }
 
         const fila = `
@@ -143,6 +158,15 @@ function renderizarTabla(selectorTabla, data) {
                 <td>${accion}</td>
             </tr>`;
         tabla.append(fila);
+    });
+}
+
+// FUNCION PARA MOSTRAR MENSAJE DE ERROR
+function mostrarComentarios(ot, comentario) {
+    Swal.fire({        
+        title: "Comentarios " + ot,
+        text: comentario,        
+        draggable: true
     });
 }
 

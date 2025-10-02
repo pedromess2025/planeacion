@@ -54,7 +54,7 @@ header('Access-Control-Allow-Origin: *');
                                         </div>
                                     </div>
                                     <hr>
-                                    <div class="row mb-3" style="display: none;">
+                                    <div class="row mb-3">
                                         <div class="col-md-3">
                                             <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
                                             <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
@@ -93,7 +93,7 @@ header('Access-Control-Allow-Origin: *');
                                             </div>
                                         </div>
                                         <div class="col-md-2 d-flex align-items-end">
-                                            <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="filtrar()">Aplicar filtro</button>
+                                            <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()">Aplicar filtro</button>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -241,30 +241,9 @@ header('Access-Control-Allow-Origin: *');
         </div>
     </div>
 
-    <!-- Logout Modal-->
-    <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
-        aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="exampleModalLabel">Cerrar sesión</h5>
-                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">×</span>
-                    </button>
-                </div>
-                <div class="modal-body">¿Estas seguro?</div>
-                <div class="modal-footer">
-                    <button class="btn btn-info" type="button" data-dismiss="modal">Cancelar</button>
-                    <a class="btn btn-danger" href="logout">Salir</a>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Bootstrap core JavaScript
     <script src = "vendor/jquery/jquery.min.js"></script>-->
-    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>    
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
@@ -285,13 +264,7 @@ header('Access-Control-Allow-Origin: *');
     <!--FUNCNIONES JS DE INCIDENCIAS-->
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
-        $(document).ready(function() {     
-            
-            // Inicialización del tooltip con JavaScript vanilla (funciona con Bootstrap 5+)
-            document.addEventListener('DOMContentLoaded', function () {
-                const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]')
-                const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl))
-            });
+        $(document).ready(function() {                             
                 // Manejar el estado activo de los botones
                 $('#statusBtnGroup .btn').on('click', function() {
                     $('#statusBtnGroup .btn').removeClass('active');
@@ -306,7 +279,8 @@ header('Access-Control-Allow-Origin: *');
                     "order": [[ 3, "desc" ]],
                     "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                     "pageLength": 10,
-                    responsive: true
+                    "responsive": true,
+                    "searching": false                    
                 }); 
 
                 // Mostrar inicialmente las solicitudes abiertas
@@ -340,6 +314,7 @@ header('Access-Control-Allow-Origin: *');
 
         });
 
+    
         function empleadoSolicita(selectIng) {
             opcion = "empleados";
             $.ajax({

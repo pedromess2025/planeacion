@@ -394,48 +394,48 @@
                             areaOT = actividad.area; //actividad.order_code.substring(0, actividad.order_code.indexOf('-')).replace('25', '');
 
                             switch (areaOT) {
-                                case 'MMZ': colorEvento = '#b08805'; break;    // Amarillo (oscurecido)
-                                case 'FZ': colorEvento = '#b06b00'; break;     // Naranja (oscurecido)
-                                case 'MG': colorEvento = '#a11646'; break;     // Rosa (oscurecido)
-                                case 'BR': colorEvento = '#573d32'; break;     // Café (oscurecido)
-                                case 'LC': colorEvento = '#1b722f'; break;     // Verde (oscurecido)
-                                case 'MT': colorEvento = '#008692'; break;     // Cyan (oscurecido)
-                                case 'MTS': colorEvento = '#62872f'; break;    // Verde claro (oscurecido)
-                                case 'EV': colorEvento = '#6e1c7d'; break;     // Morado (oscurecido)
-                                case 'DU': colorEvento = '#42565e'; break;     // Azul grisáceo (oscurecido)
-                                case 'MO': colorEvento = '#2d397e'; break;     // Azul (oscurecido)
-                                case 'MMM': colorEvento = '#ae2e26'; break;    // Rojo (oscurecido)
-                                case 'SFG': colorEvento = '#929900'; break;    // Lima (oscurecido)
-                                case 'DISL': colorEvento = '#b8a92b'; break;   // Amarillo claro (oscurecido)
-                                case 'LE': colorEvento = '#827f4c'; break;     // Caqui (oscurecido)
-                                case 'PT': colorEvento = '#00b800'; break;     // Verde neón (oscurecido)
-                                case 'OPT': colorEvento = '#006c61'; break;    // Verde azulado (oscurecido)
-                                case 'TE': colorEvento = '#176bb0'; break;     // Azul claro (oscurecido)
-                                case 'MA': colorEvento = '#b33e18'; break;     // Naranja fuerte (oscurecido)
-                                case 'APP': colorEvento = '#49287f'; break;    // Morado oscuro (oscurecido)
-                                case 'LS': colorEvento = '#7c8690'; break;     // Gris azulado (oscurecido)
-                                case 'PR': colorEvento = '#9b252f'; break;     // Rojo oscuro (oscurecido)
-                                case 'FM': colorEvento = '#42562a'; break;     // Verde oliva (oscurecido)
-                                case 'EL': colorEvento = '#b39800'; break;     // Dorado (oscurecido)
-                                case 'MI': colorEvento = '#357335'; break;     // Verde medio (oscurecido)
-                                case 'AX': colorEvento = '#b38000'; break;     // Amarillo anaranjado (oscurecido)
-                                case 'PRSL': colorEvento = '#760e3c'; break;   // Rosa oscuro (oscurecido)
-                                case 'FZSL': colorEvento = '#b34c2e'; break;   // Naranja suave (oscurecido)
-                                case 'D': colorEvento = '#434343'; break;      // Gris oscuro (oscurecido)
-                                case 'PTSL': colorEvento = '#008778'; break;   // Verde azulado claro (oscurecido)
-                                case 'ELSL': colorEvento = '#b39837'; break;   // Amarillo pastel (oscurecido)
-                                case 'OPTM': colorEvento = '#157a7f'; break;   // Verde menta (oscurecido)
-                                case 'ME': colorEvento = '#8c1b1b'; break;     // Rojo intenso (oscurecido)
-                                case 'LD': colorEvento = '#725f59'; break;     // Marrón claro (oscurecido)
-                                case 'TF': colorEvento = '#6287b2'; break;     // Azul pastel (oscurecido)
-                                case 'LDM': colorEvento = '#b89486'; break;    // Naranja pastel (oscurecido)
-                                case 'AM': colorEvento = '#b8949e'; break;     // Rosa pastel (oscurecido)
-                                case 'DMTY': colorEvento = '#7ea2a0'; break;   // Verde agua (oscurecido)
-                                case 'TI': colorEvento = '#7e6e9e'; break;     // Morado pastel (oscurecido)
-                                case 'HU': colorEvento = '#b28594'; break;     // Rosa claro (oscurecido)
-                                case 'DINL': colorEvento = '#8a9b72'; break;   // Verde claro pastel (oscurecido)
-                                default: colorEvento = '#00559f';              // Azul por defecto (oscurecido)
-                            }                                                        
+                                case 'MMZ': colorEvento = '#7a5c00'; break;    // Amarillo oscuro
+                                case 'FZ': colorEvento = '#804600'; break;     // Naranja oscuro
+                                case 'MG': colorEvento = '#6b102e'; break;     // Rosa oscuro
+                                case 'BR': colorEvento = '#3a241c'; break;     // Café oscuro
+                                case 'LC': colorEvento = '#10491d'; break;     // Verde oscuro
+                                case 'MT': colorEvento = '#004d53'; break;     // Cyan oscuro
+                                case 'MTS': colorEvento = '#3d4f1a'; break;    // Verde claro oscuro
+                                case 'EV': colorEvento = '#3e0d44'; break;     // Morado oscuro
+                                case 'DU': colorEvento = '#232d33'; break;     // Azul grisáceo oscuro
+                                case 'MO': colorEvento = '#181f3d'; break;     // Azul oscuro
+                                case 'MMM': colorEvento = '#6b1a13'; break;    // Rojo oscuro
+                                case 'SFG': colorEvento = '#011c51ff'; break;    // Azul muy oscuro
+                                case 'DISL': colorEvento = '#6b6220'; break;   // Amarillo claro oscuro
+                                case 'LE': colorEvento = '#4a4726'; break;     // Caqui oscuro
+                                case 'PT': colorEvento = '#005900'; break;     // Verde neón oscuro
+                                case 'OPT': colorEvento = '#00332e'; break;    // Verde azulado oscuro
+                                case 'TE': colorEvento = '#0b3557'; break;     // Azul claro oscuro
+                                case 'MA': colorEvento = '#6b1f0c'; break;     // Naranja fuerte oscuro
+                                case 'APP': colorEvento = '#27143f'; break;    // Morado muy oscuro
+                                case 'LS': colorEvento = '#3c434a'; break;     // Gris azulado oscuro
+                                case 'PR': colorEvento = '#5a141a'; break;     // Rojo oscuro
+                                case 'FM': colorEvento = '#232d15'; break;     // Verde oliva oscuro
+                                case 'EL': colorEvento = '#6b5c00'; break;     // Dorado oscuro
+                                case 'MI': colorEvento = '#1c3d1c'; break;     // Verde medio oscuro
+                                case 'AX': colorEvento = '#6b4d00'; break;     // Amarillo anaranjado oscuro
+                                case 'PRSL': colorEvento = '#3b071e'; break;   // Rosa muy oscuro
+                                case 'FZSL': colorEvento = '#6b2716'; break;   // Naranja suave oscuro
+                                case 'D': colorEvento = '#232323'; break;      // Gris muy oscuro
+                                case 'PTSL': colorEvento = '#00413c'; break;   // Verde azulado claro oscuro
+                                case 'ELSL': colorEvento = '#6b5c1c'; break;   // Amarillo pastel oscuro
+                                case 'OPTM': colorEvento = '#0a3d3f'; break;   // Verde menta oscuro
+                                case 'ME': colorEvento = '#4a0d0d'; break;     // Rojo intenso oscuro
+                                case 'LD': colorEvento = '#3a2f2b'; break;     // Marrón claro oscuro
+                                case 'TF': colorEvento = '#3a4a5b'; break;     // Azul pastel oscuro
+                                case 'LDM': colorEvento = '#6b4a3c'; break;    // Naranja pastel oscuro
+                                case 'AM': colorEvento = '#6b4a53'; break;     // Rosa pastel oscuro
+                                case 'DMTY': colorEvento = '#405252'; break;   // Verde agua oscuro
+                                case 'TI': colorEvento = '#4a3a5b'; break;     // Morado pastel oscuro
+                                case 'HU': colorEvento = '#6b4250'; break;     // Rosa claro oscuro
+                                case 'DINL': colorEvento = '#4a5b3a'; break;   // Verde claro pastel oscuro
+                                default: colorEvento = '#002244';              // Azul por defecto oscuro
+                            }
                             
                             estatus = '';
                             nombre2 = '';
@@ -474,7 +474,7 @@
 
                             eventos.push({
                                 title: descripcionCompleta.replace(/\n/g, '<br>'), // Mostrar toda la descripción en el title
-                                description: actividad.nombre, // Para el tooltip en HTML
+                                description: actividad.comment, // Para el tooltip en HTML
                                 start: actividad.FechaPlaneadaInicioDate,
                                 end: actividad.FechaPlaneadaInicioDate,
                                 color: colorEvento

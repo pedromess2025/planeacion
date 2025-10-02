@@ -19,7 +19,7 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <style>
+    <style>        
         .quitarbarra {
             width: 100%;
             clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 37px), 0% calc(100% - 37px));
@@ -210,7 +210,7 @@
                                             <div class="col-sm-4">
                                                 <label for="slcEstatus">Estatus</label>
                                                 <div id="DivEstatus" name="DivEstatus">
-                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onchange="mostrarMensajeEstatus()">
+                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onChange="mostrarMensajeEstatus()">
                                                         <option value="">Selecciona...</option>
                                                         <option value="Pendientedeinformacion">Pendiente de información</option>
                                                         <option value="Programadasinconfirmar">Programada sin confirmar</option>
@@ -220,8 +220,8 @@
                                                 </div>
                                             </div>
                                             <div class="col-sm-4 mt-4">
-                                                <div class="alert alert-primary" role="alert" style="display: none;">
-                                                    <p class="mb-0" id="mensajeEstatus" style="font-size: 12px;"></p>
+                                                <div class="alert alert-primary" role="alert" id="DivMensajeInfoEstatus" style="display: none;">
+                                                    <p class="mb-0" id="mensajeInfoEstatus" style="font-size: 14px;"></p>
                                                 </div>                                                
                                             </div>
                                             <div class="col-sm-4">
@@ -632,22 +632,23 @@
         //Funcion para mostrar mensaje segun estatus
         function mostrarMensajeEstatus() {
             var estatus = $('#slcEstatus').val();
-            var mensajeEstatus = $('#mensajeEstatus');
+            var mensajeEstatus = $('#mensajeInfoEstatus');
+            var divMensaje = $('#DivMensajeInfoEstatus');
 
             if (estatus === 'Pendientedeinformacion') {
-                mensajeEstatus.text('Espera información del cliente');
-                mensajeEstatus.show();
+                mensajeEstatus.text('Le falta documentación a la orden de venta por parte del área comercial.');
+                divMensaje.show();
             } else if (estatus === 'Programadasinconfirmar') {
-                mensajeEstatus.text('Fecha tentativa, espera confirmación del cliente');
-                mensajeEstatus.show();
+                mensajeEstatus.text('Fecha tentativa, espera confirmación del cliente.');
+                divMensaje.show();
             } else if (estatus === 'Servicioconfirmadoparasuejecucion') {
-                mensajeEstatus.text('Servicio confirmado, listo para ejecutar');
-                mensajeEstatus.show();
+                mensajeEstatus.text('Servicio listo para ejecutar');
+                divMensaje.show();
             } else if (estatus === 'Fechareservadasininformación') {
-                mensajeEstatus.text('Fecha reservada, falta información del cliente(OV/OT/PO)');
-                mensajeEstatus.show();
+                mensajeEstatus.text('Fecha reservada, No hay información en el sistema formal de Mess.');
+                divMensaje.show();
             } else {
-                mensajeEstatus.hide();
+                divMensaje.hide();
             }
         }
 

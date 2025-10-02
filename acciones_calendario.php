@@ -143,7 +143,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // --- 1. Consulta Base ---    
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, IFNULL(ot.comments,'Sin comentarios') AS comments
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment
             FROM servicios_planeados_mess ot
             INNER JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

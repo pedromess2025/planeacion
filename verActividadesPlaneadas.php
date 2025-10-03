@@ -199,47 +199,24 @@
                             
 
                             switch (areaOT) {
-                                case 'MMZ': colorEvento = '#b08805'; break;    // Amarillo (oscurecido)
-                                case 'FZ': colorEvento = '#b06b00'; break;     // Naranja (oscurecido)
-                                case 'MG': colorEvento = '#a11646'; break;     // Rosa (oscurecido)
-                                case 'BR': colorEvento = '#573d32'; break;     // Café (oscurecido)
-                                case 'LC': colorEvento = '#1b722f'; break;     // Verde (oscurecido)
-                                case 'MT': colorEvento = '#008692'; break;     // Cyan (oscurecido)
-                                case 'MTS': colorEvento = '#62872f'; break;    // Verde claro (oscurecido)
-                                case 'EV': colorEvento = '#6e1c7d'; break;     // Morado (oscurecido)
-                                case 'DU': colorEvento = '#42565e'; break;     // Azul grisáceo (oscurecido)
-                                case 'MO': colorEvento = '#2d397e'; break;     // Azul (oscurecido)
-                                case 'MMM': colorEvento = '#ae2e26'; break;    // Rojo (oscurecido)
-                                case 'SFG': colorEvento = '#929900'; break;    // Lima (oscurecido)
-                                case 'DISL': colorEvento = '#b8a92b'; break;   // Amarillo claro (oscurecido)
-                                case 'LE': colorEvento = '#827f4c'; break;     // Caqui (oscurecido)
-                                case 'PT': colorEvento = '#00b800'; break;     // Verde neón (oscurecido)
-                                case 'OPT': colorEvento = '#006c61'; break;    // Verde azulado (oscurecido)
-                                case 'TE': colorEvento = '#176bb0'; break;     // Azul claro (oscurecido)
-                                case 'MA': colorEvento = '#b33e18'; break;     // Naranja fuerte (oscurecido)
-                                case 'APP': colorEvento = '#49287f'; break;    // Morado oscuro (oscurecido)
-                                case 'LS': colorEvento = '#7c8690'; break;     // Gris azulado (oscurecido)
-                                case 'PR': colorEvento = '#9b252f'; break;     // Rojo oscuro (oscurecido)
-                                case 'FM': colorEvento = '#42562a'; break;     // Verde oliva (oscurecido)
-                                case 'EL': colorEvento = '#b39800'; break;     // Dorado (oscurecido)
-                                case 'MI': colorEvento = '#357335'; break;     // Verde medio (oscurecido)
-                                case 'AX': colorEvento = '#b38000'; break;     // Amarillo anaranjado (oscurecido)
-                                case 'PRSL': colorEvento = '#760e3c'; break;   // Rosa oscuro (oscurecido)
-                                case 'FZSL': colorEvento = '#b34c2e'; break;   // Naranja suave (oscurecido)
-                                case 'D': colorEvento = '#434343'; break;      // Gris oscuro (oscurecido)
-                                case 'PTSL': colorEvento = '#008778'; break;   // Verde azulado claro (oscurecido)
-                                case 'ELSL': colorEvento = '#b39837'; break;   // Amarillo pastel (oscurecido)
-                                case 'OPTM': colorEvento = '#157a7f'; break;   // Verde menta (oscurecido)
-                                case 'ME': colorEvento = '#8c1b1b'; break;     // Rojo intenso (oscurecido)
-                                case 'LD': colorEvento = '#725f59'; break;     // Marrón claro (oscurecido)
-                                case 'TF': colorEvento = '#6287b2'; break;     // Azul pastel (oscurecido)
-                                case 'LDM': colorEvento = '#b89486'; break;    // Naranja pastel (oscurecido)
-                                case 'AM': colorEvento = '#b8949e'; break;     // Rosa pastel (oscurecido)
-                                case 'DMTY': colorEvento = '#7ea2a0'; break;   // Verde agua (oscurecido)
-                                case 'TI': colorEvento = '#7e6e9e'; break;     // Morado pastel (oscurecido)
-                                case 'HU': colorEvento = '#b28594'; break;     // Rosa claro (oscurecido)
-                                case 'DINL': colorEvento = '#8a9b72'; break;   // Verde claro pastel (oscurecido)
-                                default: colorEvento = '#00559f';              // Azul por defecto (oscurecido)
+                                case 'ALTA EXACITUD': colorEvento = '#7a5c00'; break;    // Alta Exactitud
+                                case 'CALIBRACIONES': colorEvento = '#804600'; break;    // Calibraciones
+                                case 'DIMENSIONAL': colorEvento = '#6b102e'; break;      // Dimensional
+                                case 'SFG': colorEvento = '#011c51'; break;              // SFG
+                                case 'MITUTOYO': colorEvento = '#3e0d44'; break;         // Mitutoyo
+                                case 'DUREZA': colorEvento = '#232d33'; break;           // Dureza
+                                case 'MANTENIMIENTO': colorEvento = '#3a241c'; break;    // Mantenimiento
+                                case 'ELECTRICA': colorEvento = '#6b5c00'; break;        // Electrica
+                                case 'TEMPERATURA': colorEvento = '#0b3557'; break;      // Temperatura
+                                case 'PRESION': colorEvento = '#005900'; break;          // Presion
+                                case 'APLICACIONES': colorEvento = '#27143f'; break;     // APP Aplicaciones
+                                case 'MT': colorEvento = '#004d53'; break;               // MT
+                                case 'MTS': colorEvento = '#3d4f1a'; break;              // MTS
+                                case 'ZEISS': colorEvento = '#10491d'; break;            // Zeiss
+                                case 'MASA': colorEvento = '#6b4a3c'; break;             // Masa
+                                case 'FUERZA': colorEvento = '#4a5b3a'; break;           // Fuerza
+                                case 'PAR TORSIONAL': colorEvento = '#00413c'; break;    // Par Torsional
+                                default: colorEvento = '#83bd80ff';                        // Azul por defecto oscuro
                             }                                                        
                             
                             // Construir la descripción con todos los campos
@@ -412,30 +389,29 @@
                                 case 'MASA': colorEvento = '#6b4a3c'; break;             // Masa
                                 case 'FUERZA': colorEvento = '#4a5b3a'; break;           // Fuerza
                                 case 'PAR TORSIONAL': colorEvento = '#00413c'; break;    // Par Torsional
-                                default: colorEvento = '#002244';                        // Azul por defecto oscuro
+                                default: colorEvento = '#e69a30ff';                        // Azul por defecto oscuro
                             }
                             
                             estatus = '';
                             nombre2 = '';
                             nombre3 = '';
                             if(actividad.estatus == 'Pendientedeinformacion'){
-                                estatus = '<span class="badge text-bg-primary">Pendiente de información</span>';
+                                estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
                             }
                             if(actividad.estatus == 'Programadasinconfirmar'){
-                                estatus = '<span class="badge text-bg-info">Programada sin confirmar</span>';
+                                estatus = '<span class="badge text-bg-primary">Programada sin confirmar</span>';
                             }
                             if(actividad.estatus == "Servicioconfirmadoparasuejecucion"){
-                                estatus = '<span class="badge text-bg-warning">Servicio confirmado<br> para ejecución</span>';
+                                estatus = '<span class="badge text-bg-success">Servicio confirmado para ejecución</span>';
                             }
                             if(actividad.estatus == 'Fechareservadasininformación'){
-                                estatus = '<span class="badge text-bg-dark">Fecha reservada sin <br>información</span>';
+                                estatus = '<span class="badge text-bg-orange">Fecha reservada sin información</span>';
                             }
-
-                            if(actividad.nombre2 != null && actividad.nombre2 != ''){
-                                nombre2 = '<i class="fas fa-user"></i> <b>' + actividad.nombre2 + '</b>\n';
+                            if(actividad.estatus == 'Cancelada'){
+                                estatus = '<span class="badge text-bg-danger">Cancelada</span>';
                             }
-                            if(actividad.nombre3 != null && actividad.nombre3 != ''){
-                                nombre3 = '<i class="fas fa-user"></i> <b>' + actividad.nombre3 + '</b>\n';
+                            if(actividad.estatus == 'Cerrada'){
+                                estatus = '<span class="badge text-bg-dark">Cerrada</span>';
                             }
 
                             // Construir la descripción con todos los campos

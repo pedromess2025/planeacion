@@ -95,22 +95,22 @@ function renderizarTabla(selectorTabla, data) {
     data.forEach(function (solicitud) {
         estatus = '';
         if(solicitud.estatus == 'Pendientedeinformacion'){
-            estatus = '<span class="badge text-bg-primary">Pendiente de información</span>';
+            estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
         }
         if(solicitud.estatus == 'Programadasinconfirmar'){
-            estatus = '<span class="badge text-bg-info">Programada sin confirmar</span>';
+            estatus = '<span class="badge text-bg-primary">Programada sin confirmar</span>';
         }
         if(solicitud.estatus == "Servicioconfirmadoparasuejecucion"){
-            estatus = '<span class="badge text-bg-warning">Servicio confirmado para ejecución</span>';
+            estatus = '<span class="badge text-bg-success">Servicio confirmado para ejecución</span>';
         }
         if(solicitud.estatus == 'Fechareservadasininformación'){
-            estatus = '<span class="badge text-bg-dark">Fecha reservada sin información</span>';
+            estatus = '<span class="badge text-bg-orange">Fecha reservada sin información</span>';
         }
         if(solicitud.estatus == 'Cancelada'){
             estatus = '<span class="badge text-bg-danger">Cancelada</span>';
         }
         if(solicitud.estatus == 'Cerrada'){
-            estatus = '<span class="badge text-bg-success">Cerrada</span>';
+            estatus = '<span class="badge text-bg-dark">Cerrada</span>';
         }
         
 

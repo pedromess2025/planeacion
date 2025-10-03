@@ -1,11 +1,10 @@
-
 //FUNCION PARA RESPONDER LA SOLICITUD
 function ActualizarActividad() {
     ingeniero = $('#slcRespoonsable').val();
     ingeniero2 = $('#slcRespoonsable2').val();
     ingeniero3 = $('#slcRespoonsable3').val();
-    ot = $('#txtOT').val();    
-    automovil =$('#slcAutomovil').val();
+    ot = $('#txtOT').val();
+    automovil = $('#slcAutomovil').val();
     fechaActividad = $('#datefechaCierre').val();
     idActividad = $('#idActividad').val();
     estatus = $('#slcEstatus').val();
@@ -49,7 +48,7 @@ function ActualizarActividad() {
 
 //FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
 function SolicitudesAbiertas() {
-    
+
     manejarVisibilidadDeTablas("#TSolAbiertas_wrapper");
     obtenerYRenderizarSolicitudes("solicitudesAbiertas", "#TSolAbiertas tbody");
 
@@ -59,7 +58,7 @@ function SolicitudesAbiertas() {
 function manejarVisibilidadDeTablas(tablaAMostrar) {
     // Oculta todas las tablas
     $("#TSolAbiertas_wrapper, #TSolAceptadas_wrapper, #TSolEnProceso_wrapper, #TSolCerradas_wrapper, #TSolRechazadas_wrapper").hide();
-    
+
     // Muestra solo la tabla deseada
     $(tablaAMostrar).show();
 }
@@ -70,12 +69,13 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
     var ing = $('#filtro-ingeniero').val();
     var area = $('#filtro-area').val();
     var ciudad = $('#filtro-ciudad').val();
+    var estatus = $('#filtro-estatus').val();
 
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
         dataType: 'json',
-        data: {opcion, ing, area, ciudad},
+        data: { opcion, ing, area, ciudad, estatus },
         success: function(data) {
             // Lógica de Renderizado: Procesa los datos y los inserta en la tabla
             renderizarTabla(tablaSeleccionada, data);
@@ -92,38 +92,38 @@ function renderizarTabla(selectorTabla, data) {
     const tabla = $(selectorTabla);
     tabla.empty(); // Limpia el contenido actual de la tabla    
 
-    data.forEach(function (solicitud) {
+    data.forEach(function(solicitud) {
         estatus = '';
-        if(solicitud.estatus == 'Pendientedeinformacion'){
+        if (solicitud.estatus == 'Pendientedeinformacion') {
             estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
         }
-        if(solicitud.estatus == 'Programadasinconfirmar'){
+        if (solicitud.estatus == 'Programadasinconfirmar') {
             estatus = '<span class="badge text-bg-primary">Programada sin confirmar</span>';
         }
-        if(solicitud.estatus == "Servicioconfirmadoparasuejecucion"){
+        if (solicitud.estatus == "Servicioconfirmadoparasuejecucion") {
             estatus = '<span class="badge text-bg-success">Servicio confirmado para ejecución</span>';
         }
-        if(solicitud.estatus == 'Fechareservadasininformación'){
+        if (solicitud.estatus == 'Fechareservadasininformación') {
             estatus = '<span class="badge text-bg-orange">Fecha reservada sin información</span>';
         }
-        if(solicitud.estatus == 'Cancelada'){
+        if (solicitud.estatus == 'Cancelada') {
             estatus = '<span class="badge text-bg-danger">Cancelada</span>';
         }
-        if(solicitud.estatus == 'Cerrada'){
+        if (solicitud.estatus == 'Cerrada') {
             estatus = '<span class="badge text-bg-dark">Cerrada</span>';
         }
-        
+
 
         nombre2 = '';
         nombre3 = '';
-        if(solicitud.nombre2 != ''){
-            nombre2 = '<br><i class="fas fa-user"></i>'+solicitud.nombre2;
+        if (solicitud.nombre2 != '') {
+            nombre2 = '<br><i class="fas fa-user"></i>' + solicitud.nombre2;
         }
-        if(solicitud.nombre3 != ''){
-            nombre3 = '<br><i class="fas fa-user"></i>'+solicitud.nombre3;
+        if (solicitud.nombre3 != '') {
+            nombre3 = '<br><i class="fas fa-user"></i>' + solicitud.nombre3;
         }
 
-        if(solicitud.capturo == 'SI'){
+        if (solicitud.capturo == 'SI') {
             accion = `
                 <div class="btn-group" role="group">       
                     <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
@@ -134,7 +134,7 @@ function renderizarTabla(selectorTabla, data) {
                     </button>
                 </div>
                 `;
-        }else{
+        } else {
             accion = `
                 <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
                     <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
@@ -163,9 +163,9 @@ function renderizarTabla(selectorTabla, data) {
 
 // FUNCION PARA MOSTRAR MENSAJE DE ERROR
 function mostrarComentarios(ot, comentario) {
-    Swal.fire({        
+    Swal.fire({
         title: "Comentarios " + ot,
-        text: comentario,        
+        text: comentario,
         draggable: true
     });
 }
@@ -180,65 +180,65 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus) {    
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus) {
     $('#Divsolicita2').show();
     $('#Divsolicita3').show();
 
     $('#slcRespoonsable').val(ingeniero);
     $('#slcRespoonsable2').val(ingeniero2);
     $('#slcRespoonsable3').val(ingeniero3);
-    
-    $('#txtOT').val(ot);    
+
+    $('#txtOT').val(ot);
     $('#slcAutomovil').val(vehiculo);
     $('#datefechaCierre').val(fechaActividad);
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
 
-    if(ingeniero2 == '0'){
+    if (ingeniero2 == '0') {
         $('#Divsolicita2').hide();
     }
-    if(ingeniero3 == '0'){
+    if (ingeniero3 == '0') {
         $('#Divsolicita3').hide();
     }
 
     // Inicializa Select2 en el campo de responsable
-        $('#slcRespoonsable').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcRespoonsable2').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcRespoonsable3').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcAreas').select2({
-            dropdownParent: $('#actualizarActividadModal'), 
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcCiudad').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcAutomovil').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
-        $('#slcEstatus').select2({
-            dropdownParent: $('#actualizarActividadModal'),
-            placeholder: "Seleccione...",
-            width: '100%'
-        });
+    $('#slcRespoonsable').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcRespoonsable2').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcRespoonsable3').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcAreas').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcCiudad').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcAutomovil').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
+    $('#slcEstatus').select2({
+        dropdownParent: $('#actualizarActividadModal'),
+        placeholder: "Seleccione...",
+        width: '100%'
+    });
 
-        $('#actualizarActividadModal').modal('show');
+    $('#actualizarActividadModal').modal('show');
 }
 
 //FUNCION PARA OBTENER EL VALOR DE LA COOKIE
@@ -248,6 +248,7 @@ function getCookie(name) {
     if (parts.length === 2) return parts.pop().split(";").shift();
 }
 
+//FUNCION PARA AGREGAR O ELIMINAR DIVS DE INGENIEROS
 function divsIng(accion) {
     if (accion === 'agrega') {
         if ($('#Divsolicita2').is(':hidden')) {
@@ -278,36 +279,66 @@ function divsIng(accion) {
     }
 }
 
+//FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES 
 function cargarCiudades() {
-            //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES        
-            $.ajax({
-                type: "POST",
-                url: "acciones_solicitud.php",
-                data: { opcion: "consultarCiudades" },
-                dataType: "json",
-                success: function (respuesta) {
-                    var select = $("#filtro-ciudad");
-                    var i = 0;
-                    respuesta.forEach(function (ciudad) {
-                        if (i == 0) {
-                            var option = `<option value="">Selecciona...</option>`;
-                            
-                            select.append(option);
-                        }
-                        var option = `<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`;
-                        select.append(option);
-                        i++;
-                    });
-                },
-                error: function (xhr, status, error) {
-                    
-                    Swal.fire({
-                        icon: "error",
-                        title: "Error",
-                        text: "Hubo un problema al cargar los datos.",
-                        confirmButtonText: "Aceptar"
-                    });
+    $.ajax({
+        type: "POST",
+        url: "acciones_solicitud.php",
+        data: { opcion: "consultarCiudades" },
+        dataType: "json",
+        success: function(respuesta) {
+            var select = $("#filtro-ciudad");
+            var i = 0;
+            respuesta.forEach(function(ciudad) {
+                if (i == 0) {
+                    var option = `<option value="">Selecciona...</option>`;
+
+                    select.append(option);
                 }
+                var option = `<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`;
+                select.append(option);
+                i++;
+            });
+        },
+        error: function(xhr, status, error) {
+
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Hubo un problema al cargar los datos.",
+                confirmButtonText: "Aceptar"
             });
         }
+    });
+}
 
+//FUNCION PARA CARGAR INFORMACIÓN DE LOS ESTATUS
+function cargarEstatus() {
+    $.ajax({
+        type: "POST",
+        url: "acciones_solicitud.php",
+        data: { opcion: "consultarEstatus" },
+        dataType: "json",
+        success: function(respuesta) {
+            var select = $("#filtro-estatus");
+            var i = 0;
+            respuesta.forEach(function(estatus) {
+                if (i == 0) {
+                    var option = `<option value="">Selecciona...</option>`;
+                    select.append(option);
+                }
+                var option = `<option value="${estatus.id}"><b>${estatus.nombre}</b></option>`;
+                select.append(option);
+                i++;
+            });
+        },
+        error: function(xhr, status, error) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Hubo un problema al cargar los datos.",
+                confirmButtonText: "Aceptar"
+            });
+        }
+    });
+}

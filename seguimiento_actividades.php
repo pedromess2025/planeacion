@@ -53,7 +53,7 @@
                                     </div>
                                     <hr>
                                     <div class="row mb-3">
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
                                             <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
                                                 <option value="">Todas las áreas</option> 
@@ -82,7 +82,7 @@
                                                 <option value="0">Selecciona...</option>
                                             </select>                             
                                         </div>
-                                        <div class="col-sm-4 mb-0">
+                                        <div class="col-md-3">
                                             <label for="filtro-ciudad">Ciudad</label>
                                             <div id="DivCiudad" name="DivCiudad">
                                                 <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
@@ -90,13 +90,24 @@
                                                 </select>                                                    
                                             </div>
                                         </div>
+                                        <div class="col-md-2">
+                                            <label for="filtro-estatus" class="mr-2">Filtrar por Estatus:</label>
+                                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-3" multiple="multiple">
+                                                <option value="">Selecciona...</option>
+                                                <option value="Pendientedeinformacion">Pendiente de información</option>
+                                                <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                                <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                                <option value="Cancelada">Cancelar</option>
+                                                <option value="Cerrada">Cerrar</option>
+                                            </select>
+                                        </div>
                                         <div class="col-md-2 d-flex align-items-end">
                                             <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()">Aplicar filtro</button>
                                         </div>
                                     </div>
                                     <div class="row">
                                         <div class="col-xl-12">
-
                                             <!-- Representa la tabla de solicitudes Abiertas.-->
                                             <table id="TSolAbiertas" name="TSolAbiertas" class="table table-hover table-striped table-bordered" style="width:100%">
                                                 <thead class="table-primary">
@@ -115,20 +126,16 @@
                                                 <tbody>
                                                 </tbody>
                                             </table>
-
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
                 <!-- /.container-fluid -->
-
             </div>
             <!-- End of Main Content -->
-
             <!-- Footer -->
             <footer class="sticky-footer bg-white">
                 <div class="container my-auto">
@@ -138,18 +145,14 @@
                 </div>
             </footer>
             <!-- End of Footer -->
-
         </div>
         <!-- End of Content Wrapper -->
-
     </div>
     <!-- End of Page Wrapper -->
-
     <!-- Scroll to Top Button-->
     <a class="scroll-to-top rounded" href="#page-top">
         <i class="fas fa-angle-up"></i>
     </a>
-
     <!-- Modal para responder incidencias -->
     <div class="modal fade" id="actualizarActividadModal" tabindex="-1" aria-labelledby="actualizarActividadLabel" aria-hidden="true">
         <div class="modal-dialog">            
@@ -255,63 +258,91 @@
                 
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!--FUNCNIONES JS DE INCIDENCIAS-->
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
         $(document).ready(function() {                             
-                // Manejar el estado activo de los botones
-                $('#statusBtnGroup .btn').on('click', function() {
-                    $('#statusBtnGroup .btn').removeClass('active');
-                    $(this).addClass('active');
-                });
-                
-                // Aplica el estilo a ambas tablas
-                $('#TSolAbiertas').DataTable({
-                    "responsive": true,
-                    "language": {
-                        "url": "//cdn.datatables.net/plug-ins/1.10.15/i18n/Spanish.json"
+            // Manejar el estado activo de los botones
+            $('#statusBtnGroup .btn').on('click', function() {
+                $('#statusBtnGroup .btn').removeClass('active');
+                $(this).addClass('active');
+            });
+            
+            // Aplica el estilo a ambas tablas
+            $('#TSolAbiertas').DataTable({
+                //"responsive": true,
+                "language": {
+                    //"url": "//cdn.datatables.net/plug-ins/1.10.15/i18n/Spanish.json"
+                    "sProcessing":     "Procesando...",
+                    "sLengthMenu":     "Mostrar _MENU_ registros",
+                    "sZeroRecords":    "No se encontraron resultados",
+                    "sEmptyTable":     "Ningún dato disponible en esta tabla",
+                    "sInfo":           "Mostrando registros del _START_ al _END_ de un total de _TOTAL_ registros",
+                    "sInfoEmpty":      "Mostrando registros del 0 al 0 de un total de 0 registros",
+                    "sInfoFiltered":   "(filtrado de un total de _MAX_ registros)",
+                    "sInfoPostFix":    "",
+                    "sSearch":         "Buscar:",
+                    "sUrl":            "",
+                    "sInfoThousands":  ",",
+                    "sLoadingRecords": "Cargando...",
+                    "oPaginate": {
+                        "sFirst":    "Primero",
+                        "sLast":     "Último",
+                        "sNext":     "Siguiente",
+                        "sPrevious": "Anterior"
                     },
-                    "order": [[ 3, "desc" ]],
-                    "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                    "pageLength": 10,
-                    "responsive": true,
-                    "searching": false                                      
-                });
+                    "oAria": {
+                        "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
+                        "sSortDescending": ": Activar para ordenar la columna de manera descendente"
+                    }
+                },
+                "order": [[ 3, "desc" ]],
+                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+                "pageLength": 10,
+                "responsive": true,
+                "searching": false                                      
+            });
 
-                // Mostrar inicialmente las solicitudes abiertas
-                SolicitudesAbiertas();
+            // Mostrar inicialmente las solicitudes abiertas
+            SolicitudesAbiertas();
 
-                // Cargar los vehículos en el select        
-                cargarVehiculos('#slcAutomovil');
+            // Cargar los vehículos en el select        
+            cargarVehiculos('#slcAutomovil');
 
-                // Cargar los empleados en el select            
-                empleadoSolicita('#slcRespoonsable');
-                empleadoSolicita('#slcRespoonsable2');
-                empleadoSolicita('#slcRespoonsable3');
-                empleadoSolicita('#filtro-ingeniero');
+            // Cargar los empleados en el select            
+            empleadoSolicita('#slcRespoonsable');
+            empleadoSolicita('#slcRespoonsable2');
+            empleadoSolicita('#slcRespoonsable3');
+            empleadoSolicita('#filtro-ingeniero');
 
-                cargarCiudades();
-                
-                // Inicializar Select2
-                $('#filtro-area').select2({
-                    placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
-                    allowClear: true // Opcional: permite deseleccionar todo
-                });
-                $('#filtro-ciudad').select2({            
-                    placeholder: "Seleccione una o varias ciudades", // Opcional: un texto de ayuda
-                    allowClear: true // Opcional: permite deseleccionar todo
-                });
-                $('#filtro-ingeniero').select2({            
-                    placeholder: "Seleccione uno o varios ingenieros", // Opcional: un texto de ayuda
-                    allowClear: true // Opcional: permite deseleccionar todo
-                });
+            // Cargar las ciudades en el select    
+            cargarCiudades();
 
+            // Cargar los estatus en el select    
+            //cargarEstatus();
 
+            // Inicializar Select2
+            $('#filtro-area').select2({
+                placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-ciudad').select2({            
+                placeholder: "Seleccione una o varias ciudades", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-ingeniero').select2({            
+                placeholder: "Seleccione uno o varios ingenieros", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-estatus').select2({            
+                placeholder: "Seleccione uno o varios estatus", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
         });
 
-    
+        //FUNCION PARA CARGAR INFORMACIÓN DE LOS EMPLEADOS
         function empleadoSolicita(selectIng) {
             opcion = "empleados";
             $.ajax({
@@ -352,9 +383,9 @@
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
         }
-        
-        function cargarVehiculos(selectVehiculos) {
-        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS        
+
+        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS
+        function cargarVehiculos(selectVehiculos) {        
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
@@ -392,10 +423,5 @@
                 }
             });
         }
-        
-
-
     </script>
-
-
 </html>

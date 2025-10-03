@@ -199,7 +199,19 @@ if ($opcion == "solicitudesAbiertas") {
             }
         }
 
-        // --- 5. Construcción Final
+        // --- 5. Manejo del estatus
+        if (!empty($_POST['estatus']) && is_array($_POST['estatus'])) {
+            $estatus = $_POST['estatus'];
+            $placeholders = implode(',', array_fill(0, count($estatus), '?'));
+            $whereClauses[] = "ot.estatus IN ($placeholders)";
+
+            foreach ($estatus as $estatus_item) {
+                $params[] = $estatus_item;
+                $param_types .= "s";
+            }
+        }
+        
+        // --- 6. Construcción Final
         if (!empty($whereClauses)) {
             $sql .= " AND " . implode(' AND ', $whereClauses);
         }

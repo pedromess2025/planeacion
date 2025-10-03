@@ -269,6 +269,7 @@
                 
                 // Aplica el estilo a ambas tablas
                 $('#TSolAbiertas').DataTable({
+                    "responsive": true,
                     "language": {
                         "url": "//cdn.datatables.net/plug-ins/1.10.15/i18n/Spanish.json"
                     },
@@ -276,8 +277,7 @@
                     "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
                     "pageLength": 10,
                     "responsive": true,
-                    "searching": false,
-                    "responsive": true                    
+                    "searching": false                                      
                 });
 
                 // Mostrar inicialmente las solicitudes abiertas

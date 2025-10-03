@@ -238,7 +238,7 @@
             
         </div>
     </div>
-
+</body>
     <!-- Bootstrap core JavaScript
     <script src = "vendor/jquery/jquery.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>    
@@ -250,7 +250,7 @@
 
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-    <script src="https://cdn.datatables.net/2.3.2/js/dataTables.js" defer="defer"></script>    
+    <script src="https://cdn.datatables.net/2.3.2/js/dataTables.js"></script>    
     <script src="https://cdn.datatables.net/responsive/3.0.0/js/dataTables.responsive.min.js"></script>
                 
     <!-- Select2 JS -->
@@ -396,6 +396,6 @@
 
 
     </script>
-</body>
+
 
 </html>

@@ -107,9 +107,8 @@
                                         </div>
                                     </div>
                                     <div class="row">
-                                        <div class="col-xl-12">
-                                            <!-- Representa la tabla de solicitudes Abiertas.-->
-                                            <table id="TSolAbiertas" name="TSolAbiertas" class="table table-hover table-striped table-bordered" style="width:100%">
+                                        <div class="col-xl-12">                                            
+                                            <table id="TSolAbiertas" class="table table-hover" style="width:100%">
                                                 <thead class="table-primary">
                                                     <tr>                                                        
                                                         <th>Ingeniero</th>
@@ -272,9 +271,12 @@
             
             // Aplica el estilo a ambas tablas
             $('#TSolAbiertas').DataTable({
-                //"responsive": true,
-                "language": {
-                    //"url": "//cdn.datatables.net/plug-ins/1.10.15/i18n/Spanish.json"
+                "responsive": true,                
+                "ordering": true,
+                "lengthMenu": [ 5, 10, 25, 50, -1],
+                "pageLength": 10,                
+                "searching": false,
+                "language": {                    
                     "sProcessing":     "Procesando...",
                     "sLengthMenu":     "Mostrar _MENU_ registros",
                     "sZeroRecords":    "No se encontraron resultados",
@@ -297,12 +299,7 @@
                         "sSortAscending":  ": Activar para ordenar la columna de manera ascendente",
                         "sSortDescending": ": Activar para ordenar la columna de manera descendente"
                     }
-                },
-                "order": [[ 3, "desc" ]],
-                "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
-                "pageLength": 10,
-                "responsive": true,
-                "searching": false                                      
+                }                                    
             });
 
             // Mostrar inicialmente las solicitudes abiertas

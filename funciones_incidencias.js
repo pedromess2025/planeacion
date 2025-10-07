@@ -89,8 +89,9 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
 
 // FUNCIÓN PARA RENDERIZAR LA TABLA
 function renderizarTabla(selectorTabla, data) {
-    const tabla = $(selectorTabla);
-    tabla.empty(); // Limpia el contenido actual de la tabla    
+//    const tabla = $(selectorTabla);
+    var table = $(selectorTabla).closest('table').DataTable();
+    //table.empty(); // Limpia el contenido actual de la tabla    
 
     data.forEach(function(solicitud) {
         estatus = '';
@@ -141,24 +142,30 @@ function renderizarTabla(selectorTabla, data) {
                 </button>
             `;
         }
+        fechaActividad  ='';
+        if(solicitud.start_date < Date.now()){
+            fechaActividad = `<h4 style="color: red; font-weight: bold;">${solicitud.start_date}</h4>`;
+        }
+        else{
+            fechaActividad = solicitud.start_date;
+        }
 
-        const fila = `
-            <tr>
-                <td><i class="fas fa-user"></i>${solicitud.nombre}
-                    ${nombre2}
-                    ${nombre3}                                        
-                </td>
-                <td>${solicitud.area}</td>
-                <td>${solicitud.order_code}</td>
-                <td>${solicitud.start_date}</td>
-                <td>${solicitud.ds_cliente}</td>
-                <td>${solicitud.city}</td>
-                <td>${solicitud.vehiculo}</td>
-                <td>${estatus}</td>
-                <td>${accion}</td>
-            </tr>`;
-        tabla.append(fila);
+
+        var fila = [
+            `<i class="fas fa-user"></i>${solicitud.nombre + nombre2 + nombre3}`,
+            solicitud.area,
+            solicitud.order_code,
+            fechaActividad,
+            solicitud.ds_cliente,
+            solicitud.city,
+            solicitud.vehiculo,
+            estatus,
+            accion // o el HTML de acciones
+        ];
+        table.row.add(fila);
     });
+
+    table.draw();
 }
 
 // FUNCION PARA MOSTRAR MENSAJE DE ERROR

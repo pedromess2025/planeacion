@@ -145,7 +145,7 @@ function renderizarTabla(selectorTabla, data) {
 
         fechaActividad  ='';
         if(new Date(solicitud.start_date).getTime() < Date.now()){
-            fechaActividad = `<h4 style="color: red; font-weight: bold;">${solicitud.start_date}</h4>`;
+            fechaActividad = `<h6 style="color: red; font-size:8;">${solicitud.start_date}</h6>`;
         }
         else{
             fechaActividad = solicitud.start_date;
@@ -161,7 +161,7 @@ function renderizarTabla(selectorTabla, data) {
             solicitud.city,
             solicitud.vehiculo,
             estatus,
-            accion // o el HTML de acciones
+            accion
         ];
         table.row.add(fila);
     });

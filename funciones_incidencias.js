@@ -91,7 +91,7 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
 function renderizarTabla(selectorTabla, data) {
 //    const tabla = $(selectorTabla);
     var table = $(selectorTabla).closest('table').DataTable();
-    //table.empty(); // Limpia el contenido actual de la tabla    
+    table.clear().draw();
 
     data.forEach(function(solicitud) {
         estatus = '';

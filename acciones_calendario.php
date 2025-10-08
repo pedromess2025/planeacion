@@ -138,6 +138,8 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
 
+    $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
+
 
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
@@ -177,8 +179,18 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
             $param_types .= "s";
         }
     }
+    // --- 4. Manejo del estatus
+    if (!empty($estatus)) {
+        $placeholders = implode(',', array_fill(0, count($estatus), '?'));
+        $whereClauses[] = "ot.estatus IN ($placeholders)";
 
-    // --- 4. Manejo del ingeniero
+        foreach ($estatus as $estatus_item) {
+            $params[] = $estatus_item;
+            $param_types .= "s";
+        }
+    }
+
+    // --- 5. Manejo del ingeniero
     if (!empty($ingeniero)) {
         $count = count($ingeniero);
         $placeholders = implode(',', array_fill(0, $count, '?'));
@@ -194,7 +206,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         }
     }
 
-    // --- 5. Construcción Final
+    // --- 6. Construcción Final
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);
     }

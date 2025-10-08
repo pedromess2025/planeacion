@@ -78,7 +78,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 </li>
 
 <hr class="sidebar-divider d-none d-md-block">
-</ul>
+
 <div class="text-center d-none d-md-inline">
     <button class="rounded-circle border-0" id="sidebarToggle"></button> 
 </div>

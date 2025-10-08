@@ -62,8 +62,8 @@
                 <div class="container-fluid">                    
                     <h1>Calendario de Actividades Planeadas</h1>
 
-                    <div class="row mb-3">
-                        <div class="col-md-3">
+                    <div class="row mb-2">
+                        <div class="col-md-2">
                             <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
                             <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
                                 <option value="">Todas las áreas</option> 
@@ -92,13 +92,25 @@
                                 <option value="0">Selecciona...</option>
                             </select>                             
                         </div>
-                        <div class="col-sm-4 mb-0">
+                        <div class="col-sm-3 mb-0">
                             <label for="txtCiudad">Ciudad</label>
                             <div id="DivCiudad" name="DivCiudad">
                                 <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
                                     <option value="">Selecciona...</option>
                                 </select>                                                    
                             </div>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="filtro-estatus" class="mr-2">Filtrar por Estatus:</label>
+                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-3" multiple="multiple">
+                                <option value="">Selecciona...</option>
+                                <option value="Pendientedeinformacion">Pendiente de información</option>
+                                <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                <option value="Cancelada">Cancelar</option>
+                                <option value="Cerrada">Cerrar</option>
+                            </select>
                         </div>
                         <div class="col-md-2 d-flex align-items-end">
                             <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="filtrar()">Aplicar filtro</button>
@@ -170,10 +182,14 @@
             });
             $('#filtro-ciudad').select2({            
                 placeholder: "Seleccione una o varias ciudades", // Opcional: un texto de ayuda
-                allowClear: true // Opcional: permite deseleccionar todo
+                allowClear: true // Opcional: permite deseleccionar todo                
             });
             $('#filtro-ingeniero').select2({            
                 placeholder: "Seleccione uno o varios ingenieros", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-estatus').select2({            
+                placeholder: "Seleccione uno o varios estatus", // Opcional: un texto de ayuda
                 allowClear: true // Opcional: permite deseleccionar todo
             });
         });        
@@ -353,6 +369,7 @@
             var ing = $('#filtro-ingeniero').val();
             var area = $('#filtro-area').val();
             var ciudad = $('#filtro-ciudad').val();
+            var estatus = $('#filtro-estatus').val();
             var accion = "ActividadesCalendarioPlaneadas";
             
             $.ajax({
@@ -360,7 +377,7 @@
                 method: 'POST',
                 async: false,
                 dataType: 'json',
-                data: { accion, ing, area, ciudad },
+                data: { accion, ing, area, ciudad, estatus },
                 success: function (data) {
                     $('#calendarioActividadesPlaneadas').empty();
                     if (data.status === 'success') {

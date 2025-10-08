@@ -1,34 +1,31 @@
 <?php
-    include '../conn.php';
+    include 'conn.php';
 
     header('Content-Type: text/html; charset=utf-8');
-    $deAsunto="Nueva incidencia registrada";
+    $deAsunto="Actividades por vencer - MESS";
 
-    require("../PHPMailer-master/src/PHPMailer.php");
-    require("../PHPMailer-master/src/SMTP.php");
+    require("PHPMailer-master/src/PHPMailer.php");
+    require("PHPMailer-master/src/SMTP.php");
+        
     
-    $responsable = $_POST['responsable'];
-    $tipo = $_POST['tipo'];
-    $solicita = $_COOKIE['noEmpleado'];
-    
-    $sqlCorreo = "SELECT correo as correoResponsable, nombre as nombreResponsable, (SELECT correo FROM usuarios WHERE noEmpleado = (SELECT jefe FROM usuarios WHERE noEmpleado = '$responsable')) AS correoJefe
-                    FROM usuarios 
-                    WHERE noEmpleado = '$responsable'";
-                    //echo $sqlCorreo; 
+    $sqlCorreo = "SELECT s.*, u.nombre, u.correo
+                FROM servicios_planeados_mess s
+                INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
+                WHERE 
+                    s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
+                    s.start_date 
+                    BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY)";
+                    
     $resCorreo = $conn->query($sqlCorreo);
     
         while ($rowCorreo = $resCorreo->fetch_assoc()) {
-                $correoResponsable = $rowCorreo["correoResponsable"];
-                $nombreResponsable = $rowCorreo["nombreResponsable"];
-                $correoJefe = $rowCorreo["correoJefe"];
-
-        }
-    
+                $correoResponsable = $rowCorreo["correo"];
+                $nombreResponsable = $rowCorreo["nombre"];
     $mail = new PHPMailer\PHPMailer\PHPMailer();
     
     $mail->IsSMTP();
 	
-    $mail->SMTPDebug = 0; // PONER EN 0 SI NO QUIERES QUE SALGA EL LOG EN LA PANTALLA
+    $mail->SMTPDebug = 2; // PONER EN 0 SI NO QUIERES QUE SALGA EL LOG EN LA PANTALLA
                           //PONER EN 2 PARA DEPURACION DETALLADA
     $mail->SMTPAuth = true; 
     $mail->SMTPSecure = 'ssl';
@@ -41,14 +38,14 @@
     $mail->Password = "hglidvwsxcbbefhe";////CONTRASENIA DE APLICACION GENERADA DESDE CONSOLA DE GOOGLE
     
     
-    $mail->SetFrom("mess.metrologia@gmail.com", "Registro de Incidencias MESS");//////////PONER CUENTA GMAIL
+    $mail->SetFrom("mess.metrologia@gmail.com", "Actividades sin confirmar");//////////PONER CUENTA GMAIL
     $mail->Subject = $deAsunto;
     $mail->Body = ' 
 <html lang="es">
 <head>
-    <link href="../vendor/fontawesome-free/css/all.min.css" rel="stylesheet">    
+    <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">    
     <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.css" rel="stylesheet">
-    <link href="../css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <center> 
         <img src="https://messbook.com.mx/mess_logooficial.jpg" style = "width: 20%">
     </center>
@@ -73,9 +70,9 @@
         
     <center>
     <h2>
-        '.utf8_decode($nombreResponsable).' acabas de recibir una incidencia del tipo '.$tipo.'.<br>
-        <b>Por favor ingresa al sistema de incidencias para darle seguimiento.</b><br>
-        <a href="https://messbook.com.mx/incidencias/incidencias" class="btn btn-outline-primary btn-block">
+        '.utf8_decode($nombreResponsable).' tienes actividades con fecha por vencer y necesitan informaci&oacute;n por confirmar.<br>
+        <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento.</b><br>
+        <a href="https://messbook.com.mx/loginMaster" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
     </h2>
@@ -86,18 +83,20 @@
     </center>
     <!-- Bootstrap core JavaScript-->
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <script src = "../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src = "vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
     <!-- Core plugin JavaScript-->
-    <script src = "../vendor/jquery-easing/jquery.easing.min.js"></script>
+    <script src = "vendor/jquery-easing/jquery.easing.min.js"></script>
     <!-- Custom scripts for all pages-->
-    <script src = "../js/sb-admin-2.min.js"></script>
+    <script src = "js/sb-admin-2.min.js"></script>
 </body>
 </html>';
 
     //Envío de correo
     
         $correos = $correoResponsable;         
-        $correos .= ',pedro.martinez@mess.com.mx';//correo de pruebas aqui debe de ir el correo del RRHH
+        $correos .= ',amram@mess.com.mx';
+        $correos .= ',sebastian.gutierrez@mess.com.mx';
+        $correos .= ',pedro.martinez@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);
         $mensaje = '';
         
@@ -137,5 +136,7 @@
         <?php
         //header("location: https://messbook.com.mx/incidencias/incidencias");
         }
-    echo json_encode(true);
+    //echo json_encode(true);
+
+    }
 ?>

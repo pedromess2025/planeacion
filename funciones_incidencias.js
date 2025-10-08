@@ -142,8 +142,9 @@ function renderizarTabla(selectorTabla, data) {
                 </button>
             `;
         }
+
         fechaActividad  ='';
-        if(solicitud.start_date < Date.now()){
+        if(new Date(solicitud.start_date).getTime() < Date.now()){
             fechaActividad = `<h4 style="color: red; font-weight: bold;">${solicitud.start_date}</h4>`;
         }
         else{

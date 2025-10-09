@@ -143,9 +143,10 @@ function renderizarTabla(selectorTabla, data) {
             `;
         }
 
-        fechaActividad  ='';
-        if(new Date(solicitud.start_date).getTime() < Date.now() && (solicitud.estatus != 'Cerrada' || solicitud.estatus != 'Cancelada')){
-            fechaActividad = `<h6 style="color: red; font-size:8;">${solicitud.start_date}</h6>`;
+        let fechaActividad = '';        
+        const startDate = new Date(solicitud.start_date);
+        if (!isNaN(startDate.getTime()) && startDate.getTime() < Date.now() && (solicitud.estatus != 'Cerrada' && solicitud.estatus != 'Cancelada')) {
+            fechaActividad = `<h6 style="color: red; font-size:15px;">${solicitud.start_date}</h6>`;
         }
         else{
             fechaActividad = solicitud.start_date;

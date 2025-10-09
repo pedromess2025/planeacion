@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html>
 <head>
     <meta charset="utf-8">
@@ -17,11 +16,8 @@
     <link href="https://cdn.datatables.net/responsive/3.0.0/css/responsive.dataTables.min.css" rel="stylesheet" />
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    
 </head>
-
 <body id="page-top">
-
     <!-- Page Wrapper -->
     <div id="wrapper">
         <?php
@@ -114,7 +110,7 @@
                                                         <th>Ingeniero</th>
                                                         <th>Area</th>
                                                         <th>OT</th>
-                                                        <th>Fecha Actividad</th>
+                                                        <th>Fecha Planeada</th>
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>
                                                         <th>Vehiculo</th>
@@ -155,89 +151,92 @@
     <!-- Modal para responder incidencias -->
     <div class="modal fade" id="actualizarActividadModal" tabindex="-1" aria-labelledby="actualizarActividadLabel" aria-hidden="true">
         <div class="modal-dialog">            
-                <div class="modal-content">
-                    <div class="modal-header bg-primary text-white">
-                        <h5 class="modal-title" id="actualizarActividadLabel">Actualizar Actividad</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row card-footer border-left-primary mb-3">
-                            <input type="hidden" class="form-control form-control-sm" id="idActividad" name="idActividad">
-                            <div class="col-sm-9 mb-0">
-                                <label for="slcRespoonsable">Ingeniero</label>
-                                <div id="Divsolicita" name="Divsolicita">
-                                    <select id="slcRespoonsable" name="slcRespoonsable">
-                                        <option value="">Selecciona...</option>
-                                    </select>
-                                </div>
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title" id="actualizarActividadLabel">Actualizar Actividad</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row card-footer border-left-primary mb-3">
+                        <input type="hidden" class="form-control form-control-sm" id="idActividad" name="idActividad">
+                        <div class="col-sm-9 mb-0">
+                            <label for="slcRespoonsable">Ingeniero</label>
+                            <div id="Divsolicita" name="Divsolicita">
+                                <select id="slcRespoonsable" name="slcRespoonsable">
+                                    <option value="">Selecciona...</option>
+                                </select>
                             </div>
-                            <div class="col-sm-3 mb-0">
-                                <label for="slcRespoonsable">Ing.</label>
-                                <div class="input-group">
-                                    <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
-                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
-                                </div>
-                            </div>
-                            <div class="col-sm-12 mb-0">                                
-                                <div id="Divsolicita2" name="Divsolicita2">
-                                    <label for="slcRespoonsable2">Ingeniero 2</label>
-                                    <select id="slcRespoonsable2" name="slcRespoonsable2">
-                                        <option value="">Selecciona...</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-12 mb-0">                                
-                                <div id="Divsolicita3" name="Divsolicita3">
-                                    <label for="slcRespoonsable3">Ingeniero 3</label>
-                                    <select id="slcRespoonsable3" name="slcRespoonsable3">
-                                        <option value="">Selecciona...</option>
-                                    </select>
-                                </div>
-                            </div>  
                         </div>
-
-                        <div class="row card-footer border-left-primary">
-                            <div class="col-sm-6 mb-0">
-                                <label for="txtOT">OT</label>
-                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" placeholder="Ej. EL25-01E-1">
+                        <div class="col-sm-3 mb-0">
+                            <label for="slcRespoonsable">Ing.</label>
+                            <div class="input-group">
+                                <button type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
+                                <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                             </div>
-                            <div class="col-sm-6 mb-0">
-                                <label for="datefechaCierre">Fecha planeada</label>
-                                <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
-                            </div>                            
                         </div>
-
-                        <div class="row card-header border-left-primary">                                           
-                            <div class="col-sm-6">
-                                <label for="slcAutomovil">Automovil</label>
-                                <div id="DivAutomovil" name="DivAutomovil">
-                                    <select id="slcAutomovil" name="slcAutomovil" class="form-select">
-                                        <option value="">Selecciona...</option>
-                                    </select>
-                                </div>
+                        <div class="col-sm-12 mb-0">                                
+                            <div id="Divsolicita2" name="Divsolicita2">
+                                <label for="slcRespoonsable2">Ingeniero 2</label>
+                                <select id="slcRespoonsable2" name="slcRespoonsable2">
+                                    <option value="">Selecciona...</option>
+                                </select>
                             </div>
-                            <div class="col-sm-6">
-                                <label for="slcEstatus">Estatus</label>
-                                <div id="DivEstatus" name="DivEstatus">
-                                    <select id="slcEstatus" name="slcEstatus" class="form-select">
-                                        <option value="">Selecciona...</option>
-                                        <option value="Pendientedeinformacion">Pendiente de información</option>
-                                        <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                        <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
-                                        <option value="Fechareservadasininformación">Fecha reservada sin información</option>
-                                        <option value="Cancelada">Cancelar</option>
-                                        <option value="Cerrada">Cerrar</option>
-                                    </select>
-                                </div>
+                        </div>
+                        <div class="col-sm-12 mb-0">                                
+                            <div id="Divsolicita3" name="Divsolicita3">
+                                <label for="slcRespoonsable3">Ingeniero 3</label>
+                                <select id="slcRespoonsable3" name="slcRespoonsable3">
+                                    <option value="">Selecciona...</option>
+                                </select>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" onclick="ActualizarActividad()">Actualizar</button>
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <div class="row card-footer border-left-primary">
+                        <div class="col-sm-6 mb-0">
+                            <label for="txtOT">OT</label>
+                            <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" placeholder="Ej. EL25-01E-1">
+                        </div>
+                        <div class="col-sm-6 mb-0">
+                            <label for="datefechaCierre">Fecha planeada</label>
+                            <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
+                        </div>                            
+                    </div>
+                    <div class="row card-header border-left-primary">                                           
+                        <div class="col-sm-6">
+                            <label for="slcAutomovil">Automovil</label>
+                            <div id="DivAutomovil" name="DivAutomovil">
+                                <select id="slcAutomovil" name="slcAutomovil" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <label for="slcEstatus">Estatus</label>
+                            <div id="DivEstatus" name="DivEstatus">
+                                <select id="slcEstatus" name="slcEstatus" class="form-select">
+                                    <option value="">Selecciona...</option>
+                                    <option value="Pendientedeinformacion">Pendiente de información</option>
+                                    <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                                    <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                    <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                    <option value="Cancelada">Cancelar</option>
+                                    <option value="Cerrada">Cerrar</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row card-footer border-left-primary">
+                        <div class="col-sm-12">
+                            <label for="txtComment">Comentarios</label>
+                            <textarea class="form-control form-control-sm" id="txtComment" name="txtComment"></textarea>
+                        </div>
                     </div>
                 </div>
-            
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="ActualizarActividad()">Actualizar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
         </div>
     </div>
 </body>
@@ -317,9 +316,6 @@
             // Cargar las ciudades en el select    
             cargarCiudades();
 
-            // Cargar los estatus en el select    
-            //cargarEstatus();
-
             // Inicializar Select2
             $('#filtro-area').select2({
                 placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
@@ -359,7 +355,6 @@
                         select.append(option);
                         
                     });
-
                 },
                 error: function(jqXHR, textStatus, errorThrown) {
                     Swal.fire({
@@ -367,12 +362,11 @@
                         icon: "error",
                         draggable: true
                     });
-
                 }
             });
-
         }
 
+        //FUNCION PARA CONVERTIR TEXTO A MAYUSCULAS Y SIN ACENTOS
         function convertirTexto(e) {
             // Convertir a mayúsculas y quitar acentos
             e.value = e.value
@@ -390,7 +384,6 @@
                 dataType: "json",
                 success: function (respuesta) {
                     var select = $(selectVehiculos);
-                    
                     respuesta.forEach(function (vehiculo) {
                         // Define el color según el valor de vehiculo.usuario
                         let color = "";
@@ -399,12 +392,10 @@
                         } else if(vehiculo.tipo === 'EXTERNO') {
                                 color = "background-color:rgb(186, 201, 255);";
                         }
-
                         var optionOtro = `<option value="Otro">Otro</option>`;
                     select.append(optionOtro);
                     var optionNa = `<option value="N/A">No Aplica</option>`;
                     select.append(optionNa);
-
                         var option = `<option value="${vehiculo.placa}" style="${color}">${vehiculo.modelo} - ${vehiculo.placa} - Usr: ${vehiculo.usuario}</option>`;
                         select.append(option);
                     });

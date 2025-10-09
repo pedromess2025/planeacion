@@ -97,6 +97,7 @@
         $correos .= ',amram@mess.com.mx';
         $correos .= ',sebastian.gutierrez@mess.com.mx';
         $correos .= ',pedro.martinez@mess.com.mx';
+        $correos .= ',hugo.soria@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);
         $mensaje = '';
         

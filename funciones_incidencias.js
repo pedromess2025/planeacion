@@ -144,7 +144,7 @@ function renderizarTabla(selectorTabla, data) {
         }
 
         fechaActividad  ='';
-        if(new Date(solicitud.start_date).getTime() < Date.now()){
+        if(new Date(solicitud.start_date).getTime() < Date.now() && (solicitud.estatus != 'Cerrada' || solicitud.estatus != 'Cancelada')){
             fechaActividad = `<h6 style="color: red; font-size:8;">${solicitud.start_date}</h6>`;
         }
         else{

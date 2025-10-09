@@ -8,6 +8,7 @@ function ActualizarActividad() {
     fechaActividad = $('#datefechaCierre').val();
     idActividad = $('#idActividad').val();
     estatus = $('#slcEstatus').val();
+    comment = $('#txtComment').val();
 
     $.ajax({
         url: 'acciones_solicitud.php',
@@ -22,7 +23,8 @@ function ActualizarActividad() {
             automovil: automovil,
             fechaActividad: fechaActividad,
             idActividad: idActividad,
-            estatus: estatus
+            estatus: estatus,
+            comment: comment
         },
         success: function(data) {
             $('#actualizarActividadModal').modal('hide');
@@ -48,10 +50,8 @@ function ActualizarActividad() {
 
 //FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
 function SolicitudesAbiertas() {
-
     manejarVisibilidadDeTablas("#TSolAbiertas_wrapper");
     obtenerYRenderizarSolicitudes("solicitudesAbiertas", "#TSolAbiertas tbody");
-
 }
 
 // FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE LAS TABLAS
@@ -65,7 +65,6 @@ function manejarVisibilidadDeTablas(tablaAMostrar) {
 
 // FUNCIÓN PARA OBTENER Y RENDERIZAR LAS SOLICITUDES
 function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
-
     var ing = $('#filtro-ingeniero').val();
     var area = $('#filtro-area').val();
     var ciudad = $('#filtro-ciudad').val();
@@ -89,10 +88,9 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
 
 // FUNCIÓN PARA RENDERIZAR LA TABLA
 function renderizarTabla(selectorTabla, data) {
-//    const tabla = $(selectorTabla);
+    //    const tabla = $(selectorTabla);
     var table = $(selectorTabla).closest('table').DataTable();
     table.clear().draw();
-
     data.forEach(function(solicitud) {
         estatus = '';
         if (solicitud.estatus == 'Pendientedeinformacion') {
@@ -113,8 +111,6 @@ function renderizarTabla(selectorTabla, data) {
         if (solicitud.estatus == 'Cerrada') {
             estatus = '<span class="badge text-bg-dark">Cerrada</span>';
         }
-
-
         nombre2 = '';
         nombre3 = '';
         if (solicitud.nombre2 != '') {
@@ -123,7 +119,6 @@ function renderizarTabla(selectorTabla, data) {
         if (solicitud.nombre3 != '') {
             nombre3 = '<br><i class="fas fa-user"></i>' + solicitud.nombre3;
         }
-
         if (solicitud.capturo == 'SI') {
             accion = `
                 <div class="btn-group" role="group">       
@@ -131,7 +126,7 @@ function renderizarTabla(selectorTabla, data) {
                         <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                     </button>         
                     <button id="btnSolicitar" type="button" class="btn btn-success" 
-                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}')">Actualizar
+                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${solicitud.comment}')">Actualizar
                     </button>
                 </div>
                 `;
@@ -142,22 +137,21 @@ function renderizarTabla(selectorTabla, data) {
                 </button>
             `;
         }
-
-        let fechaActividad = '';        
+        let fechaActividad = '';
         const startDate = new Date(solicitud.start_date);
         if (!isNaN(startDate.getTime()) && startDate.getTime() < Date.now() && (solicitud.estatus != 'Cerrada' && solicitud.estatus != 'Cancelada')) {
-            fechaActividad = `<h6 style="color: red; font-size:15px;">${solicitud.start_date}</h6>`;
+            fechaActividad = `<h6 style="color: red; font-size:13px;">${solicitud.start_date}</h6>`;
+        } else {
+            fechaActividad = `<h6 style="color: black; font-size:13px;">${solicitud.start_date}</h6>`;
         }
-        else{
-            fechaActividad = solicitud.start_date;
-        }
-
-
+        // Si no hay datos, mostrar 'S/R'
+        const durationhr = solicitud.durationhr && solicitud.durationhr.trim() !== '' ? solicitud.durationhr : 'S/R';
+        const travelhr = solicitud.travelhr && solicitud.travelhr.trim() !== '' ? solicitud.travelhr : 'S/R';
         var fila = [
             `<i class="fas fa-user"></i>${solicitud.nombre + nombre2 + nombre3}`,
             solicitud.area,
             solicitud.order_code,
-            fechaActividad,
+            fechaActividad + `<h6 style="color: black; font-size:13px;"><i class="fas fa-tools"></i> ${durationhr} hrs` + `<br>` + `<i class="fas fa-car"></i> ${travelhr} hrs</h6>`,
             solicitud.ds_cliente,
             solicitud.city,
             solicitud.vehiculo,
@@ -166,11 +160,10 @@ function renderizarTabla(selectorTabla, data) {
         ];
         table.row.add(fila);
     });
-
     table.draw();
 }
 
-// FUNCION PARA MOSTRAR MENSAJE DE ERROR
+// FUNCION PARA MOSTRAR COMENTARIOS
 function mostrarComentarios(ot, comentario) {
     Swal.fire({
         title: "Comentarios " + ot,
@@ -189,7 +182,7 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus) {
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment) {
     $('#Divsolicita2').show();
     $('#Divsolicita3').show();
 
@@ -202,11 +195,12 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
     $('#datefechaCierre').val(fechaActividad);
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
+    $('#txtComment').val(comment);
 
-    if (ingeniero2 == '0') {
+    if (ingeniero2 == '0' || ingeniero2 == '') {
         $('#Divsolicita2').hide();
     }
-    if (ingeniero3 == '0') {
+    if (ingeniero3 == '0' || ingeniero3 == '') {
         $('#Divsolicita3').hide();
     }
 
@@ -246,7 +240,6 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
         placeholder: "Seleccione...",
         width: '100%'
     });
-
     $('#actualizarActividadModal').modal('show');
 }
 
@@ -301,7 +294,6 @@ function cargarCiudades() {
             respuesta.forEach(function(ciudad) {
                 if (i == 0) {
                     var option = `<option value="">Selecciona...</option>`;
-
                     select.append(option);
                 }
                 var option = `<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`;
@@ -310,7 +302,6 @@ function cargarCiudades() {
             });
         },
         error: function(xhr, status, error) {
-
             Swal.fire({
                 icon: "error",
                 title: "Error",

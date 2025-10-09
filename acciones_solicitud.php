@@ -1,5 +1,4 @@
 <?php
-// Conexion a la base de datos
 include 'conn.php';
 mysqli_set_charset($conn, "utf8");
 $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : null;
@@ -8,8 +7,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {        
         $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
-        $result = $conn->query($sql);
-        
+        $result = $conn->query($sql);        
         $usuarios = array();
         
         while ($row = $result->fetch_assoc()) {
@@ -18,13 +16,10 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
                 'noEmpleado' => $row['id_usuario']            
             );
         }
-        
         // Devolver los eventos en formato JSON
-        
         echo json_encode($usuarios);
         
     }
-
 
 //FUNCION PARA GENERAR LA SOLICITUD
     if($opcion == "generarSolicitud"){
@@ -41,9 +36,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $automovil = $_POST["automovil"];
         $estatus = $_POST["estatus"];
         $comentarios = $_POST["comentarios"];
-        
         $fecha = date('Y-m-d H:i:s');
-        
         $noEmpleado = $noEmpleado_cookie;
 
         $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment)
@@ -54,22 +47,22 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         } else {
             $response = array('status' => 'error', 'message' => 'Error al registrar la incidencia: ' . $conn->error);
         }
-        
         // Devolver la respuesta en formato JSON
         header('Content-Type: application/json');
         echo json_encode($response);
     }
 
+//FUNCION PARA ACTUALIZAR LA ACTIVIDAD
     if($opcion == "actualizarActividad"){
         $ingeniero = $_POST["ingeniero"];
         $ingeniero2 = $_POST["ingeniero2"];
         $ingeniero3 = $_POST["ingeniero3"];
-
         $ot = $_POST["ot"];
         $automovil = $_POST["automovil"];
         $fechaActividad = $_POST["fechaActividad"];
         $idActividad = $_POST["idActividad"];
         $estatus = $_POST["estatus"];
+        $comment = $_POST["comment"];
         
         $sqlUpdate = "UPDATE servicios_planeados_mess 
                         SET engineer = '$ingeniero',
@@ -79,7 +72,8 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
                             order_code = '$ot', 
                             start_date = '$fechaActividad', 
                             vehiculo = '$automovil',
-                            estatus = '$estatus'
+                            estatus = '$estatus',
+                            comment = '$comment'
                         WHERE id = $idActividad";
         //echo $sqlUpdate;
         
@@ -88,16 +82,13 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         } else {
             $response = array('status' => 'error', 'message' => 'Error al actualizar la actividad: ' . $conn->error);
         }
-        
         // Devolver la respuesta en formato JSON
         header('Content-Type: application/json');
         echo json_encode($response);
     }
 
-
-
+//FUNCION PARA MOSTRAR EL INVENTARIO DE VEHICULOS
 if ($opcion == "consultarInventarioGeneral") {
-    
     // Conexion a la base de datos
     include '../ControlVehicular/conn.php';
     $rol = $_COOKIE['rol'] ?? $_COOKIE['rolL'];
@@ -124,10 +115,7 @@ if ($opcion == "consultarInventarioGeneral") {
                             FROM inventario inv
                             WHERE inv.id_usuario != $id_usuario ORDER BY inv.usuario)";
     }
-    
-
     $result = $conn->query($sqlConsultaVehiculosG);
-
     $vehiculos = [];
     if ($result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
@@ -138,12 +126,12 @@ if ($opcion == "consultarInventarioGeneral") {
     $conn->close();
 }
 
+//FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
 if ($opcion == "solicitudesAbiertas") {
-
     $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];        
     $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];        
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
-
+    $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // Consulta base
@@ -153,8 +141,8 @@ if ($opcion == "solicitudesAbiertas") {
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
             WHERE ot.start_date >= ?"; // 1=Programada, 2=En Proceso, 3=Completada, 4=Cancelada    
-            
-        
+
+        // --- 1. Inicialización de arrays para cláusulas WHERE y parámetros ---
         $whereClauses = [];
         $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.
         $param_types = "s";       // String para los tipos de los parámetros (s = string);
@@ -187,7 +175,6 @@ if ($opcion == "solicitudesAbiertas") {
         if (!empty($ingeniero)) {
             $count = count($ingeniero);
             $placeholders = implode(',', array_fill(0, $count, '?'));
-            
             $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
 
             // Añadir la lista de ingenieros al array de parámetros TRES VECES (Correcto para los 3 IN)
@@ -215,7 +202,6 @@ if ($opcion == "solicitudesAbiertas") {
         if (!empty($whereClauses)) {
             $sql .= " AND " . implode(' AND ', $whereClauses);
         }
-            
         $sql .= " GROUP BY ot.id
             ORDER BY ot.id DESC";
 
@@ -223,7 +209,6 @@ if ($opcion == "solicitudesAbiertas") {
         if ($stmt = $conn->prepare($sql)) {
             // Enlazar los parámetros dinámicamente        
             $stmt->bind_param($param_types, ...$params);
-
             $stmt->execute();
             $result = $stmt->get_result();
 
@@ -236,14 +221,13 @@ if ($opcion == "solicitudesAbiertas") {
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
             }
-
             $stmt->close();
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
         }
-
 }
 
+//FUNCION PARA MOSTRAR LAS CIUDADES
 if($opcion == "consultarCiudades"){
     $sql = "SELECT * FROM ciudades_mexico ORDER BY estado, ciudad";
     $result = $conn->query($sql);
@@ -256,6 +240,4 @@ if($opcion == "consultarCiudades"){
     echo json_encode($ciudades);
     $conn->close();
 }
-
-
 ?>  

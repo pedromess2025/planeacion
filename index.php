@@ -69,7 +69,7 @@
                                     </div>
                                     <form id="formPlaneacion" name="formPlaneacion">
                                         <div class="row">
-                                            <div class="col-sm-6 mb-0">
+                                            <div class="col-sm-4 mb-0">
                                                 <label for="slcRespoonsable">Ingeniero</label>
                                                 <div id="Divsolicita" name="Divsolicita">
                                                     <select id="slcRespoonsable" name="slcRespoonsable">
@@ -87,7 +87,7 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-2 mb-0">
+                                            <div class="col-sm-4 mb-0">
                                                 <label for="btnAgregar">+ Ing.</label>
                                                 <div class="input-group">
                                                     <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>

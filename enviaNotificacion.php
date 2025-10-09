@@ -8,13 +8,13 @@
     require("PHPMailer-master/src/SMTP.php");
         
     
-    $sqlCorreo = "SELECT s.*, u.nombre, u.correo
-                FROM servicios_planeados_mess s
-                INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
-                WHERE 
-                    s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
-                    s.start_date 
-                    BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY)";
+        $sqlCorreo = "SELECT s.*, u.nombre, u.correo
+                    FROM servicios_planeados_mess s
+                    INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
+                    WHERE 
+                        s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
+                        s.start_date 
+                        BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY) GROUP BY s.capturado_por";
                     
     $resCorreo = $conn->query($sqlCorreo);
     

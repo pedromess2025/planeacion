@@ -119,20 +119,22 @@ function renderizarTabla(selectorTabla, data) {
         if (solicitud.nombre3 != '') {
             nombre3 = '<br><i class="fas fa-user"></i>' + solicitud.nombre3;
         }
+
+        const comentarioLimpio = escapeForHtmlAttribute(solicitud.comment);
         if (solicitud.capturo == 'SI') {
             accion = `
                 <div class="btn-group" role="group">       
-                    <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
+                    <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                         <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                     </button>         
                     <button id="btnSolicitar" type="button" class="btn btn-success" 
-                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${solicitud.comment}')">Actualizar
+                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}')">Actualizar
                     </button>
                 </div>
                 `;
         } else {
             accion = `
-                <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${solicitud.comment}')">
+                <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                     <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                 </button>
             `;
@@ -162,6 +164,17 @@ function renderizarTabla(selectorTabla, data) {
     });
     table.draw();
 }
+
+function escapeForHtmlAttribute(text) {
+    if (!text) return '';
+    // 1. Replace all single quotes with an escaped version \'
+    // 2. Replace all double quotes with an escaped version \"
+    // 3. Replace all line breaks (\n or \r) with spaces or escape sequences
+    return text.toString()
+        .replace(/'/g, "\\'")     // Escape single quotes
+        .replace(/"/g, '\"')      // Escape double quotes (optional, but good practice)
+        .replace(/(\r\n|\n|\r)/g, ' '); // Replace line breaks with a single space
+}   
 
 // FUNCION PARA MOSTRAR COMENTARIOS
 function mostrarComentarios(ot, comentario) {

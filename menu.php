@@ -52,7 +52,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 <li class="nav-item">
     <a class="nav-link" href="seguimiento_actividades">
         <i class="fas fa-fw fa-home"></i>
-        <span>Seguimiento activiades</span>
+        <span>Seguimiento actividades</span>
     </a>
 </li>
 

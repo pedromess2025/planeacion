@@ -40,7 +40,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 ?>
     <li class="nav-item">
     <a class="nav-link" href="index">
-        <i class="fas fa-fw fa-check"></i>
+        <i class="fas fa-fw fa-check text-gray-400"></i>
         <span>Registrar actividad</span>
     </a>
 </li>
@@ -51,29 +51,36 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 
 <li class="nav-item">
     <a class="nav-link" href="seguimiento_actividades">
-        <i class="fas fa-fw fa-home"></i>
+        <i class="fas fa-fw fa-home text-gray-400"></i>
         <span>Seguimiento actividades</span>
     </a>
 </li>
 
 <li class="nav-item">
     <a class="nav-link" href="verActividadesPlaneadas">
-        <i class="fas fa-fw fa-calendar"></i>
+        <i class="fas fa-fw fa-calendar text-gray-400"></i>
         <span>Actividades planeadas</span>
     </a>
 </li>
 
 <li class="nav-item">
     <a class="nav-link" href="verActividades">
-        <i class="fas fa-fw fa-calendar"></i>
+        <i class="fas fa-fw fa-calendar text-gray-400"></i>
         <span>Actividades planeadas SCOT</span>
     </a>
 </li>
 
 <li class="nav-item">
     <a class="nav-link" href="Manual Planeacion.pdf" target="_blank">
-        <i class="fas fa-fw fa-book"></i>
+        <i class="fas fa-fw fa-book text-gray-400"></i>
         <span>Manual de usuario</span>
+    </a>
+</li>
+
+<li class = "nav-item">
+    <a class = "nav-link" href = "#" data-toggle = "modal" data-target = "#logoutModalN">
+        <i class = "fas fa-sign-out-alt text-gray-100"></i>
+        Salir
     </a>
 </li>
 

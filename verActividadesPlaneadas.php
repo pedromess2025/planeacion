@@ -412,6 +412,13 @@
                             estatus = '';
                             nombre2 = '';
                             nombre3 = '';
+                            if(actividad.engineer2 != null && actividad.engineer2 != '0'){
+                                nombre2 = '<i class="fas fa-user"></i> <b>' + actividad.nombre2 + '</b>\n';
+                            }
+                            if(actividad.engineer2 != null && actividad.engineer2 != '0'){
+                                nombre3 = '<i class="fas fa-user"></i> <b>' + actividad.nombre3 + '</b>\n';
+                            }
+
                             if(actividad.estatus == 'Pendientedeinformacion'){
                                 estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
                             }

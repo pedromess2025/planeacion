@@ -239,6 +239,34 @@
             </div>
         </div>
     </div>
+    <!-- Modal para responder solicitud logistica -->
+    <div class="modal fade" id="responderSolicitudLogisticaModal" tabindex="-1" aria-labelledby="solicitudApoyoLogisticaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">            
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white py-2">
+                    <h5 id="solicitudApoyoLogisticaLabel">Solicitud de Apoyo Logística</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row card-footer mb-3">
+                        <input type="hidden" class="form-control form-control-sm" id="idActividadLogistica" name="idActividadLogistica">
+                        <input type="hidden" class="form-control form-control-sm" id="accionLogistica" name="accionLogistica">
+                        <br>
+                        <span id="estado-badge" class="badge text-bg-secondary"></span>
+                        <hr>
+                        <div class="col-sm-12 mb-0">
+                            <label for="txtCommentLogistica">Comentarios</label>
+                            <textarea class="form-control form-control-sm" id="txtCommentLogistica" name="txtCommentLogistica" placeholder="--"></textarea>
+                        </div>                        
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="enviarRespuestaLogistica()">Enviar Solicitud</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
     <!-- Bootstrap core JavaScript
     <script src = "vendor/jquery/jquery.min.js"></script>-->

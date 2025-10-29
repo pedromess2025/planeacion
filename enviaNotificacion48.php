@@ -65,7 +65,7 @@
 </head>
 <body>
     <div class="header">
-        Aviso de Nuevo incidencia registrada
+        Aviso de actividad no actualizada
     </div>
         
     <center>
@@ -94,8 +94,6 @@
     //Envío de correo
     
         $correos = $correoResponsable;         
-        $correos .= ',amram@mess.com.mx';
-        $correos .= ',sebastian.gutierrez@mess.com.mx';
         $correos .= ',pedro.martinez@mess.com.mx';
         $correos .= ',hugo.soria@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);

@@ -14,7 +14,7 @@
                     WHERE 
                         s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
                         s.start_date 
-                        BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY) GROUP BY s.capturado_por";
+                        BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 2 DAY) GROUP BY s.capturado_por";
                     
     $resCorreo = $conn->query($sqlCorreo);
     
@@ -94,6 +94,8 @@
     //Envío de correo
     
         $correos = $correoResponsable;         
+        $correos .= ',amram@mess.com.mx';
+        $correos .= ',sebastian.gutierrez@mess.com.mx';
         $correos .= ',pedro.martinez@mess.com.mx';
         $correos .= ',hugo.soria@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);

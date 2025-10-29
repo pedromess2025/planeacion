@@ -92,6 +92,8 @@ function renderizarTabla(selectorTabla, data) {
     var table = $(selectorTabla).closest('table').DataTable();
     table.clear().draw();
     data.forEach(function(solicitud) {
+
+        // Determinar el estatus con su respectivo badge
         estatus = '';
         if (solicitud.estatus == 'Pendientedeinformacion') {
             estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
@@ -111,6 +113,9 @@ function renderizarTabla(selectorTabla, data) {
         if (solicitud.estatus == 'Cerrada') {
             estatus = '<span class="badge text-bg-dark">Cerrada</span>';
         }
+
+
+        // Construir el nombre completo con íconos
         nombre2 = '';
         nombre3 = '';
         if (solicitud.nombre2 != '') {
@@ -120,25 +125,79 @@ function renderizarTabla(selectorTabla, data) {
             nombre3 = '<br><i class="fas fa-user"></i>' + solicitud.nombre3;
         }
 
+        //Limpiar comentarios
         const comentarioLimpio = escapeForHtmlAttribute(solicitud.comment);
-        if (solicitud.capturo == 'SI') {
-            accion = `
-                <div class="btn-group" role="group">       
+        const comentarioLimpioLogistico = escapeForHtmlAttribute(solicitud.comment_logistic);
+        //verifica solicitud de logistica      
+        var estatusLogistica = '';      
+        if(solicitud.estatus_logistic === 'Solicitado'){
+            if (solicitud.capturo === 'SI'){
+                estatusLogistica = `
+                        <button type="button" class="btn btn-warning" onclick="responderSolicitudLogistica('${solicitud.id}')">
+                            <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                        </button>
+                `;
+            }else{
+                estatusLogistica = `
+                        <button type="button" class="btn btn-warning">
+                            <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                        </button>
+                `;
+            }
+        }else{
+            if(solicitud.estatus_logistic === 'aceptada'){
+                var estatusLogistica = `
+                            <button type="button" class="btn btn-success" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
+                                <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                            </button>`;
+            }else if(solicitud.estatus_logistic === 'rechazada'){
+                var estatusLogistica = `
+                            <button type="button" class="btn btn-danger" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
+                                <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                            </button>`;
+            }
+        }
+        // Determinar las acciones disponibles de acuer
+        var accion = '';
+        var noEmpleado = getCookie('noEmpleado');
+        if (solicitud.capturo === 'SI'){
+            
+                accion = `
+                    <div class="btn-group" role="group">       
+                        <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                            <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
+                        </button>
+                        <button id="btnSolicitar" type="button" class="btn btn-primary" 
+                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        ${estatusLogistica}
+                    </div>
+                    `;
+            
+            
+        } else {
+            if(['42', '276', '290', '183'].includes(noEmpleado)) {
+                accion = `
+                    <div class="btn-group" role="group">       
+                        <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                            <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
+                        </button>
+                        ${estatusLogistica}
+                    </div>
+                    `;
+            }else{
+                accion = `
                     <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                         <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
-                    </button>         
-                    <button id="btnSolicitar" type="button" class="btn btn-success" 
-                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}')">Actualizar
                     </button>
-                </div>
                 `;
-        } else {
-            accion = `
-                <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
-                    <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
-                </button>
-            `;
+            }
         }
+
+        
+
+
         let fechaActividad = '';
         const startDate = new Date(solicitud.start_date);
         if (!isNaN(startDate.getTime()) && startDate.getTime() < Date.now() && (solicitud.estatus != 'Cerrada' && solicitud.estatus != 'Cancelada')) {
@@ -179,6 +238,7 @@ function escapeForHtmlAttribute(text) {
 // FUNCION PARA MOSTRAR COMENTARIOS
 function mostrarComentarios(ot, comentario) {
     Swal.fire({
+        icon: "info",
         title: "Comentarios " + ot,
         text: comentario,
         draggable: true
@@ -351,6 +411,88 @@ function cargarEstatus() {
                 title: "Error",
                 text: "Hubo un problema al cargar los datos.",
                 confirmButtonText: "Aceptar"
+            });
+        }
+    });
+}
+
+// FUNCION PARA RESPONDER LA SOLICITUD DE LOGISTICA
+function responderSolicitudLogistica(idActividad) {
+
+    Swal.fire({
+        icon: "question",
+        title: "¿Confirmas que deseas aceptar esta solicitud de apoyo?",
+        showDenyButton: true,
+        showCancelButton: false,
+        denyButtonText: "Rechazar",
+        confirmButtonText: "Aceptar",             
+    }).then((result) => {
+        // Al usar result.isConfirmed o result.isDenied, ya sabemos la acción.
+        if (result.isConfirmed) {            
+            modalSolicitarApoyoLogistica(idActividad, 'aceptada'); 
+        } else if (result.isDenied) {
+            modalSolicitarApoyoLogistica(idActividad, 'rechazada');
+        }
+    });
+}
+
+function modalSolicitarApoyoLogistica(idActividad, accion) {
+    $('#idActividadLogistica').val(idActividad);
+    $('#accionLogistica').val(accion);
+    
+    if (accion === 'aceptada') {          
+        actualizarInsigniaJQuery('Solicitud Aceptada', 'text-bg-success');
+        $('#txtCommentLogistica').attr('placeholder', 'Por favor indica los horarios de salida para que se pueda coordinar el apoyo');
+    } else if (accion === 'rechazada') {     
+        actualizarInsigniaJQuery('Solicitud Rechazada', 'text-bg-danger');
+        $('#txtCommentLogistica').attr('placeholder', 'Por favor indica el motivo del rechazo de la solicitud');
+    }
+
+    $('#responderSolicitudLogisticaModal').modal('show');
+}
+
+function actualizarInsigniaJQuery(nuevoTexto, nuevaClaseBootstrap) {
+    const $insignia = $('#estado-badge');
+    
+    $insignia.removeClass(function(index, className) {
+        return (className.match(/\btext-bg-\S+/g) || []).join(' ');
+    });
+    
+    $insignia.addClass(nuevaClaseBootstrap);
+    $insignia.text(nuevoTexto);
+}
+
+function enviarRespuestaLogistica() {
+    var idActividad = $('#idActividadLogistica').val();
+    var accion = $('#accionLogistica').val();
+    var commentLogistica = $('#txtCommentLogistica').val(); 
+    $.ajax({
+        url: 'acciones_solicitud.php',
+        method: 'POST',
+        dataType: 'json',
+        data: {
+            opcion: 'responderSolicitudLogistica',
+            idActividad: idActividad,
+            accion: accion,
+            commentLogistica: commentLogistica
+        },
+        success: function(data) {
+            $('#responderSolicitudLogisticaModal').modal('hide');   
+            Swal.fire({
+                title: "Respuesta enviada con éxito!",
+                icon: "success",
+                draggable: true
+            }).then(() => {
+                // Recargar la tabla de solicitudes abiertas
+                SolicitudesAbiertas();
+            });
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            $('#responderSolicitudLogisticaModal').modal('hide');
+            Swal.fire({
+                title: "La respuesta no se pudo enviar!",
+                icon: "error",
+                draggable: true
             });
         }
     });

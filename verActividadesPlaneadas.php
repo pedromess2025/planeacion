@@ -363,6 +363,26 @@
             });
         }
 
+        //Funcion para solicitar apoyo logístico
+        function solicitarApoyo(order_code) {
+            
+            Swal.fire({
+                icon: "question",
+                title: "¿Deseas generar una solicitud de apoyo?",
+                showDenyButton: true,
+                showCancelButton: false,
+                DenyButtonText: "No solicitar",
+                confirmButtonText: "Solicitar"                
+            }).then((result) => {
+                /* Read more about isConfirmed, isDenied below */
+                if (result.isConfirmed) {
+                    //Swal.fire("Saved!", "", "success");
+                    generarSolicitudLogistica(order_code);
+                } else if (result.isDenied) {
+                    Swal.fire("No se realizó ninguna solicitud.", "", "info");
+                }
+            });
+        }
 
         //Funcion para Enviar los datos
         function filtrar() {
@@ -389,24 +409,24 @@
                             areaOT = actividad.area;
 
                             switch (areaOT) {
-                                case 'ALTA EXACITUD': colorEvento = '#7a5c00'; break;    // Alta Exactitud
+                                case 'ALTA EXACITUD': colorEvento = '#534008ff'; break;    // Alta Exactitud
                                 case 'CALIBRACIONES': colorEvento = '#804600'; break;    // Calibraciones
-                                case 'DIMENSIONAL': colorEvento = '#6b102e'; break;      // Dimensional
+                                case 'DIMENSIONAL': colorEvento = '#570520ff'; break;      // Dimensional
                                 case 'SFG': colorEvento = '#011c51'; break;              // SFG
                                 case 'MITUTOYO': colorEvento = '#3e0d44'; break;         // Mitutoyo
                                 case 'DUREZA': colorEvento = '#232d33'; break;           // Dureza
                                 case 'MANTENIMIENTO': colorEvento = '#3a241c'; break;    // Mantenimiento
-                                case 'ELECTRICA': colorEvento = '#6b5c00'; break;        // Electrica
+                                case 'ELECTRICA': colorEvento = '#bfa70cff'; break;        // Electrica
                                 case 'TEMPERATURA': colorEvento = '#0b3557'; break;      // Temperatura
                                 case 'PRESION': colorEvento = '#005900'; break;          // Presion
                                 case 'APLICACIONES': colorEvento = '#27143f'; break;     // APP Aplicaciones
                                 case 'MT': colorEvento = '#004d53'; break;               // MT
                                 case 'MTS': colorEvento = '#3d4f1a'; break;              // MTS
                                 case 'ZEISS': colorEvento = '#10491d'; break;            // Zeiss
-                                case 'MASA': colorEvento = '#6b4a3c'; break;             // Masa
+                                case 'MASA': colorEvento = '#ad4011ff'; break;             // Masa
                                 case 'FUERZA': colorEvento = '#4a5b3a'; break;           // Fuerza
                                 case 'PAR TORSIONAL': colorEvento = '#00413c'; break;    // Par Torsional
-                                default: colorEvento = '#e69a30ff';                        // Azul por defecto oscuro
+                                default: colorEvento = '#958007ff';                        // Azul por defecto oscuro
                             }
                             
                             estatus = '';
@@ -438,6 +458,41 @@
                                 estatus = '<span class="badge text-bg-dark">Cerrada</span>';
                             }
 
+                            //Opcion para logistica VICKY
+                            var noEmpleado = getCookie('noEmpleado');
+                            var estatusLogistica = actividad.estatus_logistic;
+                            var solicitudLog = '';
+                            if(noEmpleado == '42' || noEmpleado == '276' || noEmpleado == '290' || noEmpleado == '183'){
+                                if(estatusLogistica == 'Solicitado'){
+                                    solicitudLog = `<button type="button" class="btn btn-warning" style="padding:2px; font-size:10px; height:24px; width:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px;">
+                                                        <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                                                    </button>`;
+                                }
+                                else{
+                                    if(estatusLogistica == 'Aceptado'){
+                                        solicitudLog = `<button type="button" class="btn btn-success")" style="padding:2px; font-size:10px; height:24px; width:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px;">
+                                                    <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                                                </button>`;
+                                    }
+                                    else{
+                                        if(estatusLogistica=='Rechazado'){
+                                            solicitudLog = `<button type="button" class="btn btn-danger" style="padding:2px; font-size:10px; height:24px; width:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px;">
+                                                    <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                                                </button>`;
+                                        }
+                                        else {
+                                            solicitudLog = `<button type="button" class="btn btn-logistica" onclick="solicitarApoyo('${actividad.id}')" style="padding:2px; font-size:10px; height:24px; width:24px; display:inline-flex; align-items:center; justify-content:center; border-radius:4px;">
+                                                    <i class="fas fa-hand-paper" style="font-size:12px;"></i>
+                                                </button>`;
+                                        }   
+                                    }
+                                    
+                                }
+                            }else{
+                                solicitudLog = '';
+                            }
+
+
                             // Construir la descripción con todos los campos
                             var descripcionCompleta = 
                                 '<i class="fas fa-user"></i> <b>' + actividad.nombre + '</b>\n' +
@@ -447,7 +502,7 @@
                                 'OT: ' + actividad.order_code + '\n' +
                                 'Cliente: ' + (actividad.ds_cliente || '') + '\n'+
                                 'Ciudad: ' + (actividad.city || '') + '\n'+
-                                estatus+'\n' +
+                                solicitudLog +'  '+ estatus+'\n' +
                                 '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:black; border-style:solid;">';
 
                             eventos.push({
@@ -505,6 +560,60 @@
                 });
                 calendar.render();
             }
+        }
+
+        function generarSolicitudLogistica(order_code) {
+            $.ajax({
+                    url: 'acciones_solicitud.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        opcion: 'solicitudApoyoLogistica',
+                        order_code: order_code
+                    },
+                    success: function(data) {
+                        $('#actualizarActividadModal').modal('hide');
+                        Swal.fire({
+                            title: "Solicitud generada con éxito!",
+                            icon: "success",
+                            draggable: true
+                        }).then(() => {
+                            // Recargar calendario
+                            filtrar();
+                            enviaNotificacion(order_code);
+                        });
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        $('#responderIncidenciaModal').modal('hide');
+                        Swal.fire({
+                            title: "La solicitud no se pudo generar!",
+                            icon: "error",
+                            draggable: true
+                        });
+                    }
+                });
+        }
+        function enviaNotificacion(servicio) {
+            $.ajax({
+                url: 'enviaNotificacionLog.php', // La URL del script PHP que obtendra los datos
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    servicio: servicio
+                },
+                success: function(data) {
+                    
+                },
+                error: function(jqXHR, textStatus, errorThrown) {                    
+
+                }
+            });
+        }
+        //FUNCION PARA OBTENER EL VALOR DE LA COOKIE
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
         }
     </script>
 </body>

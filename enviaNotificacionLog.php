@@ -1,26 +1,24 @@
 <?php
     include 'conn.php';
+    $servicio =$_POST['servicio'];
+    $sql = "SELECT u.correo FROM servicios_planeados_mess s
+INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
+WHERE s.id = '$servicio'";
+    $result = $conn->query($sql);
+    $correo = [];
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $correo = $row['correo'];
+        }
+    }
 
     header('Content-Type: text/html; charset=utf-8');
-    $deAsunto="Actividades por vencer - MESS";
+    $deAsunto="Solicitud de apoyo - Logistica MESS";
 
     require("PHPMailer-master/src/PHPMailer.php");
     require("PHPMailer-master/src/SMTP.php");
         
-    
-        $sqlCorreo = "SELECT s.*, u.nombre, u.correo
-                    FROM servicios_planeados_mess s
-                    INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
-                    WHERE 
-                        s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
-                        s.start_date 
-                        BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY) GROUP BY s.capturado_por";
-                    
-    $resCorreo = $conn->query($sqlCorreo);
-    
-        while ($rowCorreo = $resCorreo->fetch_assoc()) {
-                $correoResponsable = $rowCorreo["correo"];
-                $nombreResponsable = $rowCorreo["nombre"];
+
     $mail = new PHPMailer\PHPMailer\PHPMailer();
     
     $mail->IsSMTP();
@@ -38,7 +36,7 @@
     $mail->Password = "hglidvwsxcbbefhe";////CONTRASENIA DE APLICACION GENERADA DESDE CONSOLA DE GOOGLE
     
     
-    $mail->SetFrom("mess.metrologia@gmail.com", "Actividades sin confirmar");//////////PONER CUENTA GMAIL
+    $mail->SetFrom("mess.metrologia@gmail.com", "Solicitud de apoyo, logistica");//////////PONER CUENTA GMAIL
     $mail->Subject = $deAsunto;
     $mail->Body = ' 
 <html lang="es">
@@ -65,13 +63,13 @@
 </head>
 <body>
     <div class="header">
-        Aviso de actividad no actualizada
+        Solicitud de apoyo - Log&iacute;stica MESS
     </div>
         
     <center>
     <h2>
-        '.utf8_decode($nombreResponsable).' tienes actividades con fecha por vencer y necesitan informaci&oacute;n por confirmar.<br>
-        <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento.</b><br>
+        Logisitica solicita apoyo para entrega/recoleccion.<br>
+        <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento a la solicitud.</b><br>
         <a href="https://messbook.com.mx/loginMaster" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
@@ -93,9 +91,8 @@
 
     //Envío de correo
     
-        $correos = $correoResponsable;         
+        $correos = $correo;         
         $correos .= ',pedro.martinez@mess.com.mx';
-        $correos .= ',hugo.soria@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);
         $mensaje = '';
         
@@ -137,5 +134,5 @@
         }
     //echo json_encode(true);
 
-    }
+    
 ?>

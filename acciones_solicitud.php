@@ -135,7 +135,8 @@ if ($opcion == "solicitudesAbiertas") {
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // Consulta base
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
+                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
@@ -239,5 +240,41 @@ if($opcion == "consultarCiudades"){
     }
     echo json_encode($ciudades);
     $conn->close();
+}
+
+if ($opcion == "solicitudApoyoLogistica") {
+    $order_code = $_POST["order_code"];
+    $sql = "UPDATE servicios_planeados_mess 
+            SET estatus_logistic = 'Solicitado'
+            WHERE id = $order_code";
+
+    if ($conn->query($sql) === TRUE) {  
+        $solicitud = array('status' => 'success', 'message' => 'Solicitud de apoyo logístico enviada con éxito.');
+    } else {
+        $solicitud = array('status' => 'error', 'message' => 'Error al enviar la solicitud de apoyo logístico: ' . $conn->error);
+    }
+    echo json_encode($solicitud);
+    $conn->close();
+}
+
+
+if($opcion == "responderSolicitudLogistica"){
+    $idActividad = $_POST["idActividad"];
+    $comentarioLogistica = $_POST["commentLogistica"];
+    $estatus = $_POST["accion"]; // 'aceptada' o 'rechazada'
+    
+    $sqlUpdate = "UPDATE servicios_planeados_mess 
+                    SET comment_logistic = '$comentarioLogistica',
+                        estatus_logistic = '$estatus'
+                    WHERE id = $idActividad";
+    
+    if ($conn->query($sqlUpdate) === TRUE) {
+        $response = array('status' => 'success', 'message' => 'Comentario guardado con éxito.');
+    } else {
+        $response = array('status' => 'error', 'message' => 'Error al guardar el comentario: ' . $conn->error);
+    }
+    // Devolver la respuesta en formato JSON
+    header('Content-Type: application/json');
+    echo json_encode($response);
 }
 ?>  

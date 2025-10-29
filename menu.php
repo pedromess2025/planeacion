@@ -10,6 +10,11 @@
         background-color: #ff7300ff !important;
         color: #ffffffff !important;
     }
+    .btn-logistica{
+        --bs-bg-opacity: 1;
+        background-color: #bf00ffff !important;
+        color: #ffffffff !important;
+    }
 </style>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>

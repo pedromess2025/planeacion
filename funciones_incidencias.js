@@ -485,6 +485,7 @@ function enviarRespuestaLogistica() {
             }).then(() => {
                 // Recargar la tabla de solicitudes abiertas
                 SolicitudesAbiertas();
+                enviaNotificacionResp(idActividad, commentLogistica, accion);
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -494,6 +495,25 @@ function enviarRespuestaLogistica() {
                 icon: "error",
                 draggable: true
             });
+        }
+    });
+}
+
+function enviaNotificacionResp(idActividad, commentLogistica, accion) {
+    $.ajax({
+        url: 'enviaNotificacionLogResp.php', // La URL del script PHP que obtendra los datos
+        method: 'POST',
+        dataType: 'json',
+        data: {
+            servicio: idActividad,
+            commentLogistica: commentLogistica,
+            accion: accion
+        },
+        success: function(data) {
+            
+        },
+        error: function(jqXHR, textStatus, errorThrown) {                    
+
         }
     });
 }

@@ -1,7 +1,7 @@
 <?php
     include 'conn.php';
     $servicio =$_POST['servicio'];
-    $sql = "SELECT u.correo, s.order_code FROM servicios_planeados_mess s
+    $sql = "SELECT u.correo, s.order_code, s.city, s.ds_cliente FROM servicios_planeados_mess s
 INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
 WHERE s.id = '$servicio'";
     $result = $conn->query($sql);
@@ -70,8 +70,13 @@ WHERE s.id = '$servicio'";
     <center>
     <h2>
         Logisitica solicita apoyo para entrega/recoleccion.<br>
+        <b>Servicio</b>'.utf8_decode($orderCode).'<br><br>
+        <b>Detalles del servicio: </b><br>
+        Ciudad: '.utf8_decode($row['city']).'<br>
+        Cliente: '.utf8_decode($row['ds_cliente']).'<br><br>
+
         <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento a la solicitud.</b><br>
-        
+
         <a href="https://messbook.com.mx/loginMaster" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>

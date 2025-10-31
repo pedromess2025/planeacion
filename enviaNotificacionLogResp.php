@@ -77,7 +77,7 @@ WHERE s.id = '$servicio'";
         <b>Acci&oacute;n realizada: </b>'.utf8_decode($accion).'<br><br>
         <b>Comentario de Log&iacute;stica: </b>'.utf8_decode($commentLogistica).'<br><br>
         <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento a la solicitud.</b><br>
-        <a href="https://messbook.com.mx/loginMaster/planeacion" class="btn btn-outline-primary btn-block">
+        <a href="https://messbook.com.mx/planeacion" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
     </h2>

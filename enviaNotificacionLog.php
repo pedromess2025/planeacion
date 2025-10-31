@@ -77,7 +77,7 @@ WHERE s.id = '$servicio'";
 
         <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento a la solicitud.</b><br>
 
-        <a href="https://messbook.com.mx/loginMaster" class="btn btn-outline-primary btn-block">
+        <a href="https://messbook.com.mx/planeacion" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
     </h2>

@@ -34,7 +34,7 @@ function ActualizarActividad() {
                 draggable: true
             }).then(() => {
                 // Recargar la tabla de solicitudes abiertas
-                SolicitudesAbiertas();                
+                SolicitudesLogistica();
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -49,9 +49,9 @@ function ActualizarActividad() {
 }
 
 //FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
-function SolicitudesAbiertas() {
+function SolicitudesLogistica() {
     manejarVisibilidadDeTablas("#TSolAbiertas_wrapper");
-    obtenerYRenderizarSolicitudes("solicitudesAbiertas", "#TSolAbiertas tbody");
+    obtenerYRenderizarSolicitudes("SolicitudesLogistica", "#TSolAbiertas tbody");
 }
 
 // FUNCIÓN PARA MANEJAR LA VISIBILIDAD DE LAS TABLAS
@@ -167,10 +167,6 @@ function renderizarTabla(selectorTabla, data) {
                         <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
-                        <button id="btnSolicitar" type="button" class="btn btn-primary" 
-                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}')">
-                            <i class="fas fa-edit"></i>
-                        </button>
                         ${estatusLogistica}
                     </div>
                     `;
@@ -252,68 +248,6 @@ function mostrarMensajeDeError() {
         icon: "error",
         draggable: true
     });
-}
-
-//FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment) {
-    $('#Divsolicita2').show();
-    $('#Divsolicita3').show();
-
-    $('#slcRespoonsable').val(ingeniero);
-    $('#slcRespoonsable2').val(ingeniero2);
-    $('#slcRespoonsable3').val(ingeniero3);
-
-    $('#txtOT').val(ot);
-    $('#slcAutomovil').val(vehiculo);
-    $('#datefechaCierre').val(fechaActividad);
-    $('#idActividad').val(idActividad);
-    $('#slcEstatus').val(estatus);
-    $('#txtComment').val(comment);
-
-    if (ingeniero2 == '0' || ingeniero2 == '') {
-        $('#Divsolicita2').hide();
-    }
-    if (ingeniero3 == '0' || ingeniero3 == '') {
-        $('#Divsolicita3').hide();
-    }
-
-    // Inicializa Select2 en el campo de responsable
-    $('#slcRespoonsable').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcRespoonsable2').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcRespoonsable3').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcAreas').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcCiudad').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcAutomovil').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#slcEstatus').select2({
-        dropdownParent: $('#actualizarActividadModal'),
-        placeholder: "Seleccione...",
-        width: '100%'
-    });
-    $('#actualizarActividadModal').modal('show');
 }
 
 //FUNCION PARA OBTENER EL VALOR DE LA COOKIE
@@ -484,7 +418,8 @@ function enviarRespuestaLogistica() {
                 draggable: true
             }).then(() => {
                 // Recargar la tabla de solicitudes abiertas
-                SolicitudesAbiertas();                
+                
+                SolicitudesLogistica();
                 enviaNotificacionResp(idActividad, commentLogistica, accion);
             });
         },

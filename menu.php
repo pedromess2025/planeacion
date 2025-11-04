@@ -56,8 +56,15 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 
 <li class="nav-item">
     <a class="nav-link" href="seguimiento_actividades">
-        <i class="fas fa-fw fa-home text-gray-400"></i>
+        <i class="fas fa-fw fa-list text-gray-400"></i>
         <span>Seguimiento actividades</span>
+    </a>
+</li>
+
+<li class="nav-item">
+    <a class="nav-link" href="sol_logistica">
+        <i class="fas fa-fw fa-car text-gray-400"></i>
+        <span>Solicitudes Logistica</span>
     </a>
 </li>
 

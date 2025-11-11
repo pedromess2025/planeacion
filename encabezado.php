@@ -12,13 +12,6 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-
-
-<div class = "topbar-divider d-none d-sm-block">
-    <div class="col-xl-4 mb-0" style="text-align: center">
-        <img class="sidebar-card-illustration" src="img/MESS_05_Imagotipo_1.png" width="160">
-    </div>
-</div>
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->

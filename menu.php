@@ -60,14 +60,14 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Seguimiento actividades</span>
     </a>
 </li>
-
+<hr>
 <li class="nav-item">
     <a class="nav-link" href="sol_logistica">
         <i class="fas fa-fw fa-car text-gray-400"></i>
         <span>Solicitudes Logistica</span>
     </a>
 </li>
-
+<hr>
 <li class="nav-item">
     <a class="nav-link" href="verActividadesPlaneadas">
         <i class="fas fa-fw fa-calendar text-gray-400"></i>
@@ -81,7 +81,14 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Actividades planeadas SCOT</span>
     </a>
 </li>
-
+<hr>
+<li class="nav-item">
+    <a class="nav-link" href="grafica_planeacion">
+        <i class="fas fa-fw fa-chart-bar text-gray-400"></i>
+        <span>Resumen por Área</span>
+    </a>
+</li>
+<hr>
 <li class="nav-item">
     <a class="nav-link" href="Manual Planeacion.pdf" target="_blank">
         <i class="fas fa-fw fa-book text-gray-400"></i>

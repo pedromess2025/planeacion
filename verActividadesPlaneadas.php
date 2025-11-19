@@ -440,16 +440,16 @@
                             }
 
                             if(actividad.estatus == 'Pendientedeinformacion'){
-                                estatus = '<span class="badge text-bg-warning">Pendiente de información</span>';
+                                estatus = '<span class="badge text-bg-warning">Pendiente de info..</span>';
                             }
                             if(actividad.estatus == 'Programadasinconfirmar'){
                                 estatus = '<span class="badge text-bg-primary">Programada sin confirmar</span>';
                             }
                             if(actividad.estatus == "Servicioconfirmadoparasuejecucion"){
-                                estatus = '<span class="badge text-bg-success">Servicio confirmado para ejecución</span>';
+                                estatus = '<span class="badge text-bg-success">Serv. confirmado para ejecución</span>';
                             }
                             if(actividad.estatus == 'Fechareservadasininformación'){
-                                estatus = '<span class="badge text-bg-orange">Fecha reservada sin información</span>';
+                                estatus = '<span class="badge text-bg-orange">Fecha reservada sin info.</span>';
                             }
                             if(actividad.estatus == 'Cancelada'){
                                 estatus = '<span class="badge text-bg-danger">Cancelada</span>';
@@ -500,6 +500,7 @@
                                 nombre3 +
                                 'Area: ' + areaOT + '\n' +
                                 'OT: ' + actividad.order_code + '\n' +
+                                '<i class="fas fa-tools"></i> '+actividad.durationhr+'  <i class="fas fa-car"></i> '+actividad.travelhr+' hrs \n'+
                                 'Cliente: ' + (actividad.ds_cliente || '') + '\n'+
                                 'Ciudad: ' + (actividad.city || '') + '\n'+
                                 solicitudLog +'  '+ estatus+'\n' +

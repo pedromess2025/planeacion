@@ -39,8 +39,8 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $fecha = date('Y-m-d H:i:s');
         $noEmpleado = $noEmpleado_cookie;
 
-        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment)
-                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios')";
+        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment, reprogramado)
+                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
             $response = array('status' => 'success', 'message' => 'Incidencia registrada con éxito.');
@@ -63,6 +63,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $idActividad = $_POST["idActividad"];
         $estatus = $_POST["estatus"];
         $comment = $_POST["comment"];
+        $reprogramado = $_POST["reprogramado"];
         
         $sqlUpdate = "UPDATE servicios_planeados_mess 
                         SET engineer = '$ingeniero',
@@ -73,7 +74,8 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
                             start_date = '$fechaActividad', 
                             vehiculo = '$automovil',
                             estatus = '$estatus',
-                            comment = '$comment'
+                            comment = '$comment',
+                            reprogramado = $reprogramado
                         WHERE id = $idActividad";
         //echo $sqlUpdate;
         
@@ -238,7 +240,7 @@ if ($opcion == "SolicitudesLogistica") {
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // Consulta base
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
-                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic
+                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic, reprogramado
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

@@ -199,6 +199,8 @@
                         <div class="col-sm-6 mb-0">
                             <label for="datefechaCierre">Fecha planeada</label>
                             <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
+                            <input type="hidden" class="form-control form-control-sm" id="datefechaCierreAnt" name="datefechaCierreAnt">
+                            <input type="hidden" id="reprogramado" name="reprogramado">
                         </div>                            
                     </div>
                     <div class="row card-header border-left-primary">                                           

@@ -147,7 +147,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     // --- 1. Consulta Base ---    
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, 
                     IFNULL(u3.nombre,'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
-                    estatus_logistic, comment_logistic
+                    estatus_logistic, comment_logistic, IFNULL(ot.travelhr, '0') AS travelhr, IFNULL(ot.durationhr, '0') AS durationhr
             FROM servicios_planeados_mess ot
             INNER JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

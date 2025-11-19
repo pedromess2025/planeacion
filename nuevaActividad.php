@@ -27,7 +27,7 @@
     </style>
 
 <?php
-    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 177, 45, 26, 525, 435, 489, 523, 298, 81, 203, 8, 278, 206);
+    $usuariosRegistran = array(183, 521, 276, 523, 33);
 
     if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         // El usuario tiene permiso para ver la página
@@ -63,13 +63,13 @@
                                     <div class="row">   
                                         <div class="col-xl-12 mb-0" style="text-align: center">
                                             <center>
-                                                <h4>REGISTRO DE ACTIVIDADES</h4>
+                                                <h4>REGISTRO DE ACTIVIDADES DIM</h4>
                                             </center>
                                         </div>
                                     </div>
                                     <form id="formPlaneacion" name="formPlaneacion">
                                         <div class="row">
-                                            <div class="col-sm-4 mb-0">
+                                            <div id="divIngeniero" name="divIngeniero">
                                                 <label for="slcRespoonsable">Ingeniero</label>
                                                 <div id="Divsolicita" name="Divsolicita">
                                                     <select id="slcRespoonsable" name="slcRespoonsable">
@@ -87,14 +87,14 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="col-sm-4 mb-0">
+                                            <div style="display: none;">
                                                 <label for="btnAgregar">+ Ing.</label>
                                                 <div class="input-group">
                                                     <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
                                                     <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4 mb-0">
+                                            <div style="display: none;">
                                                 <label for="slcAreas">Área:</label>
                                                 <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
                                                     <option value="">Todas las áreas</option> 
@@ -283,6 +283,10 @@
             empleadoSolicita('#slcRespoonsable3');
             //cargar automoviles
             cargarVehiculos();
+            
+            $('#slcAreas').val('DIMENSIONAL');
+
+            $('#divIngeniero').hide();
 
             // Inicializa Select2 en el campo de responsable
             $('#slcRespoonsable').select2({            
@@ -317,6 +321,9 @@
                 placeholder: "Seleccione...",
                 width: '100%'
             });
+            
+            
+            
 
             
         });
@@ -404,86 +411,72 @@
         }
 
         // Validaciones consolidadas
-function validarFormularioConsolidado(formData) {
-
-    // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
-    // Define todos los campos que requieren validación.
-    const camposAValidar = [
-        // Campos que no pueden ser cadena vacía ("") o "0"
-        { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
-        { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
-        { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
-        { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
-        { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
-        
-        // Campos de texto que deben validarse con .trim() para evitar solo espacios
-        { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",      esTexto: true },
-        // Los campos txtDuracion y txtDuracionViaje se validarán en el Paso 3
-    ];
-
-    const mensajesDeError = [];
+        function validarFormularioConsolidado(formData) {
     
-    // --- 2. Validar Responsables (Lógica Especial) ---
-    // Regla: Al menos uno de los tres campos de responsable debe tener un valor diferente de "0" o "".
-    const resp1 = formData["slcRespoonsable"];
-    const resp2 = formData["slcRespoonsable2"];
-    const resp3 = formData["slcRespoonsable3"];
-    
-    const responsablesVacios = (resp1 === "0" || resp1 === "") && 
-                                (resp2 === "0" || resp2 === "") && 
-                                (resp3 === "0" || resp3 === "");
+            // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
+            // Define todos los campos que requieren validación.
+            const camposAValidar = [
+                // Campos que no pueden ser cadena vacía ("")
+                { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
+                { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
+                //{ valor: formData["txtDuracion"],       mensaje: "Ingresa la duración estimada" },
+                //{ valor: formData["txtDuracionViaje"],  mensaje: "Ingresa la duración del viaje" },
+                { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
+                { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
+                { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
+                
+                // Campos de texto que deben validarse con .trim() para evitar solo espacios
+                { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",     esTexto: true },
+                //{ valor: formData["txtOT"],             mensaje: "Ingresa una OT",         esTexto: true },
+            ];
 
-    if (responsablesVacios) {
-        mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
-    }
+            const mensajesDeError = [];
+            
+            // --- 2. Validar Responsables (Lógica Especial) ---
+            // Regla: Al menos uno de los tres campos de responsable debe tener un valor diferente de "0" o "".
+            const resp1 = formData["slcRespoonsable"];
+            const resp2 = formData["slcRespoonsable2"];
+            const resp3 = formData["slcRespoonsable3"];
+            
+            // La condición 'esVacio' es TRUE si TODOS están vacíos o en "0"
+            const responsablesVacios = (resp1 === "0" || resp1 === "") && 
+                                    (resp2 === "0" || resp2 === "") && 
+                                    (resp3 === "0" || resp3 === "");
 
-    // --- 3. Validar Campos de Duración (Nuevo Requisito: Mayor que Cero) ---
-    const duracion = parseFloat(formData["txtDuracion"]);
-    const duracionViaje = parseFloat(formData["txtDuracionViaje"]);
-
-    // Validar Duración (Estimada)
-    if (isNaN(duracion) || duracion <= 0) {
-        mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
-    }
-
-    // Validar Duración del Viaje
-    if (isNaN(duracionViaje) || duracionViaje <= 0) { // Permitimos cero si no hay viaje, pero no negativo
-        // Si el requisito estricto es > 0, usar duracionViaje <= 0.
-        // Aquí usamos < 0 para permitir 0 si no hay viaje. Si debe ser > 0, cambie a <= 0.
-        mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
-    }
-
-
-    // --- 4. Validar Campos Generales ---
-    for (const campo of camposAValidar) {
-        let valor = campo.valor || ""; // Asegura que el valor sea una cadena para la comprobación
-        
-        if (campo.esTexto) {
-            // Validar campos de texto con trim()
-            if (valor.trim() === "") {
-                mensajesDeError.push(campo.mensaje);
+            if (responsablesVacios) {
+                mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
             }
-        } else {
-            // Validar selects y otros campos por cadena vacía o "0"
-            if (valor === "" || valor === "0") {
-                mensajesDeError.push(campo.mensaje);
+
+            // --- 3. Validar Campos Generales ---
+            for (const campo of camposAValidar) {
+                let valor = campo.valor || ""; // Asegura que el valor sea una cadena para la comprobación
+                
+                if (campo.esTexto) {
+                    // Validar campos de texto con trim()
+                    if (valor.trim() === "") {
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                } else {
+                    // Validar selects y otros campos por cadena vacía
+                    if (valor === "" || valor === "0") { // Incluimos "0" por si son selects de IDs
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                }
             }
+
+            // --- 4. Mostrar Alerta Única o Continuar ---
+            if (mensajesDeError.length > 0) {
+                Swal.fire({
+                    title: "Campos Incompletos",
+                    html: "Por favor, corrige lo siguiente:<br><br>• " + mensajesDeError.join('<br>• '),
+                    icon: "warning",
+                    draggable: true
+                });
+                return false; // Validación fallida
+            }
+
+            return true; // Validación exitosa
         }
-    }
-
-    // --- 5. Mostrar Alerta Única o Continuar ---
-    if (mensajesDeError.length > 0) {
-        Swal.fire({
-            title: "Campos Incompletos",
-            html: "Por favor, corrige lo siguiente:<br><br>• " + mensajesDeError.join('<br>• '),
-            icon: "warning",
-            draggable: true
-        });
-        return false; // Validación fallida
-    }
-
-    return true; // Validación exitosa
-}
 
         function getFormData(formId) {
             var formArray = $('#' + formId).serializeArray();
@@ -512,6 +505,9 @@ function validarFormularioConsolidado(formData) {
                         var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
                         select.append(option);
                     });
+                    if (seleccionado === '#slcRespoonsable') {
+                        $(seleccionado).val('23'); 
+                    }
 
                 },
                 error: function(jqXHR, textStatus, errorThrown) {

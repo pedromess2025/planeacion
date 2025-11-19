@@ -27,14 +27,12 @@
         <img class="sidebar-card-illustration mb-2" href="" src="img/MESS_07_CuboMess_2.png" width="40" alt="Logo">
     </div>
 </a>
-<hr class="sidebar-divider my-0">
-
-<!-- Divider -->
-<hr class="sidebar-divider">
 <!-- Heading -->
 <div class="sidebar-heading">
     <span class="badge text-xl-white">Opciones</span>
 </div>
+<!-- Divider -->
+<hr class="sidebar-divider my-2 alert-light">
 <!-- Nav Item - Pages Collapse Menu -->
 <?php
 //81 203 8  usuarios norte
@@ -45,7 +43,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 ?>
     <li class="nav-item">
     <a class="nav-link" href="index">
-        <i class="fas fa-fw fa-check text-gray-400"></i>
+        <i class="fas fa-fw fa-check text-gray-400 mb-0"></i>
         <span>Registrar actividad</span>
     </a>
 </li>
@@ -60,14 +58,14 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Seguimiento actividades</span>
     </a>
 </li>
-<hr>
+<hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="sol_logistica">
         <i class="fas fa-fw fa-car text-gray-400"></i>
         <span>Solicitudes Logistica</span>
     </a>
 </li>
-<hr>
+<hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="verActividadesPlaneadas">
         <i class="fas fa-fw fa-calendar text-gray-400"></i>
@@ -81,14 +79,14 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Actividades planeadas SCOT</span>
     </a>
 </li>
-<hr>
+<hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="grafica_planeacion">
         <i class="fas fa-fw fa-chart-bar text-gray-400"></i>
         <span>Resumen por Área</span>
     </a>
 </li>
-<hr>
+<hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="Manual Planeacion.pdf" target="_blank">
         <i class="fas fa-fw fa-book text-gray-400"></i>
@@ -103,7 +101,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
     </a>
 </li>
 
-<hr class="sidebar-divider d-none d-md-block">
+<hr class="sidebar-divider my-1 alert-light">
 
 <div class="text-center d-none d-md-inline">
     <button class="rounded-circle border-0" id="sidebarToggle"></button> 

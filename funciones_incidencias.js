@@ -6,9 +6,24 @@ function ActualizarActividad() {
     ot = $('#txtOT').val();
     automovil = $('#slcAutomovil').val();
     fechaActividad = $('#datefechaCierre').val();
+    fechaActividadAnt = $('#datefechaCierreAnt').val();
     idActividad = $('#idActividad').val();
     estatus = $('#slcEstatus').val();
     comment = $('#txtComment').val();
+
+    reprogramado = $('#reprogramado').val();
+    
+    //verifica si la fecha se modifico
+    if (fechaActividadAnt !== fechaActividad) {
+        reprogramado = 1;
+    } else {
+        if(reprogramado=1){
+            reprogramado = 1;
+        }else{
+            reprogramado = 0;
+        }        
+    }
+
 
     $.ajax({
         url: 'acciones_solicitud.php',
@@ -24,7 +39,8 @@ function ActualizarActividad() {
             fechaActividad: fechaActividad,
             idActividad: idActividad,
             estatus: estatus,
-            comment: comment
+            comment: comment,
+            reprogramado: reprogramado
         },
         success: function(data) {
             $('#actualizarActividadModal').modal('hide');
@@ -168,7 +184,7 @@ function renderizarTabla(selectorTabla, data) {
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
                         <button id="btnSolicitar" type="button" class="btn btn-primary" 
-                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}')">
+                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         ${estatusLogistica}
@@ -255,7 +271,7 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment) {
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment, reprogramado) {
     $('#Divsolicita2').show();
     $('#Divsolicita3').show();
 
@@ -266,9 +282,12 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
     $('#txtOT').val(ot);
     $('#slcAutomovil').val(vehiculo);
     $('#datefechaCierre').val(fechaActividad);
+    $('#datefechaCierreAnt').val(fechaActividad);    
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
     $('#txtComment').val(comment);
+    $('#reprogramado').val(reprogramado);
+
 
     if (ingeniero2 == '0' || ingeniero2 == '') {
         $('#Divsolicita2').hide();

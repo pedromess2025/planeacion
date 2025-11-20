@@ -4,6 +4,13 @@ mysqli_set_charset($conn, "utf8");
 $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : null;
 $opcion = $_POST["opcion"];
 $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noEmpleado_cookie;
+$areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];        
+$ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];        
+$ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
+$estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
+$fechaHoy = date('Y-m-d');
+$fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
+
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {        
         $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
@@ -40,7 +47,7 @@ $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noE
         $noEmpleado = $noEmpleado_cookie;
 
         $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment, reprogramado)
-                                            VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
+                        VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
             $response = array('status' => 'success', 'message' => 'Incidencia registrada con éxito.');
@@ -212,6 +219,59 @@ if ($opcion == "solicitudesAbiertas") {
         if ($stmt = $conn->prepare($sql)) {
             // Enlazar los parámetros dinámicamente        
             $stmt->bind_param($param_types, ...$params);
+            $stmt->execute();
+            $result = $stmt->get_result();
+
+            if ($result && $result->num_rows > 0) {
+                $actividades = [];
+                while ($row = $result->fetch_assoc()) {
+                    $actividades[] = $row;
+                }
+                echo json_encode($actividades);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        }
+}
+
+//FUNCION PARA MOSTRAR LAS SOLICITUDES PENDIENTES
+if ($opcion == "solicitudesPendientes") {
+    // Consulta base
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
+                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic
+            FROM servicios_planeados_mess ot
+            inner join usuarios u on ot.engineer = u.id_usuario 
+            LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
+            WHERE ot.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
+                ot.start_date
+            BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 1 DAY)
+            UNION
+            SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
+                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic
+            FROM servicios_planeados_mess ot
+            inner join usuarios u on ot.engineer = u.id_usuario 
+            LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
+            WHERE ot.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion') AND
+                ot.start_date
+            BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 2 DAY)";
+
+        // --- 1. Inicialización de arrays para cláusulas WHERE y parámetros ---
+        $whereClauses = [];
+        
+        // --- 2. Construcción Final
+        if (!empty($whereClauses)) {
+            $sql .= " AND " . implode(' AND ', $whereClauses);
+        }
+
+        // --- 3. Ejecución de la Consulta Preparada ---
+        if ($stmt = $conn->prepare($sql)) {
+            // Enlazar los parámetros dinámicamente        
+          
             $stmt->execute();
             $result = $stmt->get_result();
 

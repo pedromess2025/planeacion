@@ -58,6 +58,13 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Seguimiento actividades</span>
     </a>
 </li>
+
+<li class="nav-item">
+    <a class="nav-link" href="pendientes">
+        <i class="fas fa-fw fa-hourglass-half text-warning"></i>
+        <span>Actividades por Vencer</span>
+    </a>
+</li>
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="sol_logistica">
@@ -86,6 +93,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Resumen por Área</span>
     </a>
 </li>
+
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link" href="Manual Planeacion.pdf" target="_blank">

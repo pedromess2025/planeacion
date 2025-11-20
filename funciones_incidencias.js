@@ -1,5 +1,5 @@
 //FUNCION PARA RESPONDER LA SOLICITUD
-function ActualizarActividad() {
+function ActualizarActividad(pendientes) {
     ingeniero = $('#slcRespoonsable').val();
     ingeniero2 = $('#slcRespoonsable2').val();
     ingeniero3 = $('#slcRespoonsable3').val();
@@ -12,16 +12,16 @@ function ActualizarActividad() {
     comment = $('#txtComment').val();
 
     reprogramado = $('#reprogramado').val();
-    
+
     //verifica si la fecha se modifico
     if (fechaActividadAnt !== fechaActividad) {
         reprogramado = 1;
     } else {
-        if(reprogramado=1){
+        if (reprogramado = 1) {
             reprogramado = 1;
-        }else{
+        } else {
             reprogramado = 0;
-        }        
+        }
     }
 
 
@@ -50,7 +50,11 @@ function ActualizarActividad() {
                 draggable: true
             }).then(() => {
                 // Recargar la tabla de solicitudes abiertas
-                SolicitudesAbiertas();                
+                if (pendientes === 'pendientes') {
+                    obtenerYRenderizarSolicitudes("solicitudesPendientes", "#TSolAbiertas tbody");
+                } else {
+                    SolicitudesAbiertas();
+                }
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -145,28 +149,28 @@ function renderizarTabla(selectorTabla, data) {
         const comentarioLimpio = escapeForHtmlAttribute(solicitud.comment);
         const comentarioLimpioLogistico = escapeForHtmlAttribute(solicitud.comment_logistic);
         //verifica solicitud de logistica      
-        var estatusLogistica = '';      
-        if(solicitud.estatus_logistic === 'Solicitado'){
-            if (solicitud.capturo === 'SI'){
+        var estatusLogistica = '';
+        if (solicitud.estatus_logistic === 'Solicitado') {
+            if (solicitud.capturo === 'SI') {
                 estatusLogistica = `
                         <button type="button" class="btn btn-warning" onclick="responderSolicitudLogistica('${solicitud.id}')">
                             <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                         </button>
                 `;
-            }else{
+            } else {
                 estatusLogistica = `
                         <button type="button" class="btn btn-warning">
                             <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                         </button>
                 `;
             }
-        }else{
-            if(solicitud.estatus_logistic === 'aceptada'){
+        } else {
+            if (solicitud.estatus_logistic === 'aceptada') {
                 var estatusLogistica = `
                             <button type="button" class="btn btn-success" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
                                 <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                             </button>`;
-            }else if(solicitud.estatus_logistic === 'rechazada'){
+            } else if (solicitud.estatus_logistic === 'rechazada') {
                 var estatusLogistica = `
                             <button type="button" class="btn btn-danger" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
                                 <i class="fas fa-hand-paper" style="font-size:12px;"></i>
@@ -176,9 +180,9 @@ function renderizarTabla(selectorTabla, data) {
         // Determinar las acciones disponibles de acuer
         var accion = '';
         var noEmpleado = getCookie('noEmpleado');
-        if (solicitud.capturo === 'SI'){
-            
-                accion = `
+        if (solicitud.capturo === 'SI') {
+
+            accion = `
                     <div class="btn-group" role="group">       
                         <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
@@ -190,10 +194,10 @@ function renderizarTabla(selectorTabla, data) {
                         ${estatusLogistica}
                     </div>
                     `;
-            
-            
+
+
         } else {
-            if(['42', '276', '290', '183'].includes(noEmpleado)) {
+            if (['42', '276', '290', '183'].includes(noEmpleado)) {
                 accion = `
                     <div class="btn-group" role="group">       
                         <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
@@ -202,7 +206,7 @@ function renderizarTabla(selectorTabla, data) {
                         ${estatusLogistica}
                     </div>
                     `;
-            }else{
+            } else {
                 accion = `
                     <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                         <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
@@ -211,7 +215,7 @@ function renderizarTabla(selectorTabla, data) {
             }
         }
 
-        
+
 
 
         let fechaActividad = '';
@@ -246,10 +250,10 @@ function escapeForHtmlAttribute(text) {
     // 2. Replace all double quotes with an escaped version \"
     // 3. Replace all line breaks (\n or \r) with spaces or escape sequences
     return text.toString()
-        .replace(/'/g, "\\'")     // Escape single quotes
-        .replace(/"/g, '\"')      // Escape double quotes (optional, but good practice)
+        .replace(/'/g, "\\'") // Escape single quotes
+        .replace(/"/g, '\"') // Escape double quotes (optional, but good practice)
         .replace(/(\r\n|\n|\r)/g, ' '); // Replace line breaks with a single space
-}   
+}
 
 // FUNCION PARA MOSTRAR COMENTARIOS
 function mostrarComentarios(ot, comentario) {
@@ -282,7 +286,7 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
     $('#txtOT').val(ot);
     $('#slcAutomovil').val(vehiculo);
     $('#datefechaCierre').val(fechaActividad);
-    $('#datefechaCierreAnt').val(fechaActividad);    
+    $('#datefechaCierreAnt').val(fechaActividad);
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
     $('#txtComment').val(comment);
@@ -444,11 +448,11 @@ function responderSolicitudLogistica(idActividad) {
         showDenyButton: true,
         showCancelButton: false,
         denyButtonText: "Rechazar",
-        confirmButtonText: "Aceptar",             
+        confirmButtonText: "Aceptar",
     }).then((result) => {
         // Al usar result.isConfirmed o result.isDenied, ya sabemos la acción.
-        if (result.isConfirmed) {            
-            modalSolicitarApoyoLogistica(idActividad, 'aceptada'); 
+        if (result.isConfirmed) {
+            modalSolicitarApoyoLogistica(idActividad, 'aceptada');
         } else if (result.isDenied) {
             modalSolicitarApoyoLogistica(idActividad, 'rechazada');
         }
@@ -458,11 +462,11 @@ function responderSolicitudLogistica(idActividad) {
 function modalSolicitarApoyoLogistica(idActividad, accion) {
     $('#idActividadLogistica').val(idActividad);
     $('#accionLogistica').val(accion);
-    
-    if (accion === 'aceptada') {          
+
+    if (accion === 'aceptada') {
         actualizarInsigniaJQuery('Solicitud Aceptada', 'text-bg-success');
         $('#txtCommentLogistica').attr('placeholder', 'Por favor indica los horarios de salida para que se pueda coordinar el apoyo');
-    } else if (accion === 'rechazada') {     
+    } else if (accion === 'rechazada') {
         actualizarInsigniaJQuery('Solicitud Rechazada', 'text-bg-danger');
         $('#txtCommentLogistica').attr('placeholder', 'Por favor indica el motivo del rechazo de la solicitud');
     }
@@ -472,11 +476,11 @@ function modalSolicitarApoyoLogistica(idActividad, accion) {
 
 function actualizarInsigniaJQuery(nuevoTexto, nuevaClaseBootstrap) {
     const $insignia = $('#estado-badge');
-    
+
     $insignia.removeClass(function(index, className) {
         return (className.match(/\btext-bg-\S+/g) || []).join(' ');
     });
-    
+
     $insignia.addClass(nuevaClaseBootstrap);
     $insignia.text(nuevoTexto);
 }
@@ -484,7 +488,7 @@ function actualizarInsigniaJQuery(nuevoTexto, nuevaClaseBootstrap) {
 function enviarRespuestaLogistica() {
     var idActividad = $('#idActividadLogistica').val();
     var accion = $('#accionLogistica').val();
-    var commentLogistica = $('#txtCommentLogistica').val(); 
+    var commentLogistica = $('#txtCommentLogistica').val();
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
@@ -496,14 +500,14 @@ function enviarRespuestaLogistica() {
             commentLogistica: commentLogistica
         },
         success: function(data) {
-            $('#responderSolicitudLogisticaModal').modal('hide');   
+            $('#responderSolicitudLogisticaModal').modal('hide');
             Swal.fire({
                 title: "Respuesta enviada con éxito!",
                 icon: "success",
                 draggable: true
             }).then(() => {
                 // Recargar la tabla de solicitudes abiertas
-                SolicitudesAbiertas();                
+                SolicitudesAbiertas();
                 enviaNotificacionResp(idActividad, commentLogistica, accion);
             });
         },
@@ -529,9 +533,9 @@ function enviaNotificacionResp(idActividad, commentLogistica, accion) {
             accion: accion
         },
         success: function(data) {
-            
+
         },
-        error: function(jqXHR, textStatus, errorThrown) {                    
+        error: function(jqXHR, textStatus, errorThrown) {
 
         }
     });

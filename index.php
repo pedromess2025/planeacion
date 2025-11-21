@@ -149,7 +149,7 @@
                                                 <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas servicio">
                                             </div>
                                             <div class="col-sm-2 mb-0">
-                                                <label for="txtDuracion">Duración Viaje</label>
+                                                <label for="txtDuracionViaje">Dur. Estimada Viaje</label>
                                                 <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
                                             </div>
                                             <div class="col-sm-4">

@@ -99,6 +99,8 @@ WHERE s.id = '$servicio'";
     //Envío de correo
     
         $correos = $correo;         
+        $correos .= ',arturo.coronel@mess.com.mx';
+        $correos .= ',vrico@mess.com.mx';
         $correos .= ',pedro.martinez@mess.com.mx';
         $Arraycorreos  = explode (",", $correos);
         $mensaje = '';

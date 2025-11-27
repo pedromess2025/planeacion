@@ -71,6 +71,8 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         $estatus = $_POST["estatus"];
         $comment = $_POST["comment"];
         $reprogramado = $_POST["reprogramado"];
+        $cometRepro = $_POST["commentRepro"];
+        $cometCancel = $_POST["commentCancel"];
         
         $sqlUpdate = "UPDATE servicios_planeados_mess 
                         SET engineer = '$ingeniero',
@@ -82,7 +84,9 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
                             vehiculo = '$automovil',
                             estatus = '$estatus',
                             comment = '$comment',
-                            reprogramado = $reprogramado
+                            reprogramado = $reprogramado,
+                            motivo_reprogramacion = '$cometRepro',
+                            motivo_cancelacion = '$cometCancel' 
                         WHERE id = $idActividad";
         //echo $sqlUpdate;
         
@@ -145,7 +149,8 @@ if ($opcion == "solicitudesAbiertas") {
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // Consulta base
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
-                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic
+                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
+                    (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

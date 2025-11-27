@@ -9,7 +9,10 @@ function ActualizarActividad(pendientes) {
     fechaActividadAnt = $('#datefechaCierreAnt').val();
     idActividad = $('#idActividad').val();
     estatus = $('#slcEstatus').val();
+
     comment = $('#txtComment').val();
+    commentRepro = $('#txtCommentRepro').val();
+    commentCancel = $('#txtCommentCanccel').val();
 
     reprogramado = $('#reprogramado').val();
 
@@ -17,11 +20,33 @@ function ActualizarActividad(pendientes) {
     if (fechaActividadAnt !== fechaActividad) {
         reprogramado = 1;
     } else {
-        if (reprogramado = 1) {
+        if (reprogramado == 1) {
             reprogramado = 1;
         } else {
             reprogramado = 0;
         }
+    }
+
+    cmtRepro = $('#cmtRepro').val();
+    cmtCancel = $('#cmtCancel').val();
+
+    if (cmtRepro == '1' && commentRepro.trim() == '') {  
+        Swal.fire({
+            title: "La actividad ha sido reprogramada.",
+            text: "Por favor asegúrate de que el motivo de reprogramación esté claro en los comentarios.",
+            icon: "info",
+            draggable: true
+        });
+        return;
+    }
+    if (cmtCancel == '1' && commentCancel.trim() == '') {
+        Swal.fire({
+            title: "La actividad será cancelada.",
+            text: "Por favor asegúrate de que el motivo de cancelación esté claro en los comentarios.",
+            icon: "info",
+            draggable: true
+        });
+        return;
     }
 
 
@@ -40,7 +65,9 @@ function ActualizarActividad(pendientes) {
             idActividad: idActividad,
             estatus: estatus,
             comment: comment,
-            reprogramado: reprogramado
+            reprogramado: reprogramado,
+            commentRepro: commentRepro,
+            commentCancel: commentCancel
         },
         success: function(data) {
             $('#actualizarActividadModal').modal('hide');
@@ -180,7 +207,8 @@ function renderizarTabla(selectorTabla, data) {
         // Determinar las acciones disponibles de acuer
         var accion = '';
         var noEmpleado = getCookie('noEmpleado');
-        if (solicitud.capturo === 'SI') {
+        var departamento = getCookie('departamento');
+        if (solicitud.capturo === 'SI' || solicitud.depto === departamento) {
 
             accion = `
                     <div class="btn-group" role="group">       
@@ -188,7 +216,7 @@ function renderizarTabla(selectorTabla, data) {
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
                         <button id="btnSolicitar" type="button" class="btn btn-primary" 
-                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}')">
+                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}', '${solicitud.motivo_reprogramacion}', '${solicitud.motivo_cancelacion}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         ${estatusLogistica}
@@ -275,7 +303,7 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment, reprogramado) {
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment, reprogramado, commentRepro, commentCancel) {
     $('#Divsolicita2').show();
     $('#Divsolicita3').show();
 
@@ -290,6 +318,9 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
     $('#idActividad').val(idActividad);
     $('#slcEstatus').val(estatus);
     $('#txtComment').val(comment);
+    $('#txtCommentRepro').val(commentRepro);
+    $('#txtCommentCanccel').val(commentCancel);
+
     $('#reprogramado').val(reprogramado);
 
 
@@ -337,6 +368,52 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
         width: '100%'
     });
     $('#actualizarActividadModal').modal('show');
+}
+
+function validaEstatus() {
+    var estatus = $('#slcEstatus').val();
+    if (estatus === 'Cancelada') {        
+        $('#divCancelacion').show();
+        $('#cmtCancel').val('1');   
+    }else {
+        $('#divCancelacion').hide();
+        $('#cmtCancel').val('0');        
+    }
+}
+function validaFechas() {
+    var fechaActividad = $('#datefechaCierre').val();
+    var fechaActividadAnt = $('#datefechaCierreAnt').val();    
+    
+    // Constante que representa la cantidad de milisegundos en un día (24 horas)
+    const MILISEGUNDOS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    // 1. Crear objetos Date a partir de las cadenas
+    const fechaAntObj = new Date(fechaActividadAnt);
+    const fechaActObj = new Date(fechaActividad);
+
+    // 2. ELIMINAR Horas, Minutos, Segundos y Milisegundos de los objetos
+    // Al usar setHours(0, 0, 0, 0), ambas fechas quedan fijadas a medianoche (00:00:00),
+    // asegurando que solo se compare el día, mes y año.
+    fechaAntObj.setHours(0, 0, 0, 0); 
+    fechaActObj.setHours(0, 0, 0, 0); 
+
+
+    // 3. Calcular la diferencia absoluta en milisegundos usando las fechas modificadas
+    const diferenciaMs = Math.abs(fechaActObj.getTime() - fechaAntObj.getTime());
+
+    // 4. Calcular la diferencia en días
+    const diferenciaDias = Math.round(diferenciaMs / MILISEGUNDOS_POR_DIA);
+
+
+    // --- Lógica de Reprogramación ---
+    // Verifica si la diferencia de días es al menos 1
+    if (diferenciaDias >= 1) {
+        $('#divReprogramacion').show();
+        $('#cmtRepro').val('1');
+    } else {
+        $('#divReprogramacion').hide();        
+        $('#cmtRepro').val('0');
+    } 
 }
 
 //FUNCION PARA OBTENER EL VALOR DE LA COOKIE

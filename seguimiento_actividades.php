@@ -198,7 +198,7 @@
                         </div>
                         <div class="col-sm-6 mb-0">
                             <label for="datefechaCierre">Fecha planeada</label>
-                            <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
+                            <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre" onchange="validaFechas()">
                             <input type="hidden" class="form-control form-control-sm" id="datefechaCierreAnt" name="datefechaCierreAnt">
                             <input type="hidden" id="reprogramado" name="reprogramado">
                         </div>                            
@@ -215,7 +215,7 @@
                         <div class="col-sm-6">
                             <label for="slcEstatus">Estatus</label>
                             <div id="DivEstatus" name="DivEstatus">
-                                <select id="slcEstatus" name="slcEstatus" class="form-select">
+                                <select id="slcEstatus" name="slcEstatus" class="form-select" onchange="validaEstatus()">
                                     <option value="">Selecciona...</option>
                                     <option value="Pendientedeinformacion">Pendiente de información</option>
                                     <option value="Programadasinconfirmar">Programada sin confirmar</option>
@@ -228,6 +228,16 @@
                         </div>
                     </div>
                     <div class="row card-footer border-left-primary">
+                        <div class="col-sm-12 border-end border-bottom border-warning" id="divReprogramacion" name="divReprogramacion">
+                            <label for="txtCommentRepro">Motivo Reprogramación</label>
+                            <input type="hidden" id="cmtRepro" name="cmtRepro" value="0">
+                            <textarea class="form-control form-control-sm" id="txtCommentRepro" name="txtCommentRepro"></textarea>
+                        </div>
+                        <div class="col-sm-12 border-end border-bottom border-warning" id="divCancelacion" name="divCancelacion">
+                            <label for="txtCommentCanccel">Motivo cancelación</label>
+                            <input type="hidden" id="cmtCancel" name="cmtCancel" value="0">
+                            <textarea class="form-control form-control-sm" id="txtCommentCanccel" name="txtCommentCanccel"></textarea>
+                        </div>
                         <div class="col-sm-12">
                             <label for="txtComment">Comentarios</label>
                             <textarea class="form-control form-control-sm" id="txtComment" name="txtComment"></textarea>
@@ -291,7 +301,10 @@
     <!--FUNCNIONES JS DE INCIDENCIAS-->
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
-        $(document).ready(function() {                             
+        $(document).ready(function() {   
+            
+            $('#divCancelacion').hide();                          
+            $('#divReprogramacion').hide();
             // Manejar el estado activo de los botones
             $('#statusBtnGroup .btn').on('click', function() {
                 $('#statusBtnGroup .btn').removeClass('active');

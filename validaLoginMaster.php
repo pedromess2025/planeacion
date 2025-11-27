@@ -25,6 +25,7 @@ if (empty($id_usuario) || empty($noEmpleado)) {
         $antiguedad = $row2["antiguedad"];
         $diasD = $row2["diasdisponibles"];
         $rol = $row2["rol"];
+        $departamento = $row2["departamento"];
     }
 
     if($nr == 1){
@@ -32,6 +33,7 @@ if (empty($id_usuario) || empty($noEmpleado)) {
         echo '<script>document.cookie = "nombredelusuario='.$nombreEmpleado.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "noEmpleado='.$noEmpleado.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "diasD='.$diasD.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
+        echo '<script>document.cookie = "departamento='.$departamento.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "rol='.$rol.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "SesionLogin=LoginMaster; expires=" + new Date(Date.now() + 99999000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>window.location.assign("seguimiento_actividades.php")</script>';                

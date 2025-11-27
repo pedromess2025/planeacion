@@ -16,11 +16,34 @@ function ActualizarActividad(pendientes) {
 
     reprogramado = $('#reprogramado').val();
 
-    //verifica si la fecha se modifico
-    if (fechaActividadAnt !== fechaActividad) {
+    // Constante que representa la cantidad de milisegundos en un día (24 horas)
+    const MILISEGUNDOS_POR_DIA = 1000 * 60 * 60 * 24;
+
+    // 1. Crear objetos Date a partir de las cadenas
+    const fechaAntObj = new Date(fechaActividadAnt);
+    const fechaActObj = new Date(fechaActividad);
+
+    // 2. ELIMINAR Horas, Minutos, Segundos y Milisegundos de los objetos
+    // Al usar setHours(0, 0, 0, 0), ambas fechas quedan fijadas a medianoche (00:00:00),
+    // asegurando que solo se compare el día, mes y año.
+    fechaAntObj.setHours(0, 0, 0, 0); 
+    fechaActObj.setHours(0, 0, 0, 0); 
+
+
+    // 3. Calcular la diferencia absoluta en milisegundos usando las fechas modificadas
+    const diferenciaMs = Math.abs(fechaActObj.getTime() - fechaAntObj.getTime());
+
+    // 4. Calcular la diferencia en días
+    const diferenciaDias = Math.round(diferenciaMs / MILISEGUNDOS_POR_DIA);
+
+
+    // --- Lógica de Reprogramación ---
+    // Verifica si la diferencia de días es al menos 1
+    if (diferenciaDias >= 1) {
         reprogramado = 1;
     } else {
-        if (reprogramado == 1) {
+        // Si las fechas son iguales (en día, mes y año), mantiene el estado anterior
+        if (reprogramado === 1) {
             reprogramado = 1;
         } else {
             reprogramado = 0;

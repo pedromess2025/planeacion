@@ -140,6 +140,8 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
 
     $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
 
+    $region = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
+
 
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
@@ -161,7 +163,6 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     // --- 2. Manejo de múltiples áreas seleccionadas
     if (!empty($areas)) {
         $placeholders = implode(',', array_fill(0, count($areas), '?'));
-        // Nota: Asumo que el campo en la BD es 'ot.area' y no el código OT más complejo.
         $whereClauses[] = "ot.area IN ($placeholders)"; 
 
         foreach ($areas as $area_item) {
@@ -172,7 +173,6 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
 
     // --- 3. Manejo de la ciudad
     if (!empty($ciudad)) {
-        // CORRECCIÓN 3: Si $ciudad es un array, se maneja correctamente con IN
         $placeholders = implode(',', array_fill(0, count($ciudad), '?'));
         $whereClauses[] = "ot.city IN ($placeholders)";
 
@@ -181,7 +181,24 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
             $param_types .= "s";
         }
     }
-    // --- 4. Manejo del estatus
+
+    // --- 4. Manejo del ingeniero 
+    if (!empty($ingeniero)) {
+        $count = count($ingeniero);
+        $placeholders = implode(',', array_fill(0, $count, '?'));
+        $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
+
+        // Añadir la lista de ingenieros al array de parámetros TRES VECES 
+        for ($i = 0; $i < 3; $i++) {
+            foreach ($ingeniero as $ingeniero_item) {
+                $params[] = $ingeniero_item;
+                $param_types .= "s"; 
+            }
+        }
+    }
+
+    // --- 5. Manejo del estatus (No es necesario si ya se filtra en el WHERE base)
+    // Si el filtro inicial no es suficiente, se añade aquí:
     if (!empty($estatus)) {
         $placeholders = implode(',', array_fill(0, count($estatus), '?'));
         $whereClauses[] = "ot.estatus IN ($placeholders)";
@@ -192,30 +209,29 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         }
     }
 
-    // --- 5. Manejo del ingeniero
-    if (!empty($ingeniero)) {
-        $count = count($ingeniero);
+    // --- 6. Manejo de la región 
+    if (!empty($region)) {
+        $count = count($region);
         $placeholders = implode(',', array_fill(0, $count, '?'));
-        
-        $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
+        $whereClauses[] = "(u.region IN ($placeholders) OR u2.region IN ($placeholders) OR u3.region IN ($placeholders))";
 
-        // Añadir la lista de ingenieros al array de parámetros TRES VECES (Correcto para los 3 IN)
+        // Añadir la lista de regiones al array de parámetros TRES VECES (NECESARIO)
         for ($i = 0; $i < 3; $i++) {
-            foreach ($ingeniero as $ingeniero_item) {
-                $params[] = $ingeniero_item;
-                $param_types .= "s"; 
+            foreach ($region as $region_item) {
+                $params[] = $region_item;
+                $param_types .= "s";
             }
         }
     }
 
-    // --- 6. Construcción Final
+    // --- 7. Construcción Final
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);
     }
             
     $sql .= " ORDER BY ot.id DESC";
 
-    // --- 6. Ejecución de la Consulta Preparada ---
+    // --- 8. Ejecución de la Consulta Preparada ---
     if ($stmt = $conn->prepare($sql)) {
         // Enlazar los parámetros dinámicamente        
         $stmt->bind_param($param_types, ...$params);

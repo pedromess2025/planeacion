@@ -48,10 +48,10 @@
                                         </div>
                                     </div>
                                     <hr>
-                                    <div class="row mb-3">
+                                    <div class="row mb-0">
                                         <div class="col-md-2">
-                                            <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
-                                            <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
+                                            <label for="filtro-area" class="mr-1">Filtrar por Área:</label>
+                                            <select id="filtro-area" class="form-select mr-1" multiple="multiple" name="areas[]">
                                                 <option value="">Todas las áreas</option> 
                                                 <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
                                                 <option value="CALIBRACIONES">Servicios Calibraciones</option>
@@ -73,22 +73,22 @@
                                             </select>
                                         </div>
                                         <div class="col-md-3">
-                                            <label for="filtro-ingeniero" class="mr-2">Filtrar por Ingeniero:</label>
-                                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-3" multiple="multiple">
+                                            <label for="filtro-ingeniero" class="mr-1">Filtrar por Ingeniero:</label>
+                                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-1" multiple="multiple">
                                                 <option value="0">Selecciona...</option>
                                             </select>                             
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-2">
                                             <label for="filtro-ciudad">Ciudad</label>
                                             <div id="DivCiudad" name="DivCiudad">
-                                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
+                                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-1" multiple="multiple">
                                                     <option value="">Selecciona...</option>
                                                 </select>                                                    
                                             </div>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="filtro-estatus" class="mr-2">Filtrar por Estatus:</label>
-                                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-3" multiple="multiple">
+                                            <label for="filtro-estatus" class="mr-1">Filtrar por Estatus:</label>
+                                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-1" multiple="multiple">
                                                 <option value="">Selecciona...</option>
                                                 <option value="Pendientedeinformacion">Pendiente de información</option>
                                                 <option value="Programadasinconfirmar">Programada sin confirmar</option>
@@ -98,8 +98,14 @@
                                                 <option value="Cerrada">Cerrar</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()">Aplicar filtro</button>
+                                        <div class="col-md-2">
+                                            <label for="filtro-region">Region</label>                                            
+                                            <select id="filtro-region" name="region[]" class="form-select  mr-1" multiple="multiple">
+                                                <option value="">Selecciona...</option>
+                                            </select>                                                                                                
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button class="btn btn-primary btn-sm w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()"><i class="fas fa-fw fa-filter"></i></button>
                                         </div>
                                     </div>
                                     <div class="row">
@@ -301,7 +307,7 @@
     <!--FUNCNIONES JS DE INCIDENCIAS-->
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
-        $(document).ready(function() {   
+        $(document).ready(function() {
             
             $('#divCancelacion').hide();                          
             $('#divReprogramacion').hide();
@@ -359,6 +365,9 @@
             // Cargar las ciudades en el select    
             cargarCiudades();
 
+            // Cargar las regiones en el select    
+            cargarRegiones();
+
             // Inicializar Select2
             $('#filtro-area').select2({
                 placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
@@ -376,6 +385,10 @@
                 placeholder: "Seleccione uno o varios estatus", // Opcional: un texto de ayuda
                 allowClear: true // Opcional: permite deseleccionar todo
             });
+            $('#filtro-region').select2({            
+                placeholder: "Seleccione una o varias regiones", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            }); 
         });
 
         //FUNCION PARA CARGAR INFORMACIÓN DE LOS EMPLEADOS

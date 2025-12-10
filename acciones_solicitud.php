@@ -141,105 +141,135 @@ if ($opcion == "consultarInventarioGeneral") {
 
 //FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
 if ($opcion == "solicitudesAbiertas") {
-    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];        
-    $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];        
+    
+    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];         
+    $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];         
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
     $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
+    $region = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
+    
     $fechaHoy = date('Y-m-d');
-    $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
+    $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));    
+    
     // Consulta base
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
-                    IF(ot.capturado_por = $noEmpleado_cookie, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
+                    IF(ot.capturado_por = ?, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
                     (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
-            WHERE ot.start_date >= ?"; // 1=Programada, 2=En Proceso, 3=Completada, 4=Cancelada    
+            -- Filtramos por el estatus Abierto (asumo Estatus 1 o 2) y la fecha.
+            WHERE ot.start_date >= ?"; 
+    
+    // --- 1. Inicialización de arrays para cláusulas WHERE y parámetros ---
+    $whereClauses = [];
+    $params = [$noEmpleado_cookie, $fechaInicio]; // $noEmpleado_cookie (para IF) y $fechaInicio (para WHERE) son los 2 primeros
+    $param_types = "ss";                       // El IF y la fecha son strings
+    
+    // --- 2. Manejo de múltiples áreas seleccionadas
+    if (!empty($areas)) {
+        $placeholders = implode(',', array_fill(0, count($areas), '?'));
+        $whereClauses[] = "ot.area IN ($placeholders)"; 
 
-        // --- 1. Inicialización de arrays para cláusulas WHERE y parámetros ---
-        $whereClauses = [];
-        $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.
-        $param_types = "s";       // String para los tipos de los parámetros (s = string);
+        foreach ($areas as $area_item) {
+            $params[] = $area_item;
+            $param_types .= "s";
+        }
+    } 
 
-        // --- 2. Manejo de múltiples áreas seleccionadas
-        if (!empty($areas)) {
-            $placeholders = implode(',', array_fill(0, count($areas), '?'));
-            // Nota: Asumo que el campo en la BD es 'ot.area' y no el código OT más complejo.
-            $whereClauses[] = "ot.area IN ($placeholders)"; 
+    // --- 3. Manejo de la ciudad
+    if (!empty($ciudad)) {
+        $placeholders = implode(',', array_fill(0, count($ciudad), '?'));
+        $whereClauses[] = "ot.city IN ($placeholders)";
 
-            foreach ($areas as $area_item) {
-                $params[] = $area_item;
+        foreach ($ciudad as $ciudad_item) {
+            $params[] = $ciudad_item;
+            $param_types .= "s";
+        }
+    }
+
+    // --- 4. Manejo del ingeniero
+    if (!empty($ingeniero)) {
+        $count = count($ingeniero);
+        $placeholders = implode(',', array_fill(0, $count, '?'));
+        $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
+
+        // Añadir la lista de ingenieros al array de parámetros TRES VECES 
+        for ($i = 0; $i < 3; $i++) {
+            foreach ($ingeniero as $ingeniero_item) {
+                $params[] = $ingeniero_item;
+                $param_types .= "s"; 
+            }
+        }
+    }
+
+    // --- 5. Manejo del estatus (No es necesario si ya se filtra en el WHERE base)
+    // Si el filtro inicial no es suficiente, se añade aquí:
+    if (!empty($estatus)) {
+        $placeholders = implode(',', array_fill(0, count($estatus), '?'));
+        $whereClauses[] = "ot.estatus IN ($placeholders)";
+
+        foreach ($estatus as $estatus_item) {
+            $params[] = $estatus_item;
+            $param_types .= "s";
+        }
+    }
+
+    // --- 6. Manejo de la región
+    if (!empty($region)) {
+        $count = count($region);
+        $placeholders = implode(',', array_fill(0, $count, '?'));
+        $whereClauses[] = "(u.region IN ($placeholders) OR u2.region IN ($placeholders) OR u3.region IN ($placeholders))";
+
+        // Añadir la lista de regiones al array de parámetros TRES VECES (NECESARIO)
+        for ($i = 0; $i < 3; $i++) {
+            foreach ($region as $region_item) {
+                $params[] = $region_item;
                 $param_types .= "s";
             }
-        } 
-
-        // --- 3. Manejo de la ciudad
-        if (!empty($ciudad)) {
-            // CORRECCIÓN 3: Si $ciudad es un array, se maneja correctamente con IN
-            $placeholders = implode(',', array_fill(0, count($ciudad), '?'));
-            $whereClauses[] = "ot.city IN ($placeholders)";
-
-            foreach ($ciudad as $ciudad_item) {
-                $params[] = $ciudad_item;
-                $param_types .= "s";
-            }
         }
-
-        // --- 4. Manejo del ingeniero
-        if (!empty($ingeniero)) {
-            $count = count($ingeniero);
-            $placeholders = implode(',', array_fill(0, $count, '?'));
-            $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
-
-            // Añadir la lista de ingenieros al array de parámetros TRES VECES (Correcto para los 3 IN)
-            for ($i = 0; $i < 3; $i++) {
-                foreach ($ingeniero as $ingeniero_item) {
-                    $params[] = $ingeniero_item;
-                    $param_types .= "s"; 
-                }
-            }
-        }
-
-        // --- 5. Manejo del estatus
-        if (!empty($_POST['estatus']) && is_array($_POST['estatus'])) {
-            $estatus = $_POST['estatus'];
-            $placeholders = implode(',', array_fill(0, count($estatus), '?'));
-            $whereClauses[] = "ot.estatus IN ($placeholders)";
-
-            foreach ($estatus as $estatus_item) {
-                $params[] = $estatus_item;
-                $param_types .= "s";
-            }
-        }
-        
-        // --- 6. Construcción Final
-        if (!empty($whereClauses)) {
-            $sql .= " AND " . implode(' AND ', $whereClauses);
-        }
-        $sql .= " GROUP BY ot.id
+    }
+    
+    // --- 7. Construcción Final
+    if (!empty($whereClauses)) {
+        $sql .= " AND " . implode(' AND ', $whereClauses);
+    }
+    $sql .= " GROUP BY ot.id
             ORDER BY ot.id DESC";
+    
+    // El 'echo $sql;' es útil para debug, pero debe ser eliminado en producción
+    // echo $sql; 
+    
+    // --- 8. Ejecución de la Consulta Preparada ---
+    if ($stmt = $conn->prepare($sql)) {
+        
+        // Enlazar los parámetros dinámicamente
+        // Se usa call_user_func_array para bind_param ya que se pasa un array variable.
+        // PHP 5.6+ permite usar el operador '...' para desempaquetar el array.
+        $stmt->bind_param($param_types, ...$params); 
+        
+        $stmt->execute();
+        $result = $stmt->get_result();
 
-        // --- 6. Ejecución de la Consulta Preparada ---
-        if ($stmt = $conn->prepare($sql)) {
-            // Enlazar los parámetros dinámicamente        
-            $stmt->bind_param($param_types, ...$params);
-            $stmt->execute();
-            $result = $stmt->get_result();
-
-            if ($result && $result->num_rows > 0) {
-                $actividades = [];
-                while ($row = $result->fetch_assoc()) {
-                    $actividades[] = $row;
-                }
-                echo json_encode($actividades);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+        // ... El resto del manejo de resultados está bien ...
+        if ($result && $result->num_rows > 0) {
+            $actividades = [];
+            while ($row = $result->fetch_assoc()) {
+                $actividades[] = $row;
             }
-            $stmt->close();
+            // Asegurar que la respuesta JSON es lo único que se imprime
+            header('Content-Type: application/json');
+            echo json_encode($actividades);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas.', 'sql' => $sql, 'params' => $params]);
         }
+        $stmt->close();
+    } else {
+        header('Content-Type: application/json');
+        echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error, 'sql' => $sql]);
+    }
 }
 
 //FUNCION PARA MOSTRAR LAS SOLICITUDES PENDIENTES
@@ -445,5 +475,19 @@ if($opcion == "responderSolicitudLogistica"){
     // Devolver la respuesta en formato JSON
     header('Content-Type: application/json');
     echo json_encode($response);
+}
+
+if ($opcion == "consultarRegiones") {
+    // Consulta para obtener las regiones
+    $sql = "SELECT DISTINCT id, region FROM region WHERE id IN (select region from usuarios WHERE id_usuario in (SELECT engineer from servicios_planeados_mess))";
+    $result = $conn->query($sql);
+    $regiones = [];
+    if ($result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $regiones[] = $row;
+        }
+    }
+    echo json_encode($regiones);
+    $conn->close();
 }
 ?>  

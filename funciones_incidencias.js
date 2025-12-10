@@ -139,18 +139,20 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
     var area = $('#filtro-area').val();
     var ciudad = $('#filtro-ciudad').val();
     var estatus = $('#filtro-estatus').val();
+    var region = $('#filtro-region').val();    
 
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
         dataType: 'json',
-        data: { opcion, ing, area, ciudad, estatus },
+        data: { opcion, ing, area, ciudad, estatus, region },
         success: function(data) {
             // Lógica de Renderizado: Procesa los datos y los inserta en la tabla
             renderizarTabla(tablaSeleccionada, data);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             // Lógica de Manejo de Errores
+            //alert("Error al obtener las solicitudes: " + textStatus+ " - "+ errorThrown+ " - "+ jqXHR.responseText);
             mostrarMensajeDeError();
         }
     });
@@ -497,6 +499,39 @@ function cargarCiudades() {
                 i++;
             });
         },
+        error: function(xhr, status, error) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: "Hubo un problema al cargar los datos.",
+                confirmButtonText: "Aceptar"
+            });
+        }
+    });
+}
+
+//FUNCION PARA CARGAR INFORMACIÓN DE LAS REGIONES
+function cargarRegiones() {
+    $.ajax({
+        type: "POST",
+        url: "acciones_solicitud.php",
+        data: { opcion: "consultarRegiones" },
+        dataType: "json",
+        success: function(respuesta) {
+            var select = $("#filtro-region");
+            var i = 0;
+            respuesta.forEach(function(region) {        
+                if (i == 0) {
+                    var option = `<option value="">Selecciona...</option>`;
+                    select.append(option);
+                }
+                var option = `<option value="${region.id}">${region.region}</option>`;
+                select.append(option);
+                i++;
+            }
+            );
+        }   
+        ,
         error: function(xhr, status, error) {
             Swal.fire({
                 icon: "error",

@@ -61,61 +61,66 @@
 <!-- Begin Page Content -->
                 <div class="container-fluid">                    
                     <h1>Calendario de Actividades Planeadas</h1>
-
-                    <div class="row mb-2">
-                        <div class="col-md-2">
-                            <label for="filtro-area" class="mr-2">Filtrar por Área:</label>
-                            <select id="filtro-area" class="form-select mr-3" multiple="multiple" name="areas[]">
-                                <option value="">Todas las áreas</option> 
-                                <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
-                                <option value="CALIBRACIONES">Servicios Calibraciones</option>
-                                <option value="DIMENSIONAL">Servicios Dimensional</option>
-                                <option value="SFG">Servicios SFG</option>
-                                <option value="MITUTOYO">Servicios Mitutoyo</option>
-                                <option value="DUREZA">Servicios Dureza</option>
-                                <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                <option value="ELECTRICA">Servicios Electrica</option>
-                                <option value="TEMPERATURA">Servicios Temperatura</option>
-                                <option value="PRESION">Servicios Presion</option>
-                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
-                                <option value="MT">Servicios MT</option>
-                                <option value="MTS">Servicios MTS</option>
-                                <option value="ZEISS">Servicios Zeiss</option>
-                                <option value="MASA">Servicios Masa</option>
-                                <option value="FUERZA">Servicios Fuerza</option>
-                                <option value="PAR TORSIONAL">Servicios Par Torsional</option>
-                            </select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="filtro-ingeniero" class="mr-2">Filtrar por Ingeniero:</label>
-                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-3" multiple="multiple">
-                                <option value="0">Selecciona...</option>
-                            </select>                             
-                        </div>
-                        <div class="col-sm-3 mb-0">
-                            <label for="txtCiudad">Ciudad</label>
-                            <div id="DivCiudad" name="DivCiudad">
-                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-3" multiple="multiple">
-                                    <option value="">Selecciona...</option>
-                                </select>                                                    
-                            </div>
-                        </div>
-                        <div class="col-md-2">
-                            <label for="filtro-estatus" class="mr-2">Filtrar por Estatus:</label>
-                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-3" multiple="multiple">
-                                <option value="">Selecciona...</option>
-                                <option value="Pendientedeinformacion">Pendiente de información</option>
-                                <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
-                                <option value="Fechareservadasininformación">Fecha reservada sin información</option>
-                                <option value="Cancelada">Cancelar</option>
-                                <option value="Cerrada">Cerrar</option>
-                            </select>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button class="btn btn-primary btn-md w-100" style="margin-top: 24px;" onclick="filtrar()">Aplicar filtro</button>
-                        </div>
-                    </div>
+                                    <div class="row mb-0">
+                                        <div class="col-md-2">
+                                            <label for="filtro-area" class="mr-1">Filtrar por Área:</label>
+                                            <select id="filtro-area" class="form-select mr-1" multiple="multiple" name="areas[]">
+                                                <option value="">Todas las áreas</option> 
+                                                <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
+                                                <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                                                <option value="DIMENSIONAL">Servicios Dimensional</option>
+                                                <option value="SFG">Servicios SFG</option>
+                                                <option value="MITUTOYO">Servicios Mitutoyo</option>
+                                                <option value="DUREZA">Servicios Dureza</option>
+                                                <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                                                <option value="ELECTRICA">Servicios Electrica</option>
+                                                <option value="TEMPERATURA">Servicios Temperatura</option>
+                                                <option value="PRESION">Servicios Presion</option>
+                                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                <option value="MT">Servicios MT</option>
+                                                <option value="MTS">Servicios MTS</option>
+                                                <option value="ZEISS">Servicios Zeiss</option>
+                                                <option value="MASA">Servicios Masa</option>
+                                                <option value="FUERZA">Servicios Fuerza</option>
+                                                <option value="PAR TORSIONAL">Servicios Par Torsional</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <label for="filtro-ingeniero" class="mr-1">Filtrar por Ingeniero:</label>
+                                            <select id="filtro-ingeniero" name="ingeniero[]" class="form-select mr-1" multiple="multiple">
+                                                <option value="0">Selecciona...</option>
+                                            </select>                             
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="filtro-ciudad">Ciudad</label>
+                                            <div id="DivCiudad" name="DivCiudad">
+                                                <select id="filtro-ciudad" name="ciudad[]" class="form-select  mr-1" multiple="multiple">
+                                                    <option value="">Selecciona...</option>
+                                                </select>                                                    
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="filtro-estatus" class="mr-1">Filtrar por Estatus:</label>
+                                            <select id="filtro-estatus" name="estatus[]" class="form-select mr-1" multiple="multiple">
+                                                <option value="">Selecciona...</option>
+                                                <option value="Pendientedeinformacion">Pendiente de información</option>
+                                                <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                                <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                                <option value="Cancelada">Cancelar</option>
+                                                <option value="Cerrada">Cerrar</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="filtro-region">Region</label>                                            
+                                            <select id="filtro-region" name="region[]" class="form-select  mr-1" multiple="multiple">
+                                                <option value="">Selecciona...</option>
+                                            </select>                                                                                                
+                                        </div>
+                                        <div class="col-md-1 d-flex align-items-end">
+                                            <button class="btn btn-primary btn-sm w-100" style="margin-top: 24px;" onclick="filtrar()"><i class="fas fa-fw fa-filter"></i></button>
+                                        </div>
+                                    </div>
                     <br><br>
                     <!-- PLANEADAS -->
                     <div id="divPlaneadas">                        
@@ -175,6 +180,8 @@
             filtrar();
             cargarCiudades();
             cargarIngenieros();
+            cargarRegiones();
+
             // Inicializar Select2
             $('#filtro-area').select2({
                 placeholder: "Selecciona una o varias áreas", // Opcional: un texto de ayuda
@@ -190,6 +197,10 @@
             });
             $('#filtro-estatus').select2({            
                 placeholder: "Seleccione uno o varios estatus", // Opcional: un texto de ayuda
+                allowClear: true // Opcional: permite deseleccionar todo
+            });
+            $('#filtro-region').select2({            
+                placeholder: "Seleccione una o varias regiones", // Opcional: un texto de ayuda
                 allowClear: true // Opcional: permite deseleccionar todo
             });
         });        
@@ -390,6 +401,7 @@
             var area = $('#filtro-area').val();
             var ciudad = $('#filtro-ciudad').val();
             var estatus = $('#filtro-estatus').val();
+            var region = $('#filtro-region').val();
             var accion = "ActividadesCalendarioPlaneadas";
             
             $.ajax({
@@ -397,7 +409,7 @@
                 method: 'POST',
                 async: false,
                 dataType: 'json',
-                data: { accion, ing, area, ciudad, estatus },
+                data: { accion, ing, area, ciudad, estatus, region },
                 success: function (data) {
                     $('#calendarioActividadesPlaneadas').empty();
                     if (data.status === 'success') {
@@ -615,6 +627,39 @@
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
+        }
+
+        //FUNCION PARA CARGAR INFORMACIÓN DE LAS REGIONES
+        function cargarRegiones() {
+            $.ajax({
+                type: "POST",
+                url: "acciones_solicitud.php",
+                data: { opcion: "consultarRegiones" },
+                dataType: "json",
+                success: function(respuesta) {
+                    var select = $("#filtro-region");
+                    var i = 0;
+                    respuesta.forEach(function(region) {        
+                        if (i == 0) {
+                            var option = `<option value="">Selecciona...</option>`;
+                            select.append(option);
+                        }
+                        var option = `<option value="${region.id}">${region.region}</option>`;
+                        select.append(option);
+                        i++;
+                    }
+                    );
+                }   
+                ,
+                error: function(xhr, status, error) {
+                    Swal.fire({
+                        icon: "error",
+                        title: "Error",
+                        text: "Hubo un problema al cargar los datos.",
+                        confirmButtonText: "Aceptar"
+                    });
+                }
+            });
         }
     </script>
 </body>

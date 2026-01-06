@@ -27,7 +27,7 @@
     </style>
 
 <?php
-    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 177, 45, 26, 525, 435, 489, 523, 298, 81, 203, 8, 278, 206, 123, 516, 5280,525);
+    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 177, 45, 26, 525, 435, 489, 523, 298, 81, 203, 8, 278, 206, 123, 516, 5280,525,288);
 
     if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         // El usuario tiene permiso para ver la página

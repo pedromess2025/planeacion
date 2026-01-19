@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>ACTIVOS MESS</title>
+    <title>PLANEACION MESS</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">    
@@ -39,7 +39,7 @@
                 <!-- Begin Page Content -->
                 <div class="container-fluid">
                     <div class="row justify-content-center">
-                        <div class="col-lg-10">
+                        <div class="col-lg-12">
                             <div class="text-center mb-2">
                                 <h2 class="fw-bold">Ingreso de Equipo</h2>
                             </div>
@@ -95,8 +95,12 @@
                                         </div>
                                     </div>
 
-                                    <div class="d-grid shadow-sm">
-                                        <button type="submit" class="btn btn-primary text-uppercase">Generar Entrada de Equipo</button>
+                                    <div class="row mb-4">
+                                        <div class="col-md-4">-
+                                        </div>
+                                        <div class="col-md-4">
+                                            <button type="submit" class="btn btn-success text-uppercase">Registrar Entrada de Equipo</button>
+                                        </div>                                        
                                     </div>
 
                                     <input type="hidden" name="estatus" value="ENTRADA">

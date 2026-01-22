@@ -2,6 +2,7 @@
 include 'conn.php';
 mysqli_set_charset($conn, "utf8");
 $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : null;
+$id_usuario_cookie = isset($_COOKIE['id_usuario']) ? $_COOKIE['id_usuario'] : null;
 $opcion = $_POST["opcion"];
 $noEmpleadoInc = isset($_POST["noEmpleadoInc"]) ? $_POST["noEmpleadoInc"] : $noEmpleado_cookie;
 $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];        

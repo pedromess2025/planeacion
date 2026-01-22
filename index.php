@@ -566,9 +566,9 @@ function validarFormularioConsolidado(formData) {
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
-
-        function cargarVehiculos() {
-        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS        
+        
+        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS   
+        function cargarVehiculos() {     
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
@@ -599,6 +599,7 @@ function validarFormularioConsolidado(formData) {
                 }
             });
         }
+
         //Funcion para mostrar mensaje segun estatus
         function mostrarMensajeEstatus() {
             var estatus = $('#slcEstatus').val();
@@ -622,6 +623,7 @@ function validarFormularioConsolidado(formData) {
             }
         }
 
+        // FUNCION PARA AGREGAR O ELIMINAR DIVS DE ING
         function divsIng(accion) {
             if (accion === 'agrega') {
                 if ($('#Divsolicita2').is(':hidden')) {

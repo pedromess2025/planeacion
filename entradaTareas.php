@@ -41,40 +41,49 @@
 
                 <div class="container py-4">
                     <div class="row">
+                        <!-- DETALLE DEL EQUIPO -->
                         <div class="col-lg-4">
                             <div class="card card-order shadow-sm mb-4">
                                 <div class="card-body">
                                     <div class="header-accent mb-4">
                                         <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
-                                        <h4 class="fw-bold text-primary">#MET-2025-02</h4>
+                                        <h4 id="folio" class="fw-bold text-primary"></h4>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="small text-muted text-uppercase fw-bold d-block">Equipo</label>
-                                        <span class="fw-bold">Multímetro Digital 87V</span>
-                                        <small class="d-block text-muted">Marca: Fluke | S/N: FL-992011</small>
+                                        <label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero</label>
+                                        <small  id="noEmpleado" name="noEmpleado" class="d-block text-muted">No. Empleado:</small>
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="small text-muted text-uppercase fw-bold d-block">Diagnóstico Inicial</label>
-                                        <p class="small text-dark bg-light p-2 rounded">"Requiere calibración con certificado trazable. El cliente reporta variaciones en la lectura de corriente alterna."</p>
+                                        <label id="equipo" name="equipo" class="small text-muted text-uppercase fw-bold d-block"></label>
+                                        <small id="marca" name="marca" class="d-block text-muted"></small> 
+                                        <small id="modelo" name="modelo" class="d-block text-muted"></small>
+                                        <small id="serie" name="serie" class="d-block text-muted"></small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="small text-muted text-uppercase fw-bold d-block">Notas Recepción</label>
+                                        <p id="diagnostico" name="diagnostico" class="small text-dark bg-light p-3 rounded border" >Sin diagnóstico inicial</p>
                                     </div>
 
                                     <label class="small text-muted text-uppercase fw-bold d-block mb-2">Fotos de Entrada</label>
                                     <div class="img-gallery">
-                                        <img src="https://images.unsplash.com/photo-1590218126049-06628867c293?auto=format&fit=crop&q=80&w=200" alt="Foto 1">
-                                        <img src="https://via.placeholder.com/200" alt="Foto 2">
+                                        <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
                                 </div>
                             </div>
                         </div>
 
+                        <!-- FORMULARIO DE ACTUALIZACION DE TRABAJO -->
                         <div class="col-lg-8">
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <h5 class="fw-bold mb-4">Actualización de Trabajo</h5>
                                     
-                                    <form action="actualizar_proceso.php" method="POST" enctype="multipart/form-data">
+                                    <form id="actualizar" method="POST" enctype="multipart/form-data">
+                                        <input type="hidden" name="id_usuarioL" value="">
+                                        <input type="hidden" name="accion" value="guardarSeguimiento">
                                         <div class="status-update-box mb-4">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
@@ -109,7 +118,7 @@
                                             <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
                                                 <i class="bi bi-arrow-left"></i> Volver
                                             </button>
-                                            <button type="submit" class="btn btn-primary px-5 fw-bold shadow-sm">
+                                            <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
                                                 Guardar Avance
                                             </button>
                                         </div>
@@ -138,12 +147,147 @@
 
     <!-- Custom scripts for all pages-->
     <script src="js/sb-admin-2.min.js"></script>
-
     <script src="https://cdn.datatables.net/1.10.8/js/jquery.dataTables.min.js" defer="defer"></script>
     
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function() {
+            $('.select2').select2({
+                width: '100%'
+            });
+
+            // Obtener ID del equipo desde URL
+            const params = new URLSearchParams(window.location.search);
+            const id_registro = params.get('id');
+            cargarDetalleEquipo(id_registro);
+            
+        });
+
+        // Función para cargar los detalles del equipo
+        function cargarDetalleEquipo(id_registro) {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'obtenerDetalleEquipo',
+                    id_registro: id_registro
+                },
+                success: function(response) {
+                    if (response.success && response.data) {
+                        const equipo = response.data;
+                        
+                        // Folio
+                        $('#folio').text(equipo.folio || '#MET-0000-00');
+                        
+                        // Ingeniero
+                        $('#ingeniero').text(equipo.ingeniero_nombre || 'Sin asignar');
+                        $('#noEmpleado').text('No. Empleado: ' + (equipo.id_usuario_asignado || 'N/A'));
+                        
+                        // Equipo
+                        $('#equipo').text((equipo.marca || '') + ' ' + (equipo.modelo || '' ) + ' ' + (equipo.no_serie));      
+                        $('#marca').text('Marca: ' + (equipo.marca || 'N/A'));
+                        $('#modelo').text('Modelo: ' + (equipo.modelo || 'N/A'));
+                        $('#serie').text('No. Serie: ' + (equipo.no_serie || 'N/A'));
+
+                        // Diagnóstico
+                        $('#diagnostico').text(equipo.notas_recepcion || 'Sin diagnóstico inicial');
+                        
+                        // Fotos
+                        if (equipo.fotos && equipo.fotos.length > 0) {
+                            const gallery = $('.img-gallery');
+                            gallery.empty();
+                            equipo.fotos.forEach(foto => {
+                                gallery.append(`<img src="${foto}" alt="Foto equipo" onclick="window.open('${foto}', '_blank')">`);
+                            });
+                        }
+                        
+                        // Estatus actual
+                        if (equipo.estatus) {
+                            $('select[name="nuevo_estatus"]').val(equipo.estatus);
+                        }
+                        
+                        // Fecha de término
+                        if (equipo.fechaTermino) {
+                            $('input[name="fecha_termino"]').val(equipo.fechaTermino.substring(0, 10));
+                        }
+                        
+                        // Notas previas
+                        if (equipo.notas_ingeniero) {
+                            $('textarea[name="notas_ingeniero"]').val(equipo.notas_ingeniero);
+                        }
+                        
+                        // ID de registro en el formulario
+                        $('form').append(`<input type="hidden" name="id_registro" value="${id_registro}">`);
+                    }
+                },
+                error: function() {
+                    console.log('Error al cargar los datos del equipo');
+                }
+            });
+        }
+
+        // Funcion para guardar cambios
+        function guardarCambios() {
+            // Llenar el campo oculto con el valor de la cookie
+            $('input[name="id_usuarioL"]').val(getCookie('id_usuarioL'));
+            var formData = new FormData($('#actualizar')[0]);
+            
+            $.ajax({
+                url: 'accionesEntradas.php',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                processData: false,
+                contentType: false,
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Éxito!',
+                            text: 'Los cambios se han guardado correctamente.',
+                            confirmButtonText: 'Aceptar'
+                        }).then(() => {
+                            location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: response.message || 'Hubo un problema al guardar los cambios.',
+                            confirmButtonText: 'Aceptar'
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error AJAX:', textStatus, errorThrown);
+                    console.error('Respuesta:', jqXHR.responseText);
+                    
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                }
+            });
+        }
+
+        // Función para obtener el valor de una cookie
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                let cookie = cookies[i].trim();
+                if (cookie.indexOf(nameEQ) === 0) {
+                    return cookie.substring(nameEQ.length);
+                }
+            }
+            return null;
+        }
+    </script>
 </body>
 </html>

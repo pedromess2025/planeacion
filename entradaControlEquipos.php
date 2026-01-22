@@ -45,7 +45,7 @@
                             </div>
 
                             <div class="card card-minimal shadow-sm p-2">
-                                <form action="guardar_entrada.php" method="POST" enctype="multipart/form-data">
+                                <form id="entradaForm" method="POST" enctype="multipart/form-data">
                                     
                                     <div class="row mb-4">
                                         <div class="col-md-7">
@@ -71,7 +71,7 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">No. Serie</label>
-                                            <input type="text" name="serie" class="form-control" placeholder="N/S" required>
+                                            <input type="text" name="no_serie" class="form-control" placeholder="N/S" required>
                                         </div>
                                     </div>
 
@@ -87,7 +87,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Fotos del Equipo</label>
-                                            <div class="upload-area" onclick="document.getElementById('fotos').click()">
+                                            <div class="upload-area">
                                                 <i class="bi bi-camera-fill fs-3 text-muted"></i>
                                                 <p class="mb-0 small text-muted">Haga clic para subir fotos</p>
                                                 <input type="file" name="fotos[]" id="fotos" class="file" multiple accept="image/*">
@@ -96,10 +96,10 @@
                                     </div>
 
                                     <div class="row mb-4">
-                                        <div class="col-md-4">-
+                                        <div class="col-md-4">
                                         </div>
                                         <div class="col-md-4">
-                                            <button type="submit" class="btn btn-success text-uppercase">Registrar Entrada de Equipo</button>
+                                            <button type="button" class="btn btn-success text-uppercase" onclick="guardarEntrada()">Registrar Entrada de Equipo</button>
                                         </div>                                        
                                     </div>
 
@@ -176,30 +176,66 @@
 
     <script type="text/javascript">
         
-        document.getElementById('selectTipoActivo').addEventListener('change', function() {
-            var techDiv = document.getElementById('techFields');
-            // Asumiendo que el texto de la opción seleccionada contiene 'COMPUTO'
-            var textoSeleccionado = this.options[this.selectedIndex].text;
-            
-            if(textoSeleccionado.includes('COMPUTO')) {
-                techDiv.classList.remove('d-none');
-            } else {
-                techDiv.classList.add('d-none');
-            }
-                
-            //cargar empleados
-            //empleadoSolicita('#slcRespoonsable');
-            
-
-            // Inicializa Select2 en el campo de responsable
-            $('#slcRespoonsable').select2({            
-                placeholder: "Seleccione...",
-                width: '100%'
-            });
-
+        $(document).ready(function() {   
             
         });
 
+        // FUNVIOPN REGISTRAR ACTIVO
+        function guardarEntrada() {
+            // 1. Obtener el formulario HTML
+            var formElement = document.getElementById('entradaForm');
+            
+            // 2. Crear objeto FormData (Captura automáticamente todos los inputs, selects y archivos)
+            var formData = new FormData(formElement);
+
+            // 3. Agregar datos manuales que no estén en inputs o que requieran lógica extra
+            formData.append('accion', 'nuevaEntrada'); // Tu identificador para PHP
+
+            // 4. Enviar vía AJAX
+            $.ajax({
+                url: 'accionesEntradas',
+                method: 'POST',
+                data: formData,         // Enviamos el objeto FormData directo
+                
+                // --- ESTAS DOS LÍNEAS SON OBLIGATORIAS PARA ARCHIVOS ---
+                processData: false,     // Evita que jQuery transforme la data a string
+                contentType: false,     // Evita que jQuery pongan cabeceras incorrectas
+                // -------------------------------------------------------
+                
+                dataType: 'json',
+                success: function(data) {
+                    if (data.status === 'success') {
+                        Swal.fire({
+                            title: "¡Guardado!",
+                            text: "La entrada se registró con éxito.",
+                            icon: "success",
+                            confirmButtonText: "Aceptar"
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
+                                formElement.reset(); // Limpia el formulario
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            title: "Error",
+                            text: data.message,
+                            icon: "error"
+                        });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error(textStatus, errorThrown);
+                    Swal.fire({
+                        title: "Error de Servidor",
+                        text: "No se pudo registrar la entrada. Revise la consola.",
+                        icon: "error"
+                    });
+                }
+            });
+        }
+
+        // Función para convertir texto a mayúsculas y quitar acentos
         function convertirTexto(e) {
             // Convertir a mayúsculas y quitar acentos
             e.value = e.value
@@ -208,6 +244,7 @@
             .replace(/[\u0300-\u036f]/g, "");
         }
 
+        // Función para obtener el valor de una cookie por su nombre
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");

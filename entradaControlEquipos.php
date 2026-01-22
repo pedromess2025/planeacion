@@ -46,12 +46,40 @@
 
                             <div class="card card-minimal shadow-sm p-2">
                                 <form id="entradaForm" method="POST" enctype="multipart/form-data">
-                                    
                                     <div class="row mb-4">
                                         <div class="col-md-7">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Cliente</label>
                                             <input type="text" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
                                         </div>
+                                        <div class="col-md-5">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Contacto del Cliente</label>
+                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico" required>
+                                        </div>
+                                        <div class="col-sm-4 mb-0">
+                                            <label for="slcRespoonsable" class="form-label small text-uppercase fw-bold text-muted">Ingeniero</label>
+                                            <div id="Divsolicita" name="Divsolicita">
+                                                <select id="slcRespoonsable" name="slcRespoonsable" class="form-select">
+                                                    <option value="0">Selecciona...</option>
+                                                </select>                                                    
+                                            </div>
+                                            <div id="Divsolicita2" name="Divsolicita2" style="display: none;">
+                                                <select id="slcRespoonsable2" name="slcRespoonsable2" class="form-select">
+                                                    <option value="0">Selecciona...</option>
+                                                </select>
+                                            </div>
+                                            <div id="Divsolicita3" name="Divsolicita3" style="display: none;">
+                                                <select id="slcRespoonsable3" name="slcRespoonsable3" class="form-select">
+                                                    <option value="0">Selecciona...</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                            <div class="col-sm-3 mb-0">
+                                                <label for="btnAgregar">+ Ing.</label>
+                                                <div class="input-group">
+                                                    <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
+                                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
+                                                </div>
+                                            </div>
                                         <div class="col-md-5">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Área</label>
                                             <select name="area" class="form-select" required>
@@ -59,7 +87,6 @@
                                             </select>
                                         </div>
                                     </div>
-
                                     <div class="row mb-4">
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Marca</label>
@@ -72,6 +99,12 @@
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">No. Serie</label>
                                             <input type="text" name="no_serie" class="form-control" placeholder="N/S" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
+                                                <label class="form-check-label" for="switchCheckDefault">Pz. Demo</label>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -177,7 +210,19 @@
     <script type="text/javascript">
         
         $(document).ready(function() {   
+            //cargar empleados
+            empleadoSolicita('#slcRespoonsable');
+            empleadoSolicita('#slcRespoonsable2');
+            empleadoSolicita('#slcRespoonsable3');
             
+            // Inicializar Select2 con búsqueda
+            setTimeout(function() {
+                $('#slcRespoonsable, #slcRespoonsable2, #slcRespoonsable3').select2({
+                    placeholder: 'Buscar ingeniero...',
+                    allowClear: true,
+                    width: '100%'
+                });
+            }, 500);
         });
 
         // FUNVIOPN REGISTRAR ACTIVO
@@ -235,6 +280,70 @@
             });
         }
 
+        function empleadoSolicita(seleccionado) {
+            opcion = "empleados";
+            $.ajax({
+                url: 'acciones_solicitud.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {opcion},
+                success: function(data) {
+                    var select = $(seleccionado);
+                    i = 0;
+                    data.forEach(function(usuarios) {
+                        if (i = 0) {
+                            var option = $('<option></option>').attr('value', '0').text('Selecciona...');
+                            select.append(option);
+                        }
+                        var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
+                        select.append(option);
+                    });
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        title: "La solicitúd no se pudo procesar!",
+                        icon: "error",
+                        draggable: true
+                    });
+                }
+            });
+        }
+
+        // Funcion para agregar o eliminar divs de ingenieros
+        function divsIng(accion) {
+            if (accion === 'agrega') {
+                if ($('#Divsolicita2').is(':hidden')) {
+                    $('#Divsolicita2').show();
+                } else if ($('#Divsolicita3').is(':hidden')) {
+                    $('#Divsolicita3').show();
+                } else {
+                    Swal.fire({
+                        title: "Solo puedes agregar hasta 3 ingenieros",
+                        icon: "warning",
+                        draggable: true
+                    });
+                }
+            } else if (accion === 'elimina') {
+                if ($('#Divsolicita3').is(':visible')) {
+                    $('#Divsolicita3').hide();
+                    $('#slcRespoonsable3').val('0');
+                    $('#slcRespoonsable2').val('0');
+                } else if ($('#Divsolicita2').is(':visible')) {
+                    $('#Divsolicita2').hide();
+                    $('#slcRespoonsable2').val('0');
+                    $('#slcRespoonsable3').val('0');
+                } else {
+                    $('#slcRespoonsable2').val('0');
+                    $('#slcRespoonsable3').val('0');
+                    Swal.fire({
+                        title: "No hay más ingenieros para eliminar",
+                        icon: "warning",
+                        draggable: true
+                    });
+                }
+            }
+        }
+        
         // Función para convertir texto a mayúsculas y quitar acentos
         function convertirTexto(e) {
             // Convertir a mayúsculas y quitar acentos

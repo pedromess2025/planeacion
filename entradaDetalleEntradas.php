@@ -390,7 +390,6 @@
         $(document).ready(function() {
             inicializarTablaEquipos();
             cargarEquipos();
-
         });
 
         // Variables globales
@@ -657,6 +656,7 @@
             .replace(/[\u0300-\u036f]/g, "");
         }
 
+        // Función para obtener el valor de una cookie
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");

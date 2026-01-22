@@ -93,6 +93,12 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Resumen por Área</span>
     </a>
 </li>
+<?php
+//USUARIOS QUE PUEDEN REGISTRAR ENTRADAS DE EQUIPOS
+$usuariosRegistran = array(523, 45, 177, 276, 183, 555);
+
+if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
+?>
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEntradas" aria-expanded="false" aria-controls="collapseEntradas">
@@ -111,6 +117,9 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         </div>
     </div>
 </li>
+<?php
+}
+?>
 
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">

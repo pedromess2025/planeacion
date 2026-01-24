@@ -182,7 +182,7 @@
 
         /* Sin asignar */
         .sin-asignar {
-            color: #ffc107;
+            color: #fdb556;
             font-weight: 700;
         }
 
@@ -473,7 +473,6 @@
                     `<span class="cell-folio">${equipo.folio}</span>`,
                     `
                     <div>
-                        <span class="info-label-table">Cliente</span>
                         <span class="info-value-table">${equipo.cliente} <span class="area-tag-table"><i class="fas fa-tag"></i> ${equipo.area}</span></span>
                     </div>`,    
                     `
@@ -488,14 +487,25 @@
                         </span>
                         <span class="info-subtitle-table">"${equipo.diagnostico_inicial}"</span>
                     </div>`,
-                    `<span class="info-value-table ${equipo.nombre ? '' : 'sin-asignar'}">${equipo.nombre || 'Sin asignar'}</span>`,
+                    (() => {
+                        const nombresStr = equipo.nombres_ingenieros || equipo.nombre || '';
+                        const nombresConIcono = nombresStr
+                            .split(',')
+                            .map(n => n.trim())
+                            .filter(n => n.length > 0)
+                            .map(n => `<i class="fas fa-user"></i> ${n}`)
+                            .join('<br>');
+                        return `<span class="info-value-table ${nombresConIcono ? '' : 'sin-asignar'}">${nombresConIcono ? ' ' + nombresConIcono : 'Sin asignar'}</span>`;
+                    })(),
                     `<div class="cell-actions">
-                        <button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})">
-                            Asignar Ing.
-                        </button>
-                        <button class="btn btn-sm btn-light" onclick="verFicha(${equipo.id})">
-                            Ver Ficha
-                        </button>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
+                                <i class="fas fa-user-plus"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="verFicha(${equipo.id})" title="Ver Ficha">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     `
                 ];

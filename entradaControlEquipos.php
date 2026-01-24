@@ -47,12 +47,16 @@
                             <div class="card card-minimal shadow-sm p-2">
                                 <form id="entradaForm" method="POST" enctype="multipart/form-data">
                                     <div class="row mb-4">
-                                        <div class="col-md-7">
+                                        <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Cliente</label>
                                             <input type="text" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
                                         </div>
-                                        <div class="col-md-5">
-                                            <label class="form-label small text-uppercase fw-bold text-muted">Contacto del Cliente</label>
+                                        <div class="col-md-4">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
+                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Contacto</label>
                                             <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico" required>
                                         </div>
                                         <div class="col-sm-4 mb-0">
@@ -88,6 +92,12 @@
                                         </div>
                                     </div>
                                     <div class="row mb-4">
+                                        <div class="col-md-0">
+                                            <div class="form-check form-switch">
+                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">
+                                                <label class="form-check-label" for="switchCheckDefault">Demo</label>
+                                            </div>
+                                        </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Marca</label>
                                             <input type="text" name="marca" class="form-control" placeholder="Marca">
@@ -99,12 +109,6 @@
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">No. Serie</label>
                                             <input type="text" name="no_serie" class="form-control" placeholder="N/S" required>
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="form-check form-switch">
-                                                <input class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault">
-                                                <label class="form-check-label" for="switchCheckDefault">Pz. Demo</label>
-                                            </div>
                                         </div>
                                     </div>
 
@@ -119,12 +123,9 @@
                                             <input type="date" name="fecha_estimada" class="form-control">
                                         </div>
                                         <div class="col-md-6">
-                                            <label class="form-label small text-uppercase fw-bold text-muted">Fotos del Equipo</label>
-                                            <div class="upload-area">
-                                                <i class="bi bi-camera-fill fs-3 text-muted"></i>
-                                                <p class="mb-0 small text-muted">Haga clic para subir fotos</p>
-                                                <input type="file" name="fotos[]" id="fotos" class="file" multiple accept="image/*">
-                                            </div>
+                                            <label class="form-label fw-bold small text-muted">Fotos del Equipo</label>
+                                            <input type="file" id="fotos" name="fotos[]" class="form-control" multiple accept="image/*" data-max-files="3">
+                                            <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado. Máximo 3 fotos. </small>
                                         </div>
                                     </div>
 
@@ -214,6 +215,21 @@
             empleadoSolicita('#slcRespoonsable');
             empleadoSolicita('#slcRespoonsable2');
             empleadoSolicita('#slcRespoonsable3');
+            
+            // Validar límite de fotos
+            $('#fotos').on('change', function() {
+                const maxFiles = parseInt($(this).data('max-files'));
+                const files = this.files;
+                
+                if (files.length > maxFiles) {
+                    Swal.fire({
+                        title: "Límite de archivos excedido",
+                        text: `Solo puedes seleccionar máximo ${maxFiles} fotos`,
+                        icon: "warning"
+                    });
+                    this.value = ''; // Limpiar el input
+                }
+            });
             
             // Inicializar Select2 con búsqueda
             setTimeout(function() {

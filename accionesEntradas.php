@@ -2,6 +2,7 @@
 include_once 'conn.php';
 
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
+    $usuario = isset($_COOKIE['id_usuarioL']) ? $_COOKIE['id_usuarioL'] : ''; // Usuario que registra la entrada
     //REGISTRO DE NUEVA ENTRADA
     $cliente = isset($_POST['cliente']) ? $_POST['cliente'] : '';
     $area  = isset($_POST['area']) ? $_POST['area'] : '';   
@@ -11,8 +12,19 @@ include_once 'conn.php';
     $diagnostico_inicial  = isset($_POST['diagnostico_inicial']) ? $_POST['diagnostico_inicial'] : '';
     $fecha_estimada  = isset($_POST['fecha_estimada']) ? $_POST['fecha_estimada'] : '';
     $fotos = isset($_POST['fotos']) ? $_POST['fotos'] : '';
-    $usuario = isset($_COOKIE['id_usuarioL']) ? $_COOKIE['id_usuarioL'] : ''; // Usuario que registra la entrada
     $observaciones = isset($_POST['observaciones']) ? $_POST['observaciones'] : '';
+    $demo = isset($_POST['demo']) ? 1 : 0; // Demo: 1 si está marcado, 0 si no
+    $contacto_nombre = isset($_POST['nombre_cliente']) ? $_POST['nombre_cliente'] : '';
+    $contacto = isset($_POST['contacto']) ? $_POST['contacto'] : '';
+    
+    // CAPTURAR IDs DE INGENIEROS
+    $slcRespoonsable = (isset($_POST['slcRespoonsable']) && $_POST['slcRespoonsable'] != '0') ? intval($_POST['slcRespoonsable']) : '';
+    $slcRespoonsable2 = (isset($_POST['slcRespoonsable2']) && $_POST['slcRespoonsable2'] != '0') ? intval($_POST['slcRespoonsable2']) : '';
+    $slcRespoonsable3 = (isset($_POST['slcRespoonsable3']) && $_POST['slcRespoonsable3'] != '0') ? intval($_POST['slcRespoonsable3']) : '';
+    
+    // Concatenar IDs de ingenieros (opcional, solo si existen)
+    $ingenieros = array_filter([$slcRespoonsable, $slcRespoonsable2, $slcRespoonsable3]);
+    $id_usuario_asignado = !empty($ingenieros) ? implode(',', $ingenieros) : '';
 
     //INGENIERO ASIGNADO
     $id_registro = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
@@ -21,20 +33,20 @@ include_once 'conn.php';
     $fecha_seguimiento = !empty($_POST['fecha_seguimiento']) ? $_POST['fecha_seguimiento'] : null;
     
     //ACTUALIZACION DE EQUIPO
-    $equipo_id = $_POST['equipo_id'];
-    $ingeniero_id = $_POST['ingeniero_id'];
+    $equipo_id = isset($_POST['equipo_id']) ? $_POST['equipo_id'] : '';
+    $ingeniero_id = isset($_POST['ingeniero_id']) ? $_POST['ingeniero_id'] : '';
     $nuevo_estatus = isset($_POST['nuevo_estatus']) ? $_POST['nuevo_estatus'] : '';
     $fecha_termino = isset($_POST['fecha_termino']) ? $_POST['fecha_termino'] : null;
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, fotos_ruta, estatus, fecha_registro, fechaTermino)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, fotos_ruta, id_usuario_asignado, estatus, fecha_registro, fechaTermino,  demo, contacto_nombre, contacto)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
         
-        // "s" = string, "i" = integer, "d" = double (decimales)
-        $stmt->bind_param("ssssssssss", 
-                        $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $fotos, $estatus, $fecha_estimada
+        // "s" = string, "i" = integer
+        $stmt->bind_param("ssssssssssiss", 
+                        $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $fotos, $id_usuario_asignado, $estatus, $demo, $contacto_nombre, $contacto
         );
         
         if ($stmt->execute()) {
@@ -98,12 +110,16 @@ include_once 'conn.php';
     // CARGAS DE REGISTROS DE ENTRADAS
     if ($accion == 'obtenerEquipos') {
         $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
-                    ent.fecha_promesa_entrega as fecha_compromiso, 
-                    ent.notas_recepcion as diagnostico_inicial, 
-                    ent.estatus, ent.id_usuario_asignado, us.nombre,
-                    CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) as folio
+                    ent.fecha_promesa_entrega AS fecha_compromiso, 
+                    ent.notas_recepcion AS diagnostico_inicial, 
+                    ent.estatus, ent.id_usuario_asignado,
+                    (
+                        SELECT GROUP_CONCAT(us.nombre SEPARATOR ', ')
+                        FROM usuarios us
+                        WHERE FIND_IN_SET(us.id_usuario, ent.id_usuario_asignado)
+                    ) AS nombres_ingenieros,
+                    CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                 FROM entrada_registros ent
-                LEFT JOIN usuarios us ON us.id = ent.id_usuario_asignado   
                 WHERE ent.estatus != 'Terminado'
                 ORDER BY ent.fecha_promesa_entrega ASC";
         

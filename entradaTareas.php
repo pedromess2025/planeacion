@@ -49,9 +49,8 @@
                                         <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
                                         <h4 id="folio" class="fw-bold text-primary"></h4>
                                     </div>
-
                                     <div class="mb-3">
-                                        <label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero</label>
+                                        <label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
                                         <small  id="noEmpleado" name="noEmpleado" class="d-block text-muted">No. Empleado:</small>
                                     </div>
 
@@ -94,6 +93,7 @@
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
                                                         <option value="CALIBRACION">⚖️ En Calibración</option>
                                                         <option value="TERMINADO">✅ Terminado</option>
+                                                        <option value="ENTREGADO">Terminado sin Enviar</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-6">
@@ -110,7 +110,7 @@
 
                                         <div class="mb-4">
                                             <label class="form-label fw-bold small text-muted">SUBIR EVIDENCIA DE SALIDA (FOTOS)</label>
-                                            <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*">
+                                            <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*" data-max-files="3">
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado.</small>
                                         </div>
 
@@ -184,8 +184,9 @@
                         $('#folio').text(equipo.folio || '#MET-0000-00');
                         
                         // Ingeniero
-                        $('#ingeniero').text(equipo.ingeniero_nombre || 'Sin asignar');
-                        $('#noEmpleado').text('No. Empleado: ' + (equipo.id_usuario_asignado || 'N/A'));
+                        const nombresStr = equipo.nombres_ingenieros || equipo.nombre || '';
+                        $('#ingeniero').text('Ingeniero(s): ' + nombresStr);
+                        $('#noEmpleado').text('No. Empleado(s): ' + (equipo.id_usuario_asignado || 'N/A'));
                         
                         // Equipo
                         $('#equipo').text((equipo.marca || '') + ' ' + (equipo.modelo || '' ) + ' ' + (equipo.no_serie));      

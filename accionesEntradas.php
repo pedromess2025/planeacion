@@ -11,7 +11,6 @@ include_once 'conn.php';
     $no_serie = isset($_POST['no_serie']) ? $_POST['no_serie'] : '';
     $diagnostico_inicial  = isset($_POST['diagnostico_inicial']) ? $_POST['diagnostico_inicial'] : '';
     $fecha_estimada  = isset($_POST['fecha_estimada']) ? $_POST['fecha_estimada'] : '';
-    $fotos = isset($_POST['fotos']) ? $_POST['fotos'] : '';
     $observaciones = isset($_POST['observaciones']) ? $_POST['observaciones'] : '';
     $demo = isset($_POST['demo']) ? 1 : 0; // Demo: 1 si está marcado, 0 si no
     $contacto_nombre = isset($_POST['nombre_cliente']) ? $_POST['nombre_cliente'] : '';
@@ -24,7 +23,6 @@ include_once 'conn.php';
     
     // Concatenar IDs de ingenieros (opcional, solo si existen)
     $ingenieros = array_filter([$slcRespoonsable, $slcRespoonsable2, $slcRespoonsable3]);
-    $id_usuario_asignado = !empty($ingenieros) ? implode(',', $ingenieros) : '';
 
     //INGENIERO ASIGNADO
     $id_registro = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
@@ -40,20 +38,41 @@ include_once 'conn.php';
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, fotos_ruta, id_usuario_asignado, estatus, fecha_registro, fechaTermino,  demo, contacto_nombre, contacto)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
         
         // "s" = string, "i" = integer
-        $stmt->bind_param("ssssssssssiss", 
-                        $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $fotos, $id_usuario_asignado, $estatus, $demo, $contacto_nombre, $contacto
+        $stmt->bind_param("ssssssssiss", 
+            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto
         );
         
         if ($stmt->execute()) {
             $ultimoId = $conn->insert_id; // Obtenemos ID para las fotos
             $errorFotos = false;
+            $errorIngenieros = false;
 
-            // 1. MANEJO DE FOTOS 
+            // 1. REGISTRAR INGENIEROS EN TABLA entrada_log_ingenieros
+            if (!empty($ingenieros)) {
+                $sqlIngeniero = "INSERT INTO entrada_log_ingenieros (id_registro, id_ing, fecha, estatus, id_asigno) VALUES (?, ?, NOW(), 'ASIGNADO', ?)";
+                $stmtIng = $conn->prepare($sqlIngeniero);
+                
+                foreach ($ingenieros as $id_ing) {
+                    $stmtIng->bind_param("iii", $ultimoId, $id_ing, $usuario);
+                    if (!$stmtIng->execute()) {
+                        $errorIngenieros = true;
+                    }
+                }
+                $stmtIng->close();
+                
+                // Actualizar fecha_asignacion si hay ingenieros asignados
+                $stmtFechaAsig = $conn->prepare("UPDATE entrada_registros SET fecha_asignacion = NOW() WHERE id_registro = ?");
+                $stmtFechaAsig->bind_param("i", $ultimoId);
+                $stmtFechaAsig->execute();
+                $stmtFechaAsig->close();
+            }
+
+            // 2. MANEJO DE FOTOS
             if (isset($_FILES['fotos'])) {
                 $fotos = $_FILES['fotos'];
                 // Contamos cuántos archivos vienen
@@ -92,7 +111,7 @@ include_once 'conn.php';
             }
             $response = array(
                 'status' => 'success', 
-                'message' => 'Entrada registrada con éxito.' . ($errorFotos ? ' (Hubo error al subir algunas fotos)' : '')
+                'message' => 'Entrada registrada con éxito.' . ($errorFotos ? ' (Hubo error al subir algunas fotos)' : '') . ($errorIngenieros ? ' (Hubo error al registrar algunos ingenieros)' : '')
             );
         } else {
             $response = array(
@@ -112,11 +131,17 @@ include_once 'conn.php';
         $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
                     ent.fecha_promesa_entrega AS fecha_compromiso, 
                     ent.notas_recepcion AS diagnostico_inicial, 
-                    ent.estatus, ent.id_usuario_asignado,
+                    ent.estatus,
                     (
-                        SELECT GROUP_CONCAT(us.nombre SEPARATOR ', ')
-                        FROM usuarios us
-                        WHERE FIND_IN_SET(us.id_usuario, ent.id_usuario_asignado)
+                        SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
+                        FROM entrada_log_ingenieros eli
+                        WHERE eli.id_registro = ent.id_registro
+                    ) AS ids_ingenieros,
+                    (
+                        SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
+                        FROM entrada_log_ingenieros eli
+                        INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                        WHERE eli.id_registro = ent.id_registro
                     ) AS nombres_ingenieros,
                     CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                 FROM entrada_registros ent
@@ -153,17 +178,26 @@ include_once 'conn.php';
 
     // ASIGNAR EQUIPO A INGENIERO
     if ($accion == 'asignarIngeniero') {
-        $sqlUpdate = "UPDATE entrada_registros 
-                    SET id_usuario_asignado = $ingeniero_id, estatus = 'Recibido', fecha_asignacion = NOW()
-                    WHERE id_registro = $equipo_id";
+        // 1. Insertar en entrada_log_ingenieros
+        $sqlInsert = "INSERT INTO entrada_log_ingenieros (id_registro, id_ing, fecha, estatus, id_asigno) VALUES (?, ?, NOW(), 'ASIGNADO', ?)";
+        $stmtInsert = $conn->prepare($sqlInsert);
+        $stmtInsert->bind_param("iii", $equipo_id, $ingeniero_id, $usuario);
         
-        if ($conn->query($sqlUpdate)) {
+        if ($stmtInsert->execute()) {
+            // 2. Actualizar estatus del equipo si es necesario
+            // Solo actualizar fecha_asignacion si aún no existe (es NULL)
+            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = 'Recibido', fecha_asignacion = IF(fecha_asignacion IS NULL, NOW(), fecha_asignacion) WHERE id_registro = ?");
+            $stmtUpd->bind_param("i", $equipo_id);
+            $stmtUpd->execute();
+            $stmtUpd->close();
+            
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
         } else {
             header('Content-Type: application/json');
-            echo json_encode(['success' => false, 'error' => $conn->error]);
+            echo json_encode(['success' => false, 'error' => $stmtInsert->error]);
         }
+        $stmtInsert->close();
         exit;
     }
 
@@ -171,11 +205,46 @@ include_once 'conn.php';
     if ($accion == 'guardarSeguimiento') {
         // Insertar nota si viene
         if ($nota !== '') {
-            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento) VALUES (?, ?, ?, NOW())");
-            $stmtSeg->bind_param('iis', $id_registro, $usuario, $nota);
+            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, estatus) VALUES (?, ?, ?, NOW(), ?)");
+            $stmtSeg->bind_param('iiss', $id_registro, $usuario, $nota, $nuevo_estatus);
             $stmtSeg->execute();
+            $id_seguimiento = $conn->insert_id; // Obtener ID del seguimiento insertado
             $stmtSeg->close();
         }
+        
+        // MANEJO DE FOTOS DE SALIDA (SEGUIMIENTO)
+        if (isset($_FILES['fotos_salida']) && isset($id_seguimiento)) {
+            $fotos = $_FILES['fotos_salida'];
+            $totalArchivos = count($fotos['name']);
+            
+            // Crear carpeta si no existe
+            $directorio = 'imgEntradas/';
+            if (!file_exists($directorio)) {
+                mkdir($directorio, 0777, true);
+            }
+            
+            for ($i = 0; $i < $totalArchivos; $i++) {
+                // Verificar que no hubo error en la subida y que tiene nombre
+                if ($fotos['error'][$i] === UPLOAD_ERR_OK && !empty($fotos['name'][$i])) {
+                    
+                    $tmpName = $fotos['tmp_name'][$i];
+                    
+                    // Generar nombre único: seguimiento_ID_TIMESTAMP_index
+                    $nuevoNombre = 'seguimiento_' . $id_registro . '_' . time() . '_' . $i . '.' . pathinfo($fotos['name'][$i], PATHINFO_EXTENSION);
+                    $rutaDestino = $directorio . $nuevoNombre;
+                    
+                    if (move_uploaded_file($tmpName, $rutaDestino)) {
+                        // Insertar ruta en BD
+                        $sqlFoto = "UPDATE entrada_seguimiento SET ruta_foto = ? WHERE id_seguimiento = ?";
+                        $stmtFoto = $conn->prepare($sqlFoto);
+                        $stmtFoto->bind_param("si", $rutaDestino, $id_seguimiento);
+                        $stmtFoto->execute();
+                        $stmtFoto->close();
+                    }
+                }
+            }
+        }
+        
         // Actualizar estatus y fecha de término
         if ($nuevo_estatus !== '') {
             $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = ?, fechaTermino = IFNULL(?, fechaTermino) WHERE id_registro = ?");
@@ -191,9 +260,19 @@ include_once 'conn.php';
     // OBTENER DETALLES DE EQUIPO
     if ($accion == 'obtenerDetalleEquipo') {
         
-        $sql = "SELECT ent.*, us.nombre as ingeniero_nombre
+        $sql = "SELECT ent.*,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
+                    FROM entrada_log_ingenieros eli
+                    WHERE eli.id_registro = ent.id_registro
+                ) AS ids_ingenieros,
+                (
+                    SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
+                    FROM entrada_log_ingenieros eli
+                    INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                    WHERE eli.id_registro = ent.id_registro
+                ) AS ingeniero_nombre
                 FROM entrada_registros ent
-                LEFT JOIN usuarios us ON us.id = ent.id_usuario_asignado
                 WHERE ent.id_registro = ?";
         
         $stmt = $conn->prepare($sql);
@@ -208,10 +287,65 @@ include_once 'conn.php';
             $folio = '#MET-' . date('Y', strtotime($equipo['fecha_registro'])) . '-' . str_pad($equipo['id_registro'], 2, '0', STR_PAD_LEFT);
             $equipo['folio'] = $folio;
             
-            // Buscar fotos
-            $fotosDirPattern = 'imgEntradas/entrada_' . $equipo['id_registro'] . '_*';
-            $fotos = glob($fotosDirPattern);
-            $equipo['fotos'] = $fotos ?: [];
+            // Buscar fotos desde BD (entrada_fotos) - solo fotos de entrada (patrón: entrada_x_xxx_x)
+            $sqlFotos = "SELECT ruta FROM entrada_fotos WHERE id_regEntrada = ? AND ruta LIKE 'imgEntradas/entrada_%' ORDER BY id ASC";
+            $stmtFotos = $conn->prepare($sqlFotos);
+            $stmtFotos->bind_param('i', $equipo['id_registro']);
+            $stmtFotos->execute();
+            $resultFotos = $stmtFotos->get_result();
+            $fotos = [];
+            while ($fotoRow = $resultFotos->fetch_assoc()) {
+                if (!empty($fotoRow['ruta'])) {
+                    $fotos[] = $fotoRow['ruta'];
+                }
+            }
+            $stmtFotos->close();
+            $equipo['fotos'] = $fotos;
+            
+            // Buscar seguimientos/comentarios
+            $sqlSeguimientos = "SELECT es.id_seguimiento, es.id_registro, es.id_usuario_nota, es.nota, 
+                                       es.fecha_seguimiento, es.ruta_foto, es.estatus,
+                                       us.nombre AS nombre_usuario
+                                FROM entrada_seguimiento es
+                                INNER JOIN usuarios us ON us.id_usuario = es.id_usuario_nota
+                                WHERE es.id_registro = ?
+                                ORDER BY es.fecha_seguimiento DESC";
+            $stmtSeg = $conn->prepare($sqlSeguimientos);
+            $stmtSeg->bind_param('i', $id_registro);
+            $stmtSeg->execute();
+            $resultSeg = $stmtSeg->get_result();
+            
+            $seguimientos = [];
+            while ($row = $resultSeg->fetch_assoc()) {
+                // Formatear fecha
+                $fecha = date('d/m/Y H:i', strtotime($row['fecha_seguimiento']));
+                
+                // Obtener iniciales del nombre
+                $palabras = explode(' ', $row['nombre_usuario']);
+                $iniciales = '';
+                foreach ($palabras as $palabra) {
+                    if (!empty($palabra)) {
+                        $iniciales .= strtoupper(substr($palabra, 0, 1));
+                    }
+                }
+
+                // Construir la estructura: "fecha-iniciales-estatus-nota" (fecha e iniciales en negrita, azul si tiene fotos)
+                $tieneImagenes = !empty($row['ruta_foto']);
+                $estilo = $tieneImagenes ? 'style="color: #0d6efd; cursor: pointer;"' : '';
+                $onclick = $tieneImagenes ? 'onclick="mostrarFotosSeguimiento(INDEX_PLACEHOLDER)"' : '';
+                $icono_img = $tieneImagenes ? ' <i class="fas fa-image"></i>' : '';
+                $estatus_label = !empty($row['estatus']) ? ' - ' . $row['estatus'] : '';
+                
+                $seguimientos[] = [
+                    'html' => $icono_img . '<strong ' . $estilo . ' ' . $onclick . '>' . $fecha . ' - ' . $iniciales . $estatus_label . '</strong> - ' . $row['nota'],
+                    'tieneImagenes' => $tieneImagenes,
+                    'fotos' => $tieneImagenes ? [$row['ruta_foto']] : [] // Convertir a array
+                ];
+            }
+            $stmtSeg->close();
+            
+            // Unir todas las notas con saltos de línea dobles, o mensaje por defecto si no hay
+            $equipo['notas_seguimiento'] = !empty($seguimientos) ? $seguimientos : null;
             
             header('Content-Type: application/json');
             echo json_encode(['success' => true, 'data' => $equipo]);

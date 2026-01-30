@@ -488,14 +488,30 @@
                         <span class="info-subtitle-table">"${equipo.diagnostico_inicial}"</span>
                     </div>`,
                     (() => {
-                        const nombresStr = equipo.nombres_ingenieros || equipo.nombre || '';
-                        const nombresConIcono = nombresStr
+                        const nombresStr = (equipo.nombres_ingenieros || equipo.nombre || '').toString();
+
+                        let nombresArr = nombresStr
                             .split(',')
                             .map(n => n.trim())
-                            .filter(n => n.length > 0)
-                            .map(n => `<i class="fas fa-user"></i> ${n}`)
-                            .join('<br>');
-                        return `<span class="info-value-table ${nombresConIcono ? '' : 'sin-asignar'}">${nombresConIcono ? ' ' + nombresConIcono : 'Sin asignar'}</span>`;
+                            .filter(n => n.length > 0);
+
+                        if (nombresArr.length === 0 && nombresStr.trim().length > 0) {
+                            nombresArr = [nombresStr.trim()];
+                        }
+
+                        const maxLen = Math.max(nombresArr.length);
+                        const items = [];
+
+                        for (let i = 0; i < maxLen; i++) {
+                            const nombre = nombresArr[i] || '';
+                            const etiqueta = nombre ? `${nombre}` : '';
+                            if (etiqueta) {
+                                items.push(`<i class="fas fa-user"></i> ${etiqueta}`);
+                            }
+                        }
+
+                        const contenido = items.join('<br>');
+                        return `<span class="info-value-table ${contenido ? '' : 'sin-asignar'}">${contenido ? ' ' + contenido : 'Sin asignar'}</span>`;
                     })(),
                     `<div class="cell-actions">
                         <div class="btn-group" role="group">

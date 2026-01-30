@@ -42,16 +42,18 @@
                 <div class="container py-4">
                     <div class="row">
                         <!-- DETALLE DEL EQUIPO -->
-                        <div class="col-lg-4">
-                            <div class="card card-order shadow-sm mb-4">
+                        <div class="col-lg-5">
+                            <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <div class="header-accent mb-4">
                                         <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
                                         <h4 id="folio" class="fw-bold text-primary"></h4>
                                     </div>
                                     <div class="mb-3">
-                                        <label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
-                                        <small  id="noEmpleado" name="noEmpleado" class="d-block text-muted">No. Empleado:</small>
+                                        <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
+                                        <div id="ingeniero" name="ingeniero"></div>
+                                        <!--<label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
+                                        <small  id="noEmpleado" name="noEmpleado" class="d-block text-muted">No. Empleado:</small>-->
                                     </div>
 
                                     <div class="mb-3">
@@ -66,16 +68,24 @@
                                         <p id="diagnostico" name="diagnostico" class="small text-dark bg-light p-3 rounded border" >Sin diagnóstico inicial</p>
                                     </div>
 
+                                    <div class="mb-3">
+                                        <label class="small text-muted text-uppercase fw-bold d-block">Notas Ing.</label>
+                                        <p id="nota_ing" name="nota_ing" class="small text-dark bg-light p-3 rounded border">Sin nota inicial</p>
+                                    </div>
+
                                     <label class="small text-muted text-uppercase fw-bold d-block mb-2">Fotos de Entrada</label>
                                     <div class="img-gallery">
                                         <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
+                                    <button type="button" id="btnVerFotos" class="btn btn-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
+                                        <i class="fas fa-image"></i> Ver fotos en carrusel
+                                    </button>
                                 </div>
                             </div>
                         </div>
 
                         <!-- FORMULARIO DE ACTUALIZACION DE TRABAJO -->
-                        <div class="col-lg-8">
+                        <div class="col-lg-7">
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <h5 class="fw-bold mb-4">Actualización de Trabajo</h5>
@@ -93,7 +103,7 @@
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
                                                         <option value="CALIBRACION">⚖️ En Calibración</option>
                                                         <option value="TERMINADO">✅ Terminado</option>
-                                                        <option value="ENTREGADO">Terminado sin Enviar</option>
+                                                        <option value="SINENVIAR">Terminado Sin Enviar</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-6">
@@ -105,12 +115,12 @@
 
                                         <div class="mb-4">
                                             <label class="form-label fw-bold small text-muted">BITÁCORA DE SERVICIO / NOTAS TÉCNICAS</label>
-                                            <textarea name="notas_ingeniero" class="form-control" rows="6" placeholder="Escriba aquí los hallazgos, componentes reemplazados o procedimientos realizados..."></textarea>
+                                            <textarea name="notas_ingeniero" class="form-control" rows="6" placeholder="Escriba aquí los hallazgos, componentes reemplazados o procedimientos realizados..." required></textarea>
                                         </div>
 
                                         <div class="mb-4">
                                             <label class="form-label fw-bold small text-muted">SUBIR EVIDENCIA DE SALIDA (FOTOS)</label>
-                                            <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*" data-max-files="3">
+                                            <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*" data-max-files="1">
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado.</small>
                                         </div>
 
@@ -126,7 +136,63 @@
                                 </div>
                             </div>
                         </div>
-                    </div> </div> </div> <footer class="sticky-footer bg-white border-top mt-auto">
+                    </div> </div> </div>
+
+            <!-- Modal Carrusel de Fotos de Entrada -->
+            <div class="modal fade" id="modalFotos" tabindex="-1" aria-labelledby="modalFotosLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalFotosLabel">Fotos de entrada</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="carouselFotos" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner" id="carouselFotosInner">
+                                    <!-- Slides dinámicos -->
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotos" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Anterior</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselFotos" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Siguiente</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Carrusel de Fotos de Seguimiento -->
+            <div class="modal fade" id="modalFotosSeguimiento" tabindex="-1" aria-labelledby="modalFotosSeguimientoLabel" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="modalFotosSeguimientoLabel">Fotos del seguimiento</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div id="carouselFotosSeg" class="carousel slide" data-bs-ride="carousel">
+                                <div class="carousel-inner" id="carouselFotosSegInner">
+                                    <!-- Slides dinámicos -->
+                                </div>
+                                <button class="carousel-control-prev" type="button" data-bs-target="#carouselFotosSeg" data-bs-slide="prev">
+                                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Anterior</span>
+                                </button>
+                                <button class="carousel-control-next" type="button" data-bs-target="#carouselFotosSeg" data-bs-slide="next">
+                                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                    <span class="visually-hidden">Siguiente</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <footer class="sticky-footer bg-white border-top mt-auto">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
                         <span>Copyright &copy; MESS 2025</span>
@@ -154,6 +220,8 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        let notasSeguimiento = []; // Variable global para guardar las notas
+        
         $(document).ready(function() {
             $('.select2').select2({
                 width: '100%'
@@ -184,9 +252,12 @@
                         $('#folio').text(equipo.folio || '#MET-0000-00');
                         
                         // Ingeniero
-                        const nombresStr = equipo.nombres_ingenieros || equipo.nombre || '';
-                        $('#ingeniero').text('Ingeniero(s): ' + nombresStr);
-                        $('#noEmpleado').text('No. Empleado(s): ' + (equipo.id_usuario_asignado || 'N/A'));
+                        const nombresStr = equipo.ingeniero_nombre || equipo.nombres_ingenieros || 'Sin asignar';
+                        // Dividir los nombres por comas y crear elementos separados
+                        const nombresList = nombresStr.split(',').map(n => n.trim()).filter(n => n);
+                        // Actualizar el contenedor con los nombres
+                        $('#ingeniero').html(nombresList.map(nombre => `<small class="d-block text-dark">-${nombre}</small>`).join(''));
+                        //$('#noEmpleado').text('No. Empleado(s): ' + (equipo.ids_ingenieros || 'N/A'));
                         
                         // Equipo
                         $('#equipo').text((equipo.marca || '') + ' ' + (equipo.modelo || '' ) + ' ' + (equipo.no_serie));      
@@ -197,15 +268,27 @@
                         // Diagnóstico
                         $('#diagnostico').text(equipo.notas_recepcion || 'Sin diagnóstico inicial');
                         
+                        // Nota Ing. - Ahora es un array de objetos con html y fotos
+                        if (equipo.notas_seguimiento && equipo.notas_seguimiento.length > 0) {
+                            notasSeguimiento = equipo.notas_seguimiento; // Guardar globalmente
+                            const notasHTML = equipo.notas_seguimiento.map((nota, index) => {
+                                // Reemplazar el onclick con índice en lugar de JSON
+                                return nota.html.replace(/onclick="[^"]*"/, `onclick="mostrarFotosSeguimiento(${index})"`);
+                            }).join('<br><br>');
+                            $('#nota_ing').html(notasHTML);
+                        } else {
+                            $('#nota_ing').text('Sin notas de seguimiento');
+                        }
+
                         // Fotos
                         if (equipo.fotos && equipo.fotos.length > 0) {
-                            const gallery = $('.img-gallery');
-                            gallery.empty();
-                            equipo.fotos.forEach(foto => {
-                                gallery.append(`<img src="${foto}" alt="Foto equipo" onclick="window.open('${foto}', '_blank')">`);
-                            });
+                            $('#btnVerFotos').show();
+                            renderCarouselFotos(equipo.fotos);
+                        } else {
+                            $('#btnVerFotos').hide();
+                            $('#carouselFotosInner').empty();
                         }
-                        
+
                         // Estatus actual
                         if (equipo.estatus) {
                             $('select[name="nuevo_estatus"]').val(equipo.estatus);
@@ -233,6 +316,18 @@
 
         // Funcion para guardar cambios
         function guardarCambios() {
+            // Validar que las notas no estén vacías
+            const notas = $('textarea[name="notas_ingeniero"]').val().trim();
+            if (!notas || notas === '') {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Campo requerido',
+                    text: 'Debes escribir notas técnicas antes de guardar.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return false;
+            }
+            
             // Llenar el campo oculto con el valor de la cookie
             $('input[name="id_usuarioL"]').val(getCookie('id_usuarioL'));
             var formData = new FormData($('#actualizar')[0]);
@@ -288,6 +383,41 @@
                 }
             }
             return null;
+        }
+
+        // Función para renderizar el carrusel de fotos de entrada
+        function renderCarouselFotos(fotos) {
+            const carouselInner = $('#carouselFotosInner');
+            carouselInner.empty();
+            fotos.forEach((foto, index) => {
+                const activeClass = index === 0 ? 'active' : '';
+                carouselInner.append(`
+                    <div class="carousel-item ${activeClass}">
+                        <img src="${foto}" class="d-block w-100" alt="Foto ${index + 1}">
+                    </div>
+                `);
+            });
+        }
+
+        // Función para mostrar fotos de seguimiento en el modal
+        function mostrarFotosSeguimiento(index) {
+            if (notasSeguimiento && notasSeguimiento[index] && notasSeguimiento[index].fotos) {
+                const fotos = notasSeguimiento[index].fotos;
+                if (fotos && fotos.length > 0) {
+                    const carouselInner = $('#carouselFotosSegInner');
+                    carouselInner.empty();
+                    fotos.forEach((foto, i) => {
+                        const activeClass = i === 0 ? 'active' : '';
+                        carouselInner.append(`
+                            <div class="carousel-item ${activeClass}">
+                                <img src="${foto}" class="d-block w-100" alt="Foto ${i + 1}">
+                            </div>
+                        `);
+                    });
+                    const modal = new bootstrap.Modal(document.getElementById('modalFotosSeguimiento'));
+                    modal.show();
+                }
+            }
         }
     </script>
 </body>

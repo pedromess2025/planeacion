@@ -46,7 +46,7 @@
                             <h2 class="fw-bold text-dark mb-1">Entrada de Equipos</h2>
                         </div>
                         <div class="col-auto">
-                            <a href="entradaControlEquipos.php" class="btn btn-primary shadow-sm"><i class="fas fa-plus"></i> Nuevo Registro</a>
+                            <a href="entradaControlEquipos.php" class="btn btn-outline-primary shadow-sm"><i class="fas fa-plus"></i> Nuevo Registro</a>
                         </div>
                     </div>
 
@@ -109,6 +109,30 @@
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-outline-primary" onclick="guardarAsignacion()">Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Modificar Ingenieros -->
+    <div class="modal fade" id="modalModificarIngenieros" tabindex="-1" aria-labelledby="modalModificarIngLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 py-3">
+                    <h5 class="modal-title fw-bold" id="modalModificarIngLabel">Modificar Ingenieros Asignados</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="padding-top: 0;">
+                    <small class="text-muted d-block mt-2">Selecciona un ingeniero para retirar.</small>
+                    <input type="hidden" id="equipoIdModificar" value="">
+                    <label class="small text-muted">Ingenieros asignados</label>
+                    <select id="selectModificarIngeniero" class="form-select form-select-lg">
+                        <option value="">Cargando...</option>
+                    </select>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-danger" onclick="retirarIngeniero()">Retirar</button>
                 </div>
             </div>
         </div>
@@ -295,9 +319,16 @@
                                 <i class="fas fa-user-plus"></i>
                             </button>`
                             : '';
+                        // Agregar botón para modificar ingenieros si hay al menos 1 asignado
+                        const botonModificar = cantidadIngenieros > 0
+                            ? `<button class="btn btn-sm btn-outline-secondary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
+                                <i class="fas fa-user-edit"></i>
+                            </button>`
+                            : '';
                         
                         return `<div class="d-flex gap-2">
                             ${botonAsignar}
+                            ${botonModificar}
                             <button class="btn btn-sm btn-outline-warning" onclick="verFicha(${equipo.id})" title="Ver Ficha">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -364,8 +395,17 @@
                             dropdownParent: $('#modalAsignarIngeniero')
                         });
                     }
-                    const modal = new bootstrap.Modal(document.getElementById('modalAsignarIngeniero'));
+                    const modal = new bootstrap.Modal(document.getElementById('modalAsignarIngeniero'), { backdrop: true, keyboard: true });
                     modal.show();
+                    
+                    // Permitir cerrar el modal con botones y X
+                    document.querySelectorAll('#modalAsignarIngeniero [data-bs-dismiss="modal"]').forEach(btn => {
+                        btn.onclick = function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            modal.hide();
+                        };
+                    });
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -379,6 +419,102 @@
                     title: 'Error',
                     text: 'No se pudieron cargar los ingenieros.'
                 });
+            });
+        }
+
+        // Función para abrir modal de modificación y cargar ingenieros asignados
+        function modificarIngenieros(equipoId) {
+            document.getElementById('equipoIdModificar').value = equipoId;
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'obtenerIngenierosAsignados',
+                    id_registro: equipoId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        const selectElement = $('#selectModificarIngeniero');
+                        selectElement.empty();
+                        selectElement.append($('<option></option>').attr('value', '').text('Seleccione un ingeniero...'));
+
+                        if (Array.isArray(response.data) && response.data.length > 0) {
+                            response.data.forEach(function(ing) {
+                                selectElement.append($('<option></option>').attr('value', ing.id).text(ing.nombre || ('Ingeniero ' + ing.id)));
+                            });
+                        } else {
+                            selectElement.append($('<option></option>').attr('value', '').text('No hay ingenieros asignados'));
+                        }
+
+                        // Inicializar Select2 en modal (dropdownParent apunta al modal-content)
+                        if ($.fn.select2) {
+                            selectElement.select2({
+                                language: 'es',
+                                placeholder: 'Buscar ingeniero...',
+                                allowClear: false,
+                                width: '100%',
+                                dropdownParent: $('#modalModificarIngenieros .modal-content')
+                            });
+                        }
+
+                        const modal = new bootstrap.Modal(document.getElementById('modalModificarIngenieros'), { backdrop: true, keyboard: true });
+                        modal.show();
+                        
+                        // Permitir cerrar el modal con botones y X
+                        document.querySelectorAll('#modalModificarIngenieros [data-bs-dismiss="modal"]').forEach(btn => {
+                            btn.onclick = function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                modal.hide();
+                            };
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los ingenieros.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los ingenieros.' });
+                }
+            });
+        }
+
+        // Función para retirar ingeniero asignado
+        function retirarIngeniero() {
+            const equipoId = document.getElementById('equipoIdModificar').value;
+            const ingenieroId = $('#selectModificarIngeniero').val();
+
+            if (!ingenieroId) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Seleccione un ingeniero a retirar.' });
+                return;
+            }
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'retirarIngeniero',
+                    equipo_id: equipoId,
+                    ingeniero_id: ingenieroId
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({ icon: 'success', title: 'Listo', text: 'Ingeniero retirado.' }).then(() => {
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('modalModificarIngenieros'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                            cargarEquipos();
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo retirar el ingeniero.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo retirar el ingeniero.' });
+                }
             });
         }
 
@@ -415,8 +551,11 @@
                             allowEscapeKey: false,
                         })
                         .then(() => {
-                            // Cerrar modal usando jQuery
-                            $('#modalAsignarIngeniero').modal('hide');
+                            // Cerrar modal usando Bootstrap
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarIngeniero'));
+                            if (modal) {
+                                modal.hide();
+                            }
                             cargarEquipos();
                         });
                     } else {

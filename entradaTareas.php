@@ -111,7 +111,7 @@
                                                     </select>
                                                 </div>
                                                 <div class="col-md-6">
-                                                    <label class="form-label fw-bold small text-muted">FECHA REAL DE TÉRMINO:</label>
+                                                    <label class="form-label fw-bold small text-muted">FECHA ACTUALIZACION:</label>
                                                     <input type="date" name="fecha_termino" class="form-control">
                                                 </div>
                                             </div>

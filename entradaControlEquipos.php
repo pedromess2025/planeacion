@@ -86,7 +86,7 @@
                                             </div>
                                         <div class="col-md-5">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Área</label>
-                                            <select name="area" class="form-select" required></select>
+                                            <select id="slcArea" name="area" class="form-select" required></select>
                                         </div>
                                     </div>
                                     <div class="row mb-4">
@@ -118,7 +118,7 @@
                                     <div class="row mb-4">
                                         <div class="col-md-6">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Promesa de Entrega (Estimado)</label>
-                                            <input type="date" name="fecha_estimada" class="form-control">
+                                            <input type="date" name="fecha_estimada" class="form-control" required>
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold small text-muted">Fotos del Equipo</label>
@@ -131,7 +131,7 @@
                                         <div class="col-md-4">
                                         </div>
                                         <div class="col-md-4">
-                                            <button type="button" class="btn btn-success text-uppercase" onclick="guardarEntrada()">Registrar Entrada de Equipo</button>
+                                            <button type="button" class="btn btn-outline-success text-uppercase" onclick="guardarEntrada()">Registrar Entrada de Equipo</button>
                                         </div>                                        
                                     </div>
 
@@ -238,6 +238,11 @@
                     allowClear: true,
                     width: '100%'
                 });
+                $('#slcArea').select2({
+                    placeholder: 'Buscar área...',
+                    allowClear: true,
+                    width: '100%'
+                });
             }, 500);
         });
 
@@ -266,16 +271,25 @@
                 dataType: 'json',
                 success: function(data) {
                     if (data.status === 'success') {
+                        // Enviar notificación a los ingenieros asignados
+                        if (data.id_entrada) {
+                            $.ajax({
+                                url: 'enviaNotificacionEntrada.php',
+                                method: 'POST',
+                                data: { id_entrada: data.id_entrada },
+                                async: true // Enviar en background
+                            });
+                        }
+                        
                         Swal.fire({
                             title: "¡Guardado!",
                             text: "La entrada se registró con éxito.",
                             icon: "success",
                             confirmButtonText: "Aceptar",
-                            timeout: 5000
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
-                                formElement.reset(); // Limpia el formulario
+                                //location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
+                                //formElement.reset(); // Limpia el formulario
                             }
                         });
                     } else {
@@ -382,7 +396,7 @@
                         select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
                     }
                     areas.forEach(function(area) {
-                        var option = $('<option></option>').attr('value', area.id).text(area.AREA);
+                        var option = $('<option></option>').attr('value', area.AREA).text(area.AREA);
                         select.append(option);
                     });
                 },

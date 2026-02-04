@@ -3,12 +3,11 @@ include 'conn.php';
 
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
-// Validación de usuario (otro caso)
-$id_usuario = isset($_POST['id_usuarioPla']) ? $_POST['id_usuarioPla'] : '';
-$nombredelusuario = isset($_POST['nombredelusuarioPla']) ? $_POST['nombredelusuarioPla'] : '';
-$noEmpleado = isset($_POST['noEmpleadoPla']) ? $_POST['noEmpleadoPla'] : '';
-$rol = isset($_POST['rolPla']) ? $_POST['rolPla'] : '';
-$usuario = isset($_POST['correoPla']) ? $_POST['correoPla'] : '';
+$id_usuario = $_POST['id_usuarioPla']    ?? $_POST['id_usuarioPlaEnt']    ?? '';
+$nombre     = $_POST['nombredelusuarioPla'] ?? $_POST['nombredelusuarioPlaEnt'] ?? '';
+$noEmpleado = $_POST['noEmpleadoPla']    ?? $_POST['noEmpleadoPlaEnt']    ?? '';
+$rol        = $_POST['rolPla']           ?? $_POST['rolPlaEnt']           ?? '';
+$usuario    = $_POST['correoPla']        ?? $_POST['correoPlaEnt']        ?? '';
 
 if (empty($id_usuario) || empty($noEmpleado)) {
     http_response_code(400);
@@ -38,8 +37,12 @@ if (empty($id_usuario) || empty($noEmpleado)) {
         echo '<script>document.cookie = "departamento='.$departamento.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "rol='.$rol.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "SesionLogin=LoginMaster; expires=" + new Date(Date.now() + 99999000).toUTCString() + ";SameSite=Lax;";</script>';
-        echo '<script>window.location.assign("seguimiento_actividades.php")</script>';                
-
+        
+        if($_POST['id_usuarioPla'] == '' || $_POST['id_usuarioPla'] == null){
+            echo '<script>window.location.assign("entradaDetalleEntradas.php")</script>';    
+        } else{
+            echo '<script>window.location.assign("seguimiento_actividades.php")</script>';
+        }
         session_start();
         $_SESSION['nombredelusuario'] = $nombreEmpleado;
         $_SESSION['noEmpleado'] = $noEmpleado;

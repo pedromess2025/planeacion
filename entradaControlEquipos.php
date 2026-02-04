@@ -86,9 +86,7 @@
                                             </div>
                                         <div class="col-md-5">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Área</label>
-                                            <select name="area" class="form-select" required>
-                                                <option value="SFG">SFG</option>                                                
-                                            </select>
+                                            <select name="area" class="form-select" required></select>
                                         </div>
                                     </div>
                                     <div class="row mb-4">
@@ -215,6 +213,8 @@
             empleadoSolicita('#slcRespoonsable');
             empleadoSolicita('#slcRespoonsable2');
             empleadoSolicita('#slcRespoonsable3');
+            //cargar areas
+            cargarAreas();
             
             // Validar límite de fotos
             $('#fotos').on('change', function() {
@@ -270,7 +270,8 @@
                             title: "¡Guardado!",
                             text: "La entrada se registró con éxito.",
                             icon: "success",
-                            confirmButtonText: "Aceptar"
+                            confirmButtonText: "Aceptar",
+                            timeout: 5000
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
@@ -360,6 +361,41 @@
             }
         }
         
+        //Funcion para cargar areas
+        function cargarAreas() {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {accion: "obtenerAreas"},
+                success: function(data) {
+                    var select = $('select[name="area"]');
+                    // soportar tanto respuesta directa como { success: true, data: [...] }
+                    var areas = [];
+                    if (Array.isArray(data)) {
+                        areas = data;
+                    } else if (data && Array.isArray(data.data)) {
+                        areas = data.data;
+                    }
+                    // Añadir opción por defecto si no existe
+                    if (select.find('option[value="0"]').length === 0) {
+                        select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+                    }
+                    areas.forEach(function(area) {
+                        var option = $('<option></option>').attr('value', area.id).text(area.AREA);
+                        select.append(option);
+                    });
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        title: "Error al cargar las áreas",
+                        icon: "error",
+                        draggable: true
+                    });
+                }
+            });
+        }
+
         // Función para convertir texto a mayúsculas y quitar acentos
         function convertirTexto(e) {
             // Convertir a mayúsculas y quitar acentos

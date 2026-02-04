@@ -51,7 +51,6 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 }
 ?>
 
-
 <li class="nav-item">
     <a class="nav-link" href="seguimiento_actividades">
         <i class="fas fa-fw fa-list text-gray-400"></i>
@@ -93,33 +92,6 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
         <span>Resumen por Área</span>
     </a>
 </li>
-<?php
-//USUARIOS QUE PUEDEN REGISTRAR ENTRADAS DE EQUIPOS
-$usuariosRegistran = array(523, 45, 177, 276, 183, 555);
-
-if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
-?>
-<hr class="sidebar-divider my-0 alert-light">
-<li class="nav-item">
-    <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEntradas" aria-expanded="false" aria-controls="collapseEntradas">
-        <i class="fas fa-fw fa-inbox text-gray-400"></i>
-        <span>Entradas</span>
-        <i class="fas fa-angle-down float-end text-gray-400"></i>
-    </a>
-    <div id="collapseEntradas" class="collapse" aria-labelledby="headingEntradas" data-bs-parent="#accordionSidebar">
-        <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="entradaControlEquipos">
-                <i class="fas fa-fw fa-clipboard-list text-primary"></i> Registro
-            </a>
-            <a class="collapse-item" href="entradaDetalleEntradas">
-                <i class="fas fa-fw fa-plus text-primary"></i> Ver Entradas
-            </a>
-        </div>
-    </div>
-</li>
-<?php
-}
-?>
 
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">

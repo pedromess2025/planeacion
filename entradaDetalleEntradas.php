@@ -23,237 +23,6 @@
     <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" rel="stylesheet">
     
-    <style>
-        body { background-color: #f4f7f6; font-family: 'Inter', system-ui, sans-serif; }
-        .card-equipment { border: 1px solid #e0e6ed; border-radius: 12px; background: #fff; transition: all 0.2s; }
-        .card-equipment:hover { border-color: #0d6efd; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        
-        /* Estilos de información */
-        .info-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; color: #6c757d; font-weight: 700; }
-        .info-value { font-size: 0.85rem; color: #2d3436; font-weight: 600; display: block; }
-        
-        /* Badges de Área */
-        .area-tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; background: #f8f9fa; border: 1px solid #dee2e6; }
-        
-        /* Thumbnail */
-        .img-container { position: relative; width: 80px; height: 80px; }
-        .img-preview { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; }
-        .photo-count { position: absolute; bottom: -5px; right: -5px; background: #000; color: #fff; font-size: 0.6rem; padding: 2px 5px; border-radius: 50%; }
-
-        /* ===== ESTILOS PARA TABLA DE EQUIPOS ===== */
-        .table-equipos-wrapper {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            overflow: hidden;
-        }
-
-        .table-equipos {
-            width: 100%;
-            margin: 0;
-        }
-
-        .table-equipos thead {
-            background: #f8f9fa;
-            border-bottom: 1px solid #e0e6ed;
-        }
-
-        .table-equipos thead th {
-            padding: 18px 15px;
-            font-weight: 700;
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            color: #6c757d;
-            letter-spacing: 0.5px;
-            border: none;
-        }
-
-        .table-equipos tbody tr {
-            border-bottom: 1px solid #f0f0f0;
-            transition: background-color 0.2s;
-        }
-
-        .table-equipos tbody tr:hover {
-            background-color: #fafbfc;
-        }
-
-        /* Fila del borde izquierdo (warning) */
-        .table-equipos tbody tr.row-warning {
-            border-left: 4px solid #ffc107;
-        }
-
-        .table-equipos tbody td {
-            padding: 20px 15px;
-            vertical-align: middle;
-            font-size: 0.95rem;
-            color: #2d3436;
-        }
-
-        /* Folio */
-        .cell-folio {
-            font-weight: 700;
-            color: #0d6efd;
-            font-size: 1.1rem;
-        }
-
-        /* Imagen */
-        .img-container-table {
-            position: relative;
-            width: 80px;
-            height: 80px;
-            flex-shrink: 0;
-        }
-
-        .img-container-table img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 10px;
-        }
-
-        .photo-count-table {
-            position: absolute;
-            bottom: -8px;
-            right: -8px;
-            background: #000;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: 700;
-            padding: 3px 6px;
-            border-radius: 50%;
-            width: 28px;
-            height: 28px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* Información */
-        .info-label-table {
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: #6c757d;
-            font-weight: 700;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .info-value-table {
-            font-size: 0.95rem;
-            color: #2d3436;
-            font-weight: 600;
-            display: block;
-        }
-
-        .info-subtitle-table {
-            font-size: 0.8rem;
-            color: #999;
-            display: block;
-            margin-top: 2px;
-        }
-
-        /* Area Tag */
-        .area-tag-table {
-            font-size: 0.7rem;
-            padding: 4px 10px;
-            border-radius: 4px;
-            background: #f8f9fa;
-            border: 1px solid #dee2e6;
-            display: inline-block;
-            margin-top: 4px;
-        }
-
-        /* Fecha Compromiso */
-        .fecha-danger {
-            color: #dc3545;
-            font-weight: 700;
-        }
-
-        .fecha-success {
-            color: #198754;
-            font-weight: 700;
-        }
-
-        .fecha-warning {
-            color: #ff9800;
-            font-weight: 700;
-        }
-
-        /* Sin asignar */
-        .sin-asignar {
-            color: #fdb556;
-            font-weight: 700;
-        }
-
-        /* Botones */
-        .cell-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .cell-actions .btn-sm {
-            padding: 6px 14px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-
-        /* DataTables responsive */
-        .dataTables_wrapper {
-            padding: 0;
-        }
-
-        .dataTables_wrapper .dataTables_paginate {
-            padding: 15px 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        .dataTables_wrapper .dataTables_info {
-            padding: 15px 20px;
-            color: #6c757d;
-            font-size: 0.9rem;
-        }
-
-        /* Select2 en Modales */
-        .select2-container--open .select2-dropdown {
-            z-index: 1070 !important; /* Asegurar que aparezca encima del modal */
-        }
-
-        .select2-container {
-            width: 100% !important;
-        }
-
-        .select2-selection--single {
-            border: 1px solid #dee2e6 !important;
-            border-radius: 0.375rem !important;
-            padding: 0.5rem 0.75rem !important;
-            min-height: 38px !important;
-        }
-
-        .select2-dropdown {
-            border: 1px solid #dee2e6 !important;
-            border-radius: 0.375rem !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
-        }
-
-        @media (max-width: 768px) {
-            .table-equipos tbody td {
-                padding: 15px 10px;
-                font-size: 0.85rem;
-            }
-
-            .img-container-table {
-                width: 60px;
-                height: 60px;
-            }
-
-            .cell-actions .btn-sm {
-                padding: 4px 10px;
-                font-size: 0.75rem;
-            }
-        }
-    </style>
 </head>
 
 <body id="page-top">
@@ -282,9 +51,9 @@
                     </div>
 
                     <!-- TABLA DE EQUIPOS CON DATATABLE -->
-                    <div class="table-equipos-wrapper">
-                        <table class="table-equipos" id="tablaEquipos">
-                            <thead>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-hover mb-0" id="tablaEquipos">
+                            <thead class="table-light">
                                 <tr>
                                     <th style="width: 15%;">Folio</th>
                                     <th style="width: 15%;">Cliente / Área</th>
@@ -470,22 +239,24 @@
 
                 // Construir HTML de fila
                 let fila = [
-                    `<span class="cell-folio">${equipo.folio}</span>`,
+                    `<span class="fw-bold text-primary fs-6">${equipo.folio}</span>`,
                     `
                     <div>
-                        <span class="info-value-table">${equipo.cliente} <span class="area-tag-table"><i class="fas fa-tag"></i> ${equipo.area}</span></span>
+                        <small class="d-block">${equipo.cliente}</small>
+                        <span class="badge bg-light text-dark"><i class="fas fa-tag"></i> ${equipo.area}</span>
                     </div>`,    
                     `
                     <div>
-                        <span class="info-value-table">${equipo.marca} | ${equipo.modelo} | ${equipo.no_serie}</span>
+                        <small class="d-block">${equipo.marca} | ${equipo.modelo}</small>
+                        <small class="text-muted">${equipo.no_serie}</small>
                     </div>`,
-                    `<span class="info-value-table">${equipo.estatus}</span>`,
+                    `<span class="badge bg-secondary">${equipo.estatus}</span>`,
                     `
                     <div>
-                        <span class="info-value-table ${claseFecha}">
+                        <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">
                             <i class="fas fa-calendar-alt"></i> ${formatearFecha(equipo.fecha_compromiso)}
-                        </span>
-                        <span class="info-subtitle-table">"${equipo.diagnostico_inicial}"</span>
+                        </small>
+                        <small class="text-muted d-block">"${equipo.diagnostico_inicial}"</small>
                     </div>`,
                     (() => {
                         const nombresStr = (equipo.nombres_ingenieros || equipo.nombre || '').toString();
@@ -511,27 +282,35 @@
                         }
 
                         const contenido = items.join('<br>');
-                        return `<span class="info-value-table ${contenido ? '' : 'sin-asignar'}">${contenido ? ' ' + contenido : 'Sin asignar'}</span>`;
+                        return `<small class="d-block ${contenido ? '' : 'text-warning fw-bold'}">${contenido ? ' ' + contenido : 'Sin asignar'}</small>`;
                     })(),
-                    `<div class="cell-actions">
-                        <div class="btn-group" role="group">
-                            <button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
+                    (() => {
+                        // Contar ingenieros asignados
+                        const idsIngenieros = (equipo.ids_ingenieros || '').trim();
+                        const cantidadIngenieros = idsIngenieros.length > 0 ? idsIngenieros.split(',').length : 0;
+                        
+                        // Mostrar botón de asignar solo si tiene menos de 3 ingenieros
+                        const botonAsignar = cantidadIngenieros < 3 
+                            ? `<button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
                                 <i class="fas fa-user-plus"></i>
-                            </button>
+                            </button>`
+                            : '';
+                        
+                        return `<div class="d-flex gap-2">
+                            ${botonAsignar}
                             <button class="btn btn-sm btn-outline-warning" onclick="verFicha(${equipo.id})" title="Ver Ficha">
                                 <i class="fas fa-eye"></i>
                             </button>
-                        </div>
-                    </div>
-                    `
+                        </div>`;
+                    })()
                 ];
 
                 // Agregar fila a la tabla
                 let row = tablaEquiposDataTable.row.add(fila);
 
-                // Aplicar clase si hay alerta (borde amarillo)
+                // Aplicar clase si hay alerta (borde izquierdo amarillo)
                 if (diferenciaDias <= 3 && diferenciaDias >= 0) {
-                    row.nodes().to$().addClass('row-warning');
+                    row.nodes().to$().addClass('border-start border-warning border-5');
                 }
             });
 
@@ -570,18 +349,13 @@
                     
                     response.data.forEach(function(ingeniero) {
                         let option = document.createElement('option');
-                        option.value = ingeniero.id;
+                        option.value = ingeniero.id_usuario;
                         option.textContent = ingeniero.nombre;
                         selectElement.appendChild(option);
                     });
 
                     // Inicializar Select2
                     if ($.fn.select2) {
-                        // Destruir instancia anterior si existe
-                        if ($('#selectIngenieroModal').hasClass('select2-hidden-accessible')) {
-                            $('#selectIngenieroModal').select2('destroy');
-                        }
-                        
                         $('#selectIngenieroModal').select2({
                             language: 'es',
                             placeholder: 'Buscar ingeniero...',
@@ -590,8 +364,6 @@
                             dropdownParent: $('#modalAsignarIngeniero')
                         });
                     }
-
-                    // Abrir el modal
                     const modal = new bootstrap.Modal(document.getElementById('modalAsignarIngeniero'));
                     modal.show();
                 } else {
@@ -613,9 +385,9 @@
         // Funcion para guardar asignacion de ingeniero
         function guardarAsignacion() {
             let equipoId = document.getElementById('equipoIdModal').value;
-            let ingenieroId = document.getElementById('selectIngenieroModal').value;
+            let ingeniero_id = document.getElementById('selectIngenieroModal').value;
 
-            if (!ingenieroId) {
+            if (!ingeniero_id) {
                 Swal.fire({
                     icon: 'warning',
                     title: 'Atención',
@@ -631,7 +403,7 @@
                 data: {
                     accion: 'asignarIngeniero',
                     equipo_id: equipoId,
-                    ingeniero_id: ingenieroId
+                    ingeniero_id: ingeniero_id
                 },
                 success: function(response) {
                     if (response.success) {
@@ -643,12 +415,8 @@
                             allowEscapeKey: false,
                         })
                         .then(() => {
-                            // Cerrar modal
-                            const modalElement = document.getElementById('modalAsignarIngeniero');
-                            const modal = new bootstrap.Modal(modalElement);
-                            modal.hide();
-                            
-                            // Recargar tabla
+                            // Cerrar modal usando jQuery
+                            $('#modalAsignarIngeniero').modal('hide');
                             cargarEquipos();
                         });
                     } else {

@@ -91,9 +91,9 @@
                                     </div>
                                     <div class="row mb-4">
                                         <div class="col-md-0">
-                                            <div class="form-check form-switch">
-                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">
-                                                <label class="form-check-label" for="switchCheckDefault">Demo</label>
+                                            <div class="form-check form-switch">                                                
+                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">                                                
+                                                <label for="switchCheckDefault" class="form-label small text-uppercase fw-bold text-muted">Demo</label>
                                             </div>
                                         </div>
                                         <div class="col-md-4">

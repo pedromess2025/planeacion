@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>PLANEACION MESS</title>
+    <title>ENTRADAS EQ - MESS</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">    
@@ -33,7 +33,7 @@
 </head>
 <body id="page-top">
     <div id="wrapper" class="d-flex">
-        <?php include 'menu.php'; ?>
+        <?php include 'menuEntradas.php'; ?>
 
         <div id="content-wrapper" class="d-flex flex-column w-100">
             <div id="content">

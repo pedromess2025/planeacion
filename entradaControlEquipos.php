@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>PLANEACION MESS</title>
+    <title>ENTRADAS EQ - MESS</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">    
@@ -27,7 +27,7 @@
     <!-- Page Wrapper -->
     <div id="wrapper">
         <?php
-            include 'menu.php';
+            include 'menuEntradas.php';
         ?>
         <!-- Content Wrapper -->
         <div id="content-wrapper" class="d-flex flex-column">

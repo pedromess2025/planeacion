@@ -97,10 +97,11 @@ include_once 'conn.php';
 
                         if (move_uploaded_file($tmpName, $rutaDestino)) {
                             // Insertar ruta en BD
-                            // Aquí podemos usar query normal o prepare (prepare es mejor)
-                            $sqlFoto = "INSERT INTO entrada_fotos (id_regEntrada, ruta) VALUES (?, ?)";
+                            // Obtener fecha actual
+                            $fechaActual = date('Y-m-d H:i:s');
+                            $sqlFoto = "INSERT INTO entrada_fotos (id_regEntrada, ruta, fecha) VALUES (?, ?, ?)";
                             $stmtFoto = $conn->prepare($sqlFoto);  
-                            $stmtFoto->bind_param("is", $ultimoId, $rutaDestino);
+                            $stmtFoto->bind_param("iss", $ultimoId, $rutaDestino, $fechaActual);
                             $stmtFoto->execute();
                             $stmtFoto->close();
                         } else {
@@ -163,7 +164,7 @@ include_once 'conn.php';
 
     // CARGAR INGENIEROS
     if ($accion == 'obtenerIngenieros') {
-        $sql = "SELECT id, nombre, id_usuario FROM `usuarios` ORDER BY nombre ASC";
+        $sql = "SELECT nombre, id_usuario FROM `usuarios` ORDER BY nombre ASC";
         $result = $conn->query($sql);
         $ingenieros = [];
         
@@ -198,6 +199,21 @@ include_once 'conn.php';
             echo json_encode(['success' => false, 'error' => $stmtInsert->error]);
         }
         $stmtInsert->close();
+        exit;
+    }
+
+    // CARGAR AREAS
+    if ($accion == 'obtenerAreas') {
+        $sql = "SELECT id, AREA FROM areas ORDER BY AREA ASC";
+        $result = $conn->query($sql);
+        $areas = [];
+        
+        while ($row = $result->fetch_assoc()) {
+            $areas[] = $row;
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $areas]);
         exit;
     }
 
@@ -252,6 +268,13 @@ include_once 'conn.php';
             $stmtUpd->execute();
             $stmtUpd->close();
         }
+        /*
+        // Actualizar fecha_actualizacion en entrada_log_ingenieros
+        $stmtIngActual = $conn->prepare("UPDATE entrada_log_ingenieros SET fecha_actualizacion = NOW() WHERE id_registro = ?");
+        $stmtIngActual->bind_param('i', $id_registro);
+        $stmtIngActual->execute();
+        $stmtIngActual->close();*/
+        
         header('Content-Type: application/json');
         echo json_encode(['success' => true]);
         exit;

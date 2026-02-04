@@ -45,9 +45,14 @@
                         <div class="col-lg-5">
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
-                                    <div class="header-accent mb-4">
-                                        <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
-                                        <h4 id="folio" class="fw-bold text-primary"></h4>
+                                    <div class="d-flex justify-content-between align-items-start mb-4">
+                                        <div class="header-accent">
+                                            <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
+                                            <h4 id="folio" class="fw-bold text-primary"></h4>
+                                        </div>
+                                        <button type="button" class="btn btn-outline-warning" onclick="history.back()">
+                                            <i class="bi bi-arrow-left"></i> Volver
+                                        </button>
                                     </div>
                                     <div class="mb-3">
                                         <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
@@ -77,7 +82,7 @@
                                     <div class="img-gallery">
                                         <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
-                                    <button type="button" id="btnVerFotos" class="btn btn-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
+                                    <button type="button" id="btnVerFotos" class="btn btn-outline-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
                                         <i class="fas fa-image"></i> Ver fotos en carrusel
                                     </button>
                                 </div>
@@ -89,7 +94,6 @@
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <h5 class="fw-bold mb-4">Actualización de Trabajo</h5>
-                                    
                                     <form id="actualizar" method="POST" enctype="multipart/form-data">
                                         <input type="hidden" name="id_usuarioL" value="">
                                         <input type="hidden" name="accion" value="guardarSeguimiento">
@@ -103,7 +107,7 @@
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
                                                         <option value="CALIBRACION">⚖️ En Calibración</option>
                                                         <option value="TERMINADO">✅ Terminado</option>
-                                                        <option value="SINENVIAR">Terminado Sin Enviar</option>
+                                                        <option value="SINENVIAR">🔚 Terminado Sin Enviar</option>
                                                     </select>
                                                 </div>
                                                 <div class="col-md-6">
@@ -125,10 +129,7 @@
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
-                                                <i class="bi bi-arrow-left"></i> Volver
-                                            </button>
-                                            <button type="button" class="btn btn-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
+                                            <button type="button" class="btn btn-outline-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
                                                 Guardar Avance
                                             </button>
                                         </div>

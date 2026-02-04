@@ -1,0 +1,53 @@
+[2026-02-04 19:43:35] Ejecutando query: SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
+                  FROM entrada_registros er
+                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro
+                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
+                  WHERE er.id_registro = 11 AND eli.estatus = 'ASIGNADO'
+                  GROUP BY er.id_registro
+[2026-02-04 19:43:35] Correos encontrados: sebastian.gutierrez@mess.com.mx
+[2026-02-04 19:43:35] Nombres: Sebastian Gutierrez Rodriguez
+[2026-02-04 19:45:50] Ejecutando query: SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
+                  FROM entrada_registros er
+                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro
+                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
+                  WHERE er.id_registro = 12 AND eli.estatus = 'ASIGNADO'
+                  GROUP BY er.id_registro
+[2026-02-04 19:45:50] Correos encontrados: sebastian.gutierrez@mess.com.mx
+[2026-02-04 19:45:50] Nombres: Sebastian Gutierrez Rodriguez
+[2026-02-04 19:45:50] Preparando envío de correo...
+[2026-02-04 19:45:50] Array de correos a procesar: 2 correos
+[2026-02-04 19:45:50] ✓ Correo agregado: sebastian.gutierrez@mess.com.mx
+[2026-02-04 19:45:50] ✓ Correo agregado: pedro.martinez@mess.com.mx
+[2026-02-04 19:45:50] Total correos válidos: 2
+[2026-02-04 19:45:50] Intentando enviar correo...
+[2026-02-04 19:45:52] ✅ ÉXITO: Correo enviado a 2 destinatarios
+[2026-02-04 19:48:17] Ejecutando query: SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
+                  FROM entrada_registros er
+                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro
+                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
+                  WHERE er.id_registro = 13 AND eli.estatus = 'ASIGNADO'
+                  GROUP BY er.id_registro
+[2026-02-04 19:48:17] Correos encontrados: sebastian.gutierrez@mess.com.mx,pedro.martinez@mess.com.mx
+[2026-02-04 19:48:17] Nombres: Sebastian Gutierrez Rodriguez,Martínez Piña Pedro 
+[2026-02-04 19:48:17] Preparando envío de correo...
+[2026-02-04 19:48:17] Array de correos a procesar: 2 correos
+[2026-02-04 19:48:17] ✓ Correo agregado: sebastian.gutierrez@mess.com.mx
+[2026-02-04 19:48:17] ✓ Correo agregado: pedro.martinez@mess.com.mx
+[2026-02-04 19:48:17] Total correos válidos: 2
+[2026-02-04 19:48:17] Intentando enviar correo...
+[2026-02-04 19:48:19] ✅ ÉXITO: Correo enviado a 2 destinatarios
+[2026-02-04 19:49:15] Ejecutando query: SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
+                  FROM entrada_registros er
+                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro
+                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
+                  WHERE er.id_registro = 14 AND eli.estatus = 'ASIGNADO'
+                  GROUP BY er.id_registro
+[2026-02-04 19:49:15] Correos encontrados: sebastian.gutierrez@mess.com.mx,pedro.martinez@mess.com.mx
+[2026-02-04 19:49:15] Nombres: Sebastian Gutierrez Rodriguez,Martínez Piña Pedro 
+[2026-02-04 19:49:15] Preparando envío de correo...
+[2026-02-04 19:49:15] Array de correos a procesar: 2 correos
+[2026-02-04 19:49:15] ✓ Correo agregado: sebastian.gutierrez@mess.com.mx
+[2026-02-04 19:49:15] ✓ Correo agregado: pedro.martinez@mess.com.mx
+[2026-02-04 19:49:15] Total correos válidos: 2
+[2026-02-04 19:49:15] Intentando enviar correo...
+[2026-02-04 19:49:17] ✅ ÉXITO: Correo enviado a 2 destinatarios

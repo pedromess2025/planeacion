@@ -3,6 +3,7 @@ include_once 'conn.php';
 
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
     $usuario = isset($_COOKIE['id_usuarioL']) ? $_COOKIE['id_usuarioL'] : ''; // Usuario que registra la entrada
+    
     //REGISTRO DE NUEVA ENTRADA
     $cliente = isset($_POST['cliente']) ? $_POST['cliente'] : '';
     $area  = isset($_POST['area']) ? $_POST['area'] : '';   
@@ -31,10 +32,13 @@ include_once 'conn.php';
     $fecha_seguimiento = !empty($_POST['fecha_seguimiento']) ? $_POST['fecha_seguimiento'] : null;
     
     //ACTUALIZACION DE EQUIPO
-    $equipo_id = isset($_POST['equipo_id']) ? $_POST['equipo_id'] : '';
-    $ingeniero_id = isset($_POST['ingeniero_id']) ? $_POST['ingeniero_id'] : '';
+    $equipo_id = isset($_POST['equipo_id']) ? intval($_POST['equipo_id']) : 0;
+    $ingeniero_id = isset($_POST['ingeniero_id']) ? intval($_POST['ingeniero_id']) : 0;
     $nuevo_estatus = isset($_POST['nuevo_estatus']) ? $_POST['nuevo_estatus'] : '';
     $fecha_termino = isset($_POST['fecha_termino']) ? $_POST['fecha_termino'] : null;
+    
+    // OBTENER INGENIEROS ASIGNADOS (solo id y nombre)
+    $id_registro_param = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
@@ -112,6 +116,7 @@ include_once 'conn.php';
             }
             $response = array(
                 'status' => 'success', 
+                'id_entrada' => $ultimoId,
                 'message' => 'Entrada registrada con éxito.' . ($errorFotos ? ' (Hubo error al subir algunas fotos)' : '') . ($errorIngenieros ? ' (Hubo error al registrar algunos ingenieros)' : '')
             );
         } else {
@@ -137,12 +142,14 @@ include_once 'conn.php';
                         SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
                         FROM entrada_log_ingenieros eli
                         WHERE eli.id_registro = ent.id_registro
+                        AND eli.estatus = 'ASIGNADO'
                     ) AS ids_ingenieros,
                     (
                         SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
                         FROM entrada_log_ingenieros eli
                         INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
                         WHERE eli.id_registro = ent.id_registro
+                        AND eli.estatus = 'ASIGNADO'
                     ) AS nombres_ingenieros,
                     CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                 FROM entrada_registros ent
@@ -177,6 +184,28 @@ include_once 'conn.php';
         exit;
     }
 
+    // OBTENER INGENIEROS ASIGNADOS A UNA ENTRADA (solo id y nombre)
+    if ($accion == 'obtenerIngenierosAsignados') {
+        $ingenierosAsignados = [];
+        if ($id_registro_param > 0) {
+            $sql = "SELECT DISTINCT eli.id_ing AS id_ing,
+                        (SELECT COALESCE(u.nombre, '') FROM usuarios u WHERE u.id = eli.id_ing OR u.id_usuario = eli.id_ing LIMIT 1) AS nombre
+                    FROM entrada_log_ingenieros eli
+                    WHERE eli.id_registro = ? AND eli.estatus = 'ASIGNADO'";
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $id_registro_param);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $ingenierosAsignados[] = ['id' => $row['id_ing'], 'nombre' => $row['nombre']];
+            }
+            $stmt->close();
+        }
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $ingenierosAsignados]);
+        exit;
+    }
+
     // ASIGNAR EQUIPO A INGENIERO
     if ($accion == 'asignarIngeniero') {
         // 1. Insertar en entrada_log_ingenieros
@@ -199,6 +228,25 @@ include_once 'conn.php';
             echo json_encode(['success' => false, 'error' => $stmtInsert->error]);
         }
         $stmtInsert->close();
+        exit;
+    }
+
+    // RETIRAR (DESASIGNAR) INGENIERO: Cambia estatus en entrada_log_ingenieros a 'SIN ASIGNAR'
+    if ($accion == 'retirarIngeniero') {
+        header('Content-Type: application/json');
+        if ($equipo_id > 0 && $ingeniero_id > 0) {
+            $sqlUpd = "UPDATE entrada_log_ingenieros SET estatus = 'SIN ASIGNAR', fecha_actualizacion = NOW() WHERE id_registro = ? AND id_ing = ? AND estatus = 'ASIGNADO' LIMIT 1";
+            $stmtUpd = $conn->prepare($sqlUpd);
+            $stmtUpd->bind_param('ii', $equipo_id, $ingeniero_id);
+            if ($stmtUpd->execute()) {
+                echo json_encode(['success' => true]);
+            } else {
+                echo json_encode(['success' => false, 'message' => $stmtUpd->error]);
+            }
+            $stmtUpd->close();
+        } else {
+            echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+        }
         exit;
     }
 

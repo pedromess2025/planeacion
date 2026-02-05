@@ -21,7 +21,7 @@
                   FROM entrada_registros er
                   LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro AND eli.estatus = 'ASIGNADO'
                   LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
-                  WHERE er.estatus NOT IN ('Terminado', 'Entregado')
+                  WHERE er.estatus IN ('Terminado')
                     AND er.fecha_promesa_entrega IS NOT NULL
                     AND DATE(er.fecha_promesa_entrega) <= CURDATE()
                   GROUP BY er.id_registro";
@@ -64,7 +64,7 @@
         $mail->Username = "mess.metrologia@gmail.com";
         $mail->Password = "hglidvwsxcbbefhe";
         
-        $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Planeación MESS");
+        $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Entrada de Equipos MESS");
         $mail->Subject = $deAsunto;
         $mail->Body = ' 
 <html lang="es">
@@ -95,13 +95,13 @@
 </head>
 <body>
     <div class="header">
-        ⚠️ Entrega Programada Hoy o Vencida
+        ⚠️ Entrega Programada Vencida
     </div>
         
     <center>
     <h2>
         Se requiere atención inmediata para este equipo.<br>
-        <b>La fecha de entrega es hoy o ya venció.</b><br>
+        <b>La fecha de entrega vencida.</b><br>
         <br>
         <b>Detalles del Equipo:</b><br>
         Cliente: '.$cliente.'<br>
@@ -115,7 +115,7 @@
             ⏱️ Días de atraso: '.$diasRetraso.'
         </span>
         <br><br>
-        <a href="https://messbook.com.mx/planeacion" class="btn btn-outline-primary btn-block">
+        <a href="https://messbook.com.mx/planeacion/entradaDetalleEntradas" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
     </h2>

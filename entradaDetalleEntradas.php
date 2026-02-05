@@ -45,9 +45,6 @@
                         <div class="col">
                             <h2 class="fw-bold text-dark mb-1">Entrada de Equipos</h2>
                         </div>
-                        <div class="col-auto">
-                            <a href="entradaControlEquipos.php" class="btn btn-outline-primary shadow-sm"><i class="fas fa-plus"></i> Nuevo Registro</a>
-                        </div>
                     </div>
 
                     <!-- TABLA DE EQUIPOS CON DATATABLE -->
@@ -187,6 +184,8 @@
 
         // Variables globales
         let tablaEquiposDataTable;
+        let modalAsignarInstance = null;
+        let modalModificarInstance = null;
 
         // Función para inicializar DataTable
         function inicializarTablaEquipos() {
@@ -199,6 +198,7 @@
                 responsive: true,
                 ordering: true,
                 searching: true,
+                order: [], // No aplicar ordenamiento automático, respetar orden del servidor
                 columnDefs: [
                     { targets: 5, orderable: false } // Desactivar ordenamiento en columna de acciones
                 ],
@@ -274,7 +274,7 @@
                         <small class="d-block">${equipo.marca} | ${equipo.modelo}</small>
                         <small class="text-muted">${equipo.no_serie}</small>
                     </div>`,
-                    `<span class="badge bg-secondary">${equipo.estatus}</span>`,
+                    `<span class="badge bg-primary">${equipo.estatus}</span>`,
                     `
                     <div>
                         <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">
@@ -313,14 +313,17 @@
                         const idsIngenieros = (equipo.ids_ingenieros || '').trim();
                         const cantidadIngenieros = idsIngenieros.length > 0 ? idsIngenieros.split(',').length : 0;
                         
-                        // Mostrar botón de asignar solo si tiene menos de 3 ingenieros
-                        const botonAsignar = cantidadIngenieros < 3 
+                        // Solo mostrar botones si usuario puede asignar (es encargado)
+                        const puedeAsignar = equipo.puede_asignar === true || equipo.puede_asignar === 1 || equipo.puede_asignar === '1';
+                        
+                        // Mostrar botón de asignar solo si tiene menos de 3 ingenieros Y puede asignar
+                        const botonAsignar = (cantidadIngenieros < 3 && puedeAsignar)
                             ? `<button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
                                 <i class="fas fa-user-plus"></i>
                             </button>`
                             : '';
-                        // Agregar botón para modificar ingenieros si hay al menos 1 asignado
-                        const botonModificar = cantidadIngenieros > 0
+                        // Agregar botón para modificar ingenieros si hay al menos 1 asignado Y puede asignar
+                        const botonModificar = (cantidadIngenieros > 0 && puedeAsignar)
                             ? `<button class="btn btn-sm btn-outline-secondary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
                                 <i class="fas fa-user-edit"></i>
                             </button>`
@@ -338,11 +341,6 @@
 
                 // Agregar fila a la tabla
                 let row = tablaEquiposDataTable.row.add(fila);
-
-                // Aplicar clase si hay alerta (borde izquierdo amarillo)
-                if (diferenciaDias <= 3 && diferenciaDias >= 0) {
-                    row.nodes().to$().addClass('border-start border-warning border-5');
-                }
             });
 
             // Redibujar tabla
@@ -354,7 +352,7 @@
             const opciones = { year: 'numeric', month: 'short', day: 'numeric' };
             return new Date(fecha).toLocaleDateString('es-MX', opciones);
         }
-
+        
         // Funcion para cargar ingenieros 
         function cargarIngenieros() {
             return $.ajax({
@@ -395,8 +393,9 @@
                             dropdownParent: $('#modalAsignarIngeniero')
                         });
                     }
-                    const modal = new bootstrap.Modal(document.getElementById('modalAsignarIngeniero'), { backdrop: true, keyboard: true });
-                    modal.show();
+                    const modalEl = document.getElementById('modalAsignarIngeniero');
+                    modalAsignarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+                    modalAsignarInstance.show();
                     
                     // Permitir cerrar el modal con botones y X
                     document.querySelectorAll('#modalAsignarIngeniero [data-bs-dismiss="modal"]').forEach(btn => {
@@ -459,15 +458,18 @@
                             });
                         }
 
-                        const modal = new bootstrap.Modal(document.getElementById('modalModificarIngenieros'), { backdrop: true, keyboard: true });
-                        modal.show();
+                        const modalEl = document.getElementById('modalModificarIngenieros');
+                        modalModificarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+                        modalModificarInstance.show();
                         
                         // Permitir cerrar el modal con botones y X
                         document.querySelectorAll('#modalModificarIngenieros [data-bs-dismiss="modal"]').forEach(btn => {
                             btn.onclick = function(e) {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                modal.hide();
+                                if (modalModificarInstance) {
+                                    modalModificarInstance.hide();
+                                }
                             };
                         });
                     } else {
@@ -486,7 +488,9 @@
             const ingenieroId = $('#selectModificarIngeniero').val();
 
             if (!ingenieroId) {
-                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Seleccione un ingeniero a retirar.' });
+                Swal.fire({ icon: 'warning', 
+                            title: 'Atención', 
+                            text: 'Seleccione un ingeniero a retirar.'});
                 return;
             }
 
@@ -501,11 +505,22 @@
                 },
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire({ icon: 'success', title: 'Listo', text: 'Ingeniero retirado.' }).then(() => {
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('modalModificarIngenieros'));
-                            if (modal) {
-                                modal.hide();
+                        Swal.fire({ icon: 'success', 
+                                    title: 'Listo', 
+                                    text: 'Ingeniero retirado.', 
+                                    timer: 2000, 
+                                    timerProgressBar: true }).then(() => {
+                            if (modalModificarInstance) {
+                                modalModificarInstance.hide();
+                            } else {
+                                const modalEl = document.getElementById('modalModificarIngenieros');
+                                if (modalEl) {
+                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                                }
                             }
+                            // Limpieza de respaldo por si queda el backdrop
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                             cargarEquipos();
                         });
                     } else {
@@ -549,13 +564,22 @@
                             text: 'El ingeniero ha sido asignado correctamente.',
                             allowOutsideClick: false,
                             allowEscapeKey: false,
+                            timer: 2000,
+                            timerProgressBar: true
                         })
                         .then(() => {
                             // Cerrar modal usando Bootstrap
-                            const modal = bootstrap.Modal.getInstance(document.getElementById('modalAsignarIngeniero'));
-                            if (modal) {
-                                modal.hide();
+                            if (modalAsignarInstance) {
+                                modalAsignarInstance.hide();
+                            } else {
+                                const modalEl = document.getElementById('modalAsignarIngeniero');
+                                if (modalEl) {
+                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                                }
                             }
+                            // Limpieza de respaldo por si queda el backdrop
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
                             cargarEquipos();
                         });
                     } else {

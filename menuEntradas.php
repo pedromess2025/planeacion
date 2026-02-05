@@ -33,10 +33,11 @@
 </div>
 <!-- Divider -->
 <?php
-//USUARIOS QUE PUEDEN REGISTRAR ENTRADAS DE EQUIPOS
-$usuariosRegistran = array(523, 45, 177, 276, 183, 555);
+//USUARIOS ENCARGADOS QUE PUEDEN REGISTRAR ENTRADAS Y ASIGNAR/MODIFICAR INGENIEROS
+// 523-SEBAS, 45-SERGIO, 177-ZAYI, 276-PEDRO, 183-AMRAM, 555-LIZ
+$usuariosEncargados = array(523, 45, 177, 276, 183, 555);
 
-if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
+if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
 ?>
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
@@ -55,6 +56,17 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
             </a>
         </div>
     </div>
+</li>
+<?php
+} else {
+    // Ingenieros regulares: solo pueden ver entradas
+?>
+<hr class="sidebar-divider my-0 alert-light">
+<li class="nav-item">
+    <a class="nav-link" href="entradaDetalleEntradas">
+        <i class="fas fa-fw fa-inbox text-gray-400"></i>
+        <span>Ver Entradas</span>
+    </a>
 </li>
 <?php
 }

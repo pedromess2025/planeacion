@@ -53,11 +53,11 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
-                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
+                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Contacto</label>
-                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico" required>
+                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico">
                                         </div>
                                         <div class="col-sm-4 mb-0">
                                             <label for="slcRespoonsable" class="form-label small text-uppercase fw-bold text-muted">Ingeniero</label>
@@ -98,7 +98,7 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Marca</label>
-                                            <input type="text" name="marca" class="form-control" placeholder="Marca">
+                                            <input type="text" name="marca" class="form-control" placeholder="Marca" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Modelo</label>
@@ -106,13 +106,13 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">No. Serie</label>
-                                            <input type="text" name="no_serie" class="form-control" placeholder="N/S" required>
+                                            <input type="text" name="no_serie" class="form-control" placeholder="N/S">
                                         </div>
                                     </div>
 
                                     <div class="mb-4">
                                         <label class="form-label small text-uppercase fw-bold text-muted">Notas de Recepción / Diagnóstico Preliminar</label>
-                                        <textarea name="diagnostico_inicial" class="form-control" rows="2" placeholder="Describa el estado visual o falla reportada..."></textarea>
+                                        <textarea name="diagnostico_inicial" class="form-control" rows="2" placeholder="Describa el estado visual o falla reportada..." required></textarea>
                                     </div>
 
                                     <div class="row mb-4">
@@ -246,18 +246,24 @@
             }, 500);
         });
 
-        // FUNVIOPN REGISTRAR ACTIVO
+        // FUNCION REGISTRAR ACTIVO
         function guardarEntrada() {
             // 1. Obtener el formulario HTML
             var formElement = document.getElementById('entradaForm');
             
-            // 2. Crear objeto FormData (Captura automáticamente todos los inputs, selects y archivos)
+            // 2. Validar formulario antes de enviar
+            if (!formElement.checkValidity()) {
+                formElement.reportValidity(); // Muestra mensajes de validación HTML5
+                return false;
+            }
+            
+            // 3. Crear objeto FormData (Captura automáticamente todos los inputs, selects y archivos)
             var formData = new FormData(formElement);
 
-            // 3. Agregar datos manuales que no estén en inputs o que requieran lógica extra
+            // 4. Agregar datos manuales que no estén en inputs o que requieran lógica extra
             formData.append('accion', 'nuevaEntrada'); // Tu identificador para PHP
 
-            // 4. Enviar vía AJAX
+            // 5. Enviar vía AJAX
             $.ajax({
                 url: 'accionesEntradas',
                 method: 'POST',
@@ -272,14 +278,14 @@
                 success: function(data) {
                     if (data.status === 'success') {
                         // Enviar notificación a los ingenieros asignados
-                        if (data.id_entrada) {
+                        /*if (data.id_entrada) {
                             $.ajax({
                                 url: 'enviaNotificacionEntrada.php',
                                 method: 'POST',
                                 data: { id_entrada: data.id_entrada },
                                 async: true // Enviar en background
                             });
-                        }
+                        }*/
                         
                         Swal.fire({
                             title: "¡Guardado!",
@@ -288,8 +294,8 @@
                             confirmButtonText: "Aceptar",
                         }).then((result) => {
                             if (result.isConfirmed) {
-                                //location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
-                                //formElement.reset(); // Limpia el formulario
+                                location.href = 'entradaDetalleEntradas'; // Redirige a la lista de entradas
+                                formElement.reset(); // Limpia el formulario
                             }
                         });
                     } else {

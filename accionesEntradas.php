@@ -315,7 +315,7 @@ include_once 'conn.php';
         // Insertar nota si viene
         if ($nota !== '') {
             $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, fecha_actualizacion, estatus) VALUES (?, ?, ?, ?, NOW(), ?)");
-            $stmtSeg->bind_param('iisss', $id_registro, $usuario, $nota, $fecha_termino, $nuevo_estatus);
+            $stmtSeg->bind_param('iisss', $id_registro, intval($usuario), $nota, $fecha_termino, $nuevo_estatus);
             $stmtSeg->execute();
             $id_seguimiento = $conn->insert_id; // Obtener ID del seguimiento insertado
             $stmtSeg->close();

@@ -371,8 +371,8 @@
                     
                     Swal.fire({
                         icon: 'error',
-                        title: 'Error de conexión',
-                        text: 'No se pudo conectar con el servidor.',
+                        title: 'Error',
+                        text: 'No se pudo registrar la información.',
                         confirmButtonText: 'Aceptar'
                     });
                 }

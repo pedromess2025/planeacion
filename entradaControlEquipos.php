@@ -278,14 +278,14 @@
                 success: function(data) {
                     if (data.status === 'success') {
                         // Enviar notificación a los ingenieros asignados
-                        /*if (data.id_entrada) {
+                        if (data.id_entrada) {
                             $.ajax({
                                 url: 'enviaNotificacionEntrada.php',
                                 method: 'POST',
                                 data: { id_entrada: data.id_entrada },
                                 async: true // Enviar en background
                             });
-                        }*/
+                        }
                         
                         Swal.fire({
                             title: "¡Guardado!",

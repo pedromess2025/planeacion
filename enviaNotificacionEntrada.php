@@ -63,7 +63,7 @@
     $mail->Username = "mess.metrologia@gmail.com";
     $mail->Password = "hglidvwsxcbbefhe";
     
-    $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Planeación MESS");
+    $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Entrada de Equipos MESS");
     $mail->Subject = $deAsunto;
     $mail->Body = ' 
 <html lang="es">
@@ -104,7 +104,7 @@
         Serie: '.$serie.'<br>
         Área: '.$area.'<br>
         <br>
-        <a href="https://messbook.com.mx/planeacion" class="btn btn-outline-primary btn-block">
+        <a href="https://messbook.com.mx/planeacion/entradaDetalleEntradas" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar
         </a>
     </h2>

@@ -55,10 +55,8 @@
                                         </button>
                                     </div>
                                     <div class="mb-3">
-                                        <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
+                                        <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s):</label>
                                         <div id="ingeniero" name="ingeniero"></div>
-                                        <!--<label id="ingeniero" name="ingeniero" class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s)</label>
-                                        <small  id="noEmpleado" name="noEmpleado" class="d-block text-muted">No. Empleado:</small>-->
                                     </div>
 
                                     <div class="mb-3">
@@ -74,7 +72,7 @@
                                     </div>
 
                                     <div class="mb-3">
-                                        <label class="small text-muted text-uppercase fw-bold d-block">Notas Ing.</label>
+                                        <label class="small text-muted text-uppercase fw-bold d-block">Notas Ing(s).</label>
                                         <p id="nota_ing" name="nota_ing" class="small text-dark bg-light p-3 rounded border">Sin nota inicial</p>
                                     </div>
 
@@ -100,9 +98,10 @@
                                         <div class="status-update-box mb-4">
                                             <div class="row g-3">
                                                 <div class="col-md-6">
-                                                    <label class="form-label fw-bold small text-muted">CAMBIAR ESTATUS A:</label>
+                                                    <label class="form-label fw-bold small text-muted">ESTATUS ACTUAL:</label>
                                                     <select name="nuevo_estatus" class="form-select border-primary fw-bold">
-                                                        <option value="DIAGNOSTICO" selected>🔍 En Diagnóstico</option>
+                                                        <option value="ENTRADA" selected>Entrada</option>
+                                                        <option value="DIAGNOSTICO">🔍 En Diagnóstico</option>
                                                         <option value="REPARACION">🛠️ En Reparación</option>
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
                                                         <option value="CALIBRACION">⚖️ En Calibración</option>
@@ -112,7 +111,7 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold small text-muted">FECHA ACTUALIZACION:</label>
-                                                    <input type="date" name="fecha_termino" class="form-control">
+                                                    <input type="date" name="fecha_termino" class="form-control" required>
                                                 </div>
                                             </div>
                                         </div>
@@ -317,6 +316,13 @@
 
         // Funcion para guardar cambios
         function guardarCambios() {
+            // Validar campos required del formulario
+            var formElement = document.getElementById('actualizar');
+            if (formElement && !formElement.checkValidity()) {
+                formElement.reportValidity(); // Muestra mensajes de validación HTML5
+                return false;
+            }
+
             // Validar que las notas no estén vacías
             const notas = $('textarea[name="notas_ingeniero"]').val().trim();
             if (!notas || notas === '') {

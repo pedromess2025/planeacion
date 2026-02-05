@@ -24,6 +24,7 @@ include_once 'conn.php';
     
     // Concatenar IDs de ingenieros (opcional, solo si existen)
     $ingenieros = array_filter([$slcRespoonsable, $slcRespoonsable2, $slcRespoonsable3]);
+    $noEmpleado = isset($_COOKIE['noEmpleado']) ? intval($_COOKIE['noEmpleado']) : 0;
 
     //INGENIERO ASIGNADO
     $id_registro = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
@@ -134,36 +135,80 @@ include_once 'conn.php';
 
     // CARGAS DE REGISTROS DE ENTRADAS
     if ($accion == 'obtenerEquipos') {
-        $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
-                    ent.fecha_promesa_entrega AS fecha_compromiso, 
-                    ent.notas_recepcion AS diagnostico_inicial, 
-                    ent.estatus,
-                    (
-                        SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
-                        FROM entrada_log_ingenieros eli
-                        WHERE eli.id_registro = ent.id_registro
-                        AND eli.estatus = 'ASIGNADO'
-                    ) AS ids_ingenieros,
-                    (
-                        SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
-                        FROM entrada_log_ingenieros eli
-                        INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
-                        WHERE eli.id_registro = ent.id_registro
-                        AND eli.estatus = 'ASIGNADO'
-                    ) AS nombres_ingenieros,
-                    CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
-                FROM entrada_registros ent
-                WHERE ent.estatus != 'Terminado'
-                ORDER BY ent.fecha_promesa_entrega ASC";
+        // Usuarios que pueden ver todos los registros (encargados de área)
+        // 523-SEBAS, 45-SERGIO, 177-ZAYI, 276-PEDRO, 183-AMRAM, 555-LIZ
+        $usuariosEncargados = array(523, 45, 177, 276, 183, 555);
+        $esEncargado = in_array($noEmpleado, $usuariosEncargados);
         
-        $result = $conn->query($sql);
+        if ($esEncargado) {
+            // Mostrar TODOS los registros
+            $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
+                        ent.fecha_promesa_entrega AS fecha_compromiso, 
+                        ent.notas_recepcion AS diagnostico_inicial, 
+                        ent.estatus,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
+                            FROM entrada_log_ingenieros eli
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS ids_ingenieros,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
+                            FROM entrada_log_ingenieros eli
+                            INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS nombres_ingenieros,
+                        CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                    FROM entrada_registros ent
+                    WHERE ent.estatus != 'Terminado'
+                    ORDER BY ent.fecha_registro DESC";
+            
+            $result = $conn->query($sql);
+        } else {
+            // Mostrar solo registros donde el ingeniero está asignado
+            $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
+                        ent.fecha_promesa_entrega AS fecha_compromiso, 
+                        ent.notas_recepcion AS diagnostico_inicial, 
+                        ent.estatus,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
+                            FROM entrada_log_ingenieros eli
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS ids_ingenieros,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
+                            FROM entrada_log_ingenieros eli
+                            INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS nombres_ingenieros,
+                        CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                    FROM entrada_registros ent
+                    INNER JOIN entrada_log_ingenieros eli_filtro ON ent.id_registro = eli_filtro.id_registro
+                    WHERE ent.estatus != 'Terminado'
+                    AND eli_filtro.id_ing = ?
+                    AND eli_filtro.estatus = 'ASIGNADO'
+                    ORDER BY ent.fecha_registro DESC";
+            
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('i', $usuario);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        }
+        
         $equipos = [];
         
         while ($row = $result->fetch_assoc()) {
             $row['id'] = $row['id_registro']; // Compatibilidad con frontend
+            $row['puede_asignar'] = $esEncargado; // Flag: solo encargados pueden asignar
             $equipos[] = $row;
         }
         
+        if (!$esEncargado) {
+            $stmt->close();
+        }
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'data' => $equipos]);
         exit;
@@ -216,7 +261,7 @@ include_once 'conn.php';
         if ($stmtInsert->execute()) {
             // 2. Actualizar estatus del equipo si es necesario
             // Solo actualizar fecha_asignacion si aún no existe (es NULL)
-            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = 'Recibido', fecha_asignacion = IF(fecha_asignacion IS NULL, NOW(), fecha_asignacion) WHERE id_registro = ?");
+            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = 'RECIBIDO', fecha_asignacion = IF(fecha_asignacion IS NULL, NOW(), fecha_asignacion) WHERE id_registro = ?");
             $stmtUpd->bind_param("i", $equipo_id);
             $stmtUpd->execute();
             $stmtUpd->close();
@@ -269,8 +314,8 @@ include_once 'conn.php';
     if ($accion == 'guardarSeguimiento') {
         // Insertar nota si viene
         if ($nota !== '') {
-            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, estatus) VALUES (?, ?, ?, NOW(), ?)");
-            $stmtSeg->bind_param('iiss', $id_registro, $usuario, $nota, $nuevo_estatus);
+            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, fecha_actualizacion, estatus) VALUES (?, ?, ?, ?, NOW(), ?)");
+            $stmtSeg->bind_param('iisss', $id_registro, $usuario, $nota, $fecha_termino, $nuevo_estatus);
             $stmtSeg->execute();
             $id_seguimiento = $conn->insert_id; // Obtener ID del seguimiento insertado
             $stmtSeg->close();
@@ -375,7 +420,7 @@ include_once 'conn.php';
             
             // Buscar seguimientos/comentarios
             $sqlSeguimientos = "SELECT es.id_seguimiento, es.id_registro, es.id_usuario_nota, es.nota, 
-                                       es.fecha_seguimiento, es.ruta_foto, es.estatus,
+                                       es.fecha_seguimiento, es.fecha_actualizacion, es.ruta_foto, es.estatus,
                                        us.nombre AS nombre_usuario
                                 FROM entrada_seguimiento es
                                 INNER JOIN usuarios us ON us.id_usuario = es.id_usuario_nota
@@ -389,7 +434,7 @@ include_once 'conn.php';
             $seguimientos = [];
             while ($row = $resultSeg->fetch_assoc()) {
                 // Formatear fecha
-                $fecha = date('d/m/Y H:i', strtotime($row['fecha_seguimiento']));
+                $fecha = date('d/m/Y H:i', strtotime($row['fecha_actualizacion']));
                 
                 // Obtener iniciales del nombre
                 $palabras = explode(' ', $row['nombre_usuario']);

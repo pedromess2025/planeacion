@@ -381,9 +381,12 @@
                             icon: "success",
                             draggable: true
                         });
-                        // Redirigir
-                        window.location.href = 'seguimiento_actividades.php';
-
+                        
+                        // Limpiar el formulario después de un registro exitoso
+                        $('#formPlaneacion')[0].reset();
+                        // Redirigir a seguimiento de actividades
+                        //window.location.href = 'seguimiento_actividades.php';
+                        enviarNotificacionActividad(data.id_actividad);
                     } else {
                         Swal.fire({
                             title: "Error al registrar la actividad: " + data.message,

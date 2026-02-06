@@ -49,10 +49,10 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
     <div id="collapseEntradas" class="collapse" aria-labelledby="headingEntradas" data-bs-parent="#accordionSidebar">
         <div class="bg-white py-2 collapse-inner rounded">
             <a class="collapse-item" href="entradaControlEquipos">
-                <i class="fas fa-fw fa-clipboard-list text-primary"></i> Registro
+                <i class="fas fa-fw fa-plus text-primary"></i> Registro
             </a>
             <a class="collapse-item" href="entradaDetalleEntradas">
-                <i class="fas fa-fw fa-plus text-primary"></i> Ver Entradas
+                <i class="fas fa-fw fa-clipboard-list text-primary"></i> Ver Entradas
             </a>
         </div>
     </div>

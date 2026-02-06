@@ -58,22 +58,21 @@
                                         <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s):</label>
                                         <div id="ingeniero" name="ingeniero"></div>
                                     </div>
-
-                                    <div class="mb-3">
-                                        <label id="equipo" name="equipo" class="small text-muted text-uppercase fw-bold d-block"></label>
-                                        <small id="marca" name="marca" class="d-block text-muted"></small> 
-                                        <small id="modelo" name="modelo" class="d-block text-muted"></small>
-                                        <small id="serie" name="serie" class="d-block text-muted"></small>
+                                    <hr>
+                                    <div class="mb-0">
+                                        <label id="equipo" name="equipo" class="small text-muted d-block mb-0"></label>
+                                        <label id="cliente" name="cliente" class="small text-muted d-block mb-0"></label>
+                                        <label id="contacto" name="contacto" class="small text-muted d-block mb-0"></label>
                                     </div>
-
+                                    <hr>
                                     <div class="mb-3">
                                         <label class="small text-muted text-uppercase fw-bold d-block">Notas Recepción</label>
-                                        <p id="diagnostico" name="diagnostico" class="small text-dark bg-light p-3 rounded border" >Sin diagnóstico inicial</p>
+                                        <p id="diagnostico" name="diagnostico" class="small text-dark bg-light p-2 rounded border" >Sin diagnóstico inicial</p>
                                     </div>
 
                                     <div class="mb-3">
                                         <label class="small text-muted text-uppercase fw-bold d-block">Notas Ing(s).</label>
-                                        <p id="nota_ing" name="nota_ing" class="small text-dark bg-light p-3 rounded border">Sin nota inicial</p>
+                                        <p id="nota_ing" name="nota_ing" class="small text-dark bg-light p-2 rounded border">Sin nota inicial</p>
                                     </div>
 
                                     <label class="small text-muted text-uppercase fw-bold d-block mb-2">Fotos de Entrada</label>
@@ -81,7 +80,7 @@
                                         <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
                                     <button type="button" id="btnVerFotos" class="btn btn-outline-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
-                                        <i class="fas fa-image"></i> Ver fotos en carrusel
+                                        <i class="fas fa-image"></i> Ver fotos entrada
                                     </button>
                                 </div>
                             </div>
@@ -100,7 +99,7 @@
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold small text-muted">ESTATUS ACTUAL:</label>
                                                     <select name="nuevo_estatus" class="form-select border-primary fw-bold">
-                                                        <option value="ENTRADA" selected>Entrada</option>
+                                                        <option value="RECIBIDO" selected>📥 Entrada</option>
                                                         <option value="DIAGNOSTICO">🔍 En Diagnóstico</option>
                                                         <option value="REPARACION">🛠️ En Reparación</option>
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
@@ -260,11 +259,11 @@
                         //$('#noEmpleado').text('No. Empleado(s): ' + (equipo.ids_ingenieros || 'N/A'));
                         
                         // Equipo
-                        $('#equipo').text((equipo.marca || '') + ' ' + (equipo.modelo || '' ) + ' ' + (equipo.no_serie));      
-                        $('#marca').text('Marca: ' + (equipo.marca || 'N/A'));
-                        $('#modelo').text('Modelo: ' + (equipo.modelo || 'N/A'));
-                        $('#serie').text('No. Serie: ' + (equipo.no_serie || 'N/A'));
+                        $('#equipo').text('Equipo: ' + (equipo.marca || '') + ' ' + (equipo.modelo ? '-' + equipo.modelo : ' - N/A') + ' ' + ('-' + equipo.no_serie || '- S/N '));                              
 
+                        // Cliente y contacto
+                        $('#cliente').text('Cliente: ' + (equipo.cliente || 'N/A')) ;
+                        $('#contacto').text('Contacto: ' + (equipo.contacto || 'N/A'));    
                         // Diagnóstico
                         $('#diagnostico').text(equipo.notas_recepcion || 'Sin diagnóstico inicial');
                         

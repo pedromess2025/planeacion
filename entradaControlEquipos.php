@@ -47,18 +47,24 @@
                             <div class="card card-minimal shadow-sm p-2">
                                 <form id="entradaForm" method="POST" enctype="multipart/form-data">
                                     <div class="row mb-4">
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Cliente</label>
                                             <input type="text" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
                                         </div>
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
                                             <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
                                         </div>
-                                        <div class="col-md-4">
-                                            <label class="form-label small text-uppercase fw-bold text-muted">Contacto</label>
-                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico" required>
+                                        <div class="col-md-3">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Teléfono de Contacto</label>
+                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono" required>
                                         </div>
+                                        <div class="col-md-3">
+                                            <label class="form-label    small text-uppercase fw-bold text-muted">Correo de Contacto</label> 
+                                            <input type="email" name="correo_cliente" class="form-control" placeholder="Correo electrónico" required>
+                                        </div>                                        
+                                    </div>
+                                    <div class="row mb-4">
                                         <div class="col-sm-4 mb-0">
                                             <label for="slcRespoonsable" class="form-label small text-uppercase fw-bold text-muted">Ingeniero</label>
                                             <div id="Divsolicita" name="Divsolicita">
@@ -402,7 +408,7 @@
                         select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
                     }
                     areas.forEach(function(area) {
-                        var option = $('<option></option>').attr('value', area.AREA).text(area.AREA);
+                        var option = $('<option></option>').attr('value', area.CDAREA).text(area.AREA);
                         select.append(option);
                     });
                 },

@@ -54,7 +54,7 @@
                                 <tr>
                                     <th style="width: 15%;">Folio</th>
                                     <th style="width: 15%;">Cliente / Área</th>
-                                    <th style="width: 15%;">Equipo / Marca / Modelo</th>
+                                    <th style="width: 15%;">Marca / Modelo / No Serie</th>
                                     <th style="width: 15%;">Estatus</th>
                                     <th style="width: 15%;">Fecha Compromiso</th>
                                     <th style="width: 15%;">Ingeniero</th>

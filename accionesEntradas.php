@@ -15,7 +15,10 @@ include_once 'conn.php';
     $observaciones = isset($_POST['observaciones']) ? $_POST['observaciones'] : '';
     $demo = isset($_POST['demo']) ? 1 : 0; // Demo: 1 si está marcado, 0 si no
     $contacto_nombre = isset($_POST['nombre_cliente']) ? $_POST['nombre_cliente'] : '';
-    $contacto = isset($_POST['contacto']) ? $_POST['contacto'] : '';
+    $telefono = isset($_POST['contacto']) ? $_POST['contacto'] : '';
+    $correo_cliente = isset($_POST['correo_cliente']) ? $_POST['correo_cliente'] : '';
+
+    $contacto = $telefono . ($correo_cliente ? ' / ' . $correo_cliente : '');
     
     // CAPTURAR IDs DE INGENIEROS
     $slcRespoonsable = (isset($_POST['slcRespoonsable']) && $_POST['slcRespoonsable'] != '0') ? intval($_POST['slcRespoonsable']) : '';
@@ -159,7 +162,7 @@ include_once 'conn.php';
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#MET-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                     FROM entrada_registros ent
                     WHERE ent.estatus != 'Terminado'
                     ORDER BY ent.fecha_registro DESC";
@@ -297,7 +300,7 @@ include_once 'conn.php';
 
     // CARGAR AREAS
     if ($accion == 'obtenerAreas') {
-        $sql = "SELECT id, AREA FROM areas ORDER BY AREA ASC";
+        $sql = "SELECT id, AREA, CDAREA FROM areas ORDER BY AREA ASC";
         $result = $conn->query($sql);
         $areas = [];
         
@@ -421,8 +424,8 @@ include_once 'conn.php';
             
             // Buscar seguimientos/comentarios
             $sqlSeguimientos = "SELECT es.id_seguimiento, es.id_registro, es.id_usuario_nota, es.nota, 
-                                       es.fecha_seguimiento, es.fecha_actualizacion, es.ruta_foto, es.estatus,
-                                       us.nombre AS nombre_usuario
+                                        es.fecha_seguimiento, es.fecha_actualizacion, es.ruta_foto, es.estatus,
+                                        us.nombre AS nombre_usuario
                                 FROM entrada_seguimiento es
                                 INNER JOIN usuarios us ON us.id_usuario = es.id_usuario_nota
                                 WHERE es.id_registro = ?

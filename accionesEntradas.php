@@ -155,7 +155,7 @@ include_once 'conn.php';
                         (
                             SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
                             FROM entrada_log_ingenieros eli
-                            INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                            INNER JOIN usuarios us ON (us.id_usuario = eli.id_ing)
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
@@ -216,7 +216,7 @@ include_once 'conn.php';
 
     // CARGAR INGENIEROS
     if ($accion == 'obtenerIngenieros') {
-        $sql = "SELECT nombre, id_usuario FROM `usuarios` ORDER BY nombre ASC";
+        $sql = "SELECT nombre, id_usuario FROM `usuarios` WHERE estatus = 1 ORDER BY nombre ASC";
         $result = $conn->query($sql);
         $ingenieros = [];
         

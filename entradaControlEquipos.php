@@ -53,11 +53,11 @@
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
-                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto">
+                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Contacto</label>
-                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico">
+                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono o correo electrónico" required>
                                         </div>
                                         <div class="col-sm-4 mb-0">
                                             <label for="slcRespoonsable" class="form-label small text-uppercase fw-bold text-muted">Ingeniero</label>
@@ -122,7 +122,7 @@
                                         </div>
                                         <div class="col-md-6">
                                             <label class="form-label fw-bold small text-muted">Fotos del Equipo</label>
-                                            <input type="file" id="fotos" name="fotos[]" class="form-control" multiple accept="image/*" data-max-files="3">
+                                            <input type="file" id="fotos" name="fotos[]" class="form-control" multiple accept="image/*" data-max-files="3" required>
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado. Máximo 3 fotos. </small>
                                         </div>
                                     </div>

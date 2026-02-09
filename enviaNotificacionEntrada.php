@@ -48,8 +48,7 @@ if (!function_exists('enviaNotificacionEntrada')) {
         $area = $rowCorreo["area"];
 
         // Obtener correos de administradores (No. Empleado)
-        //$adminIds = array(45, 177, 555);
-        $adminIds = array(523);
+        $adminIds = array(45, 177, 555);
         $adminIdList = implode(',', array_map('intval', $adminIds));
         $adminCorreos = array();
 

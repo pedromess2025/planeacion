@@ -48,8 +48,11 @@
                                     <div class="d-flex justify-content-between align-items-start mb-4">
                                         <div class="header-accent">
                                             <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
-                                            <h4 id="folio" class="fw-bold text-primary"></h4>
+                                            <h6 id="folio" class="fw-bold text-primary"></h6>
                                         </div>
+                                        <button type="button" class="btn btn-outline-danger" onclick="generarPDF()">
+                                            <i class="fas fa-file-pdf"></i>PDF
+                                        </button>
                                         <button type="button" class="btn btn-outline-warning" onclick="history.back()">
                                             <i class="bi bi-arrow-left"></i> Volver
                                         </button>
@@ -424,6 +427,13 @@
                     modal.show();
                 }
             }
+        }
+
+        // Función para generar PDF
+        function generarPDF() {
+            const params = new URLSearchParams(window.location.search);
+            const id_registro = params.get('id');
+            window.open('generar_pdf.php?id=' + id_registro, '_blank');
         }
     </script>
 </body>

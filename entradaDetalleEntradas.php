@@ -303,8 +303,8 @@
                     </div>`,    
                     `
                     <div>
-                        <small class="d-block">${equipo.marca} | ${equipo.modelo}</small>
-                        <small class="text-muted">${equipo.no_serie}</small>
+                        <small class="d-block">${equipo.marca} | ${equipo.modelo || 'S/R'}</small>
+                        <small class="text-muted">${equipo.no_serie || 'S/R'}</small>
                     </div>`,
                     `<span class="badge bg-primary">${equipo.estatus}</span>`,
                     `

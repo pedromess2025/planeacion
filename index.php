@@ -385,8 +385,8 @@
                         // Limpiar el formulario después de un registro exitoso
                         $('#formPlaneacion')[0].reset();
                         // Redirigir a seguimiento de actividades
-                        //window.location.href = 'seguimiento_actividades.php';
-                        enviarNotificacionActividad(data.id_actividad);
+                        window.location.href = 'seguimiento_actividades.php';
+                        enviaNotificacionActividad(data.id_actividad);
                     } else {
                         Swal.fire({
                             title: "Error al registrar la actividad: " + data.message,
@@ -568,6 +568,30 @@ function validarFormularioConsolidado(formData) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
+        }
+
+        function enviaNotificacionActividad(idActividad) {
+            if (!idActividad) {
+                return;
+            }
+            $.ajax({
+                url: 'enviaNotificacionActividad.php',
+                method: 'POST',
+                data: { id_actividad: idActividad },
+                async: true
+            });
+        }
+
+        function enviaNotificacionNuevaAct(idActividad) {
+            if (!idActividad) {
+                return;
+            }
+            $.ajax({
+                url: 'enviaNotificacionNuevaAct.php',
+                method: 'POST',
+                data: { id_actividad: idActividad },
+                async: true
+            });
         }
         
         //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS   

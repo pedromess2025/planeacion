@@ -388,9 +388,11 @@
                             icon: "success",
                             draggable: true
                         });
+                        // Limpiar el formulario después de un registro exitoso
+                        $('#formPlaneacion')[0].reset();
                         // Redirigir
                         window.location.href = 'seguimiento_actividades.php';
-
+                        enviaNotificacionActividad(data.id_actividad);
                     } else {
                         Swal.fire({
                             title: "Error al registrar la actividad: " + data.message,

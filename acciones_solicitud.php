@@ -51,7 +51,12 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
                         VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
-            $response = array('status' => 'success', 'message' => 'Incidencia registrada con éxito.');
+            $idActividad = $conn->insert_id;
+            $response = array(
+                'status' => 'success',
+                'message' => 'Incidencia registrada con éxito.',
+                'id_actividad' => $idActividad
+            );
         } else {
             $response = array('status' => 'error', 'message' => 'Error al registrar la incidencia: ' . $conn->error);
         }

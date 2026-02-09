@@ -135,6 +135,37 @@
         </div>
     </div>
 
+    <!-- Modal Editar Entrada -->
+    <div class="modal fade" id="modalEditarEntrada" tabindex="-1" aria-labelledby="modalEditarEntradaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-bottom-0 py-3">
+                    <h5 class="modal-title fw-bold" id="modalEditarEntradaLabel">Editar Entrada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <input type="hidden" id="editarEntradaId" value="">
+                    <div class="mb-3">
+                        <label class="form-label">Marca</label>
+                        <input type="text" class="form-control" id="editarMarca" maxlength="80">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Modelo</label>
+                        <input type="text" class="form-control" id="editarModelo" maxlength="80">
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label">No. Serie</label>
+                        <input type="text" class="form-control" id="editarSerie" maxlength="120">
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-outline-primary" onclick="guardarEdicionEntrada()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Logout Modal-->
     <a class="scroll-to-top rounded" href="#page-top">
     <div class="modal fade" id="logoutModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
@@ -186,6 +217,7 @@
         let tablaEquiposDataTable;
         let modalAsignarInstance = null;
         let modalModificarInstance = null;
+        let modalEditarInstance = null;
 
         // Función para inicializar DataTable
         function inicializarTablaEquipos() {
@@ -318,20 +350,26 @@
                         
                         // Mostrar botón de asignar solo si tiene menos de 3 ingenieros Y puede asignar
                         const botonAsignar = (cantidadIngenieros < 3 && puedeAsignar)
-                            ? `<button class="btn btn-sm btn-outline-primary" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
+                            ? `<button class="btn btn-sm btn-outline-success" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
                                 <i class="fas fa-user-plus"></i>
                             </button>`
                             : '';
                         // Agregar botón para modificar ingenieros si hay al menos 1 asignado Y puede asignar
                         const botonModificar = (cantidadIngenieros > 0 && puedeAsignar)
-                            ? `<button class="btn btn-sm btn-outline-secondary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
+                            ? `<button class="btn btn-sm btn-outline-primary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
                                 <i class="fas fa-user-edit"></i>
+                            </button>`
+                            : '';
+                        const botonEditar = (puedeAsignar)
+                            ? `<button class="btn btn-sm btn-outline-info" onclick="editarEntrada(${equipo.id})" title="Editar Entrada">
+                                <i class="fas fa-pen"></i>
                             </button>`
                             : '';
                         
                         return `<div class="d-flex gap-2">
                             ${botonAsignar}
                             ${botonModificar}
+                            ${botonEditar}
                             <button class="btn btn-sm btn-outline-warning" onclick="verFicha(${equipo.id})" title="Ver Ficha">
                                 <i class="fas fa-eye"></i>
                             </button>
@@ -599,12 +637,98 @@
                 }
             });
         }
+
+        // Función para abrir modal de edición y cargar detalles de la entrada
+        function editarEntrada(equipoId) {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'obtenerDetalleEquipo',
+                    id_registro: equipoId
+                },
+                success: function(response) {
+                    if (response && response.success && response.data && response.data.id_registro) {
+                        const data = response.data;
+                        document.getElementById('editarEntradaId').value = data.id_registro;
+                        document.getElementById('editarMarca').value = data.marca || '';
+                        document.getElementById('editarModelo').value = data.modelo || '';
+                        document.getElementById('editarSerie').value = data.no_serie || '';
+
+                        const modalEl = document.getElementById('modalEditarEntrada');
+                        modalEditarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+                        modalEditarInstance.show();
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la entrada.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la entrada.' });
+                }
+            });
+        }
+
+        // Función para guardar edición de entrada
+        function guardarEdicionEntrada() {
+            const equipoId = document.getElementById('editarEntradaId').value;
+            const marca = document.getElementById('editarMarca').value.trim();
+            const modelo = document.getElementById('editarModelo').value.trim();
+            const serie = document.getElementById('editarSerie').value.trim();
+
+            if (!equipoId) {
+                Swal.fire({ icon: 'warning', title: 'Atención', text: 'Falta el ID de la entrada.' });
+                return;
+            }
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'modificarEntrada',
+                    id_registro: equipoId,
+                    marca: marca,
+                    modelo: modelo,
+                    no_serie: serie
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Actualizado',
+                            text: 'La entrada se actualizó correctamente.',
+                            timer: 1500,
+                            timerProgressBar: true
+                        }).then(() => {
+                            if (modalEditarInstance) {
+                                modalEditarInstance.hide();
+                            } else {
+                                const modalEl = document.getElementById('modalEditarEntrada');
+                                if (modalEl) {
+                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                                }
+                            }
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cargarEquipos();
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo actualizar la entrada.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo actualizar la entrada.' });
+                }
+            });
+        }
         
         // Función para ver ficha del equipo
         function verFicha(equipoId) {
             window.location.href = 'entradaTareas.php?id=' + equipoId;
         }
         
+        // Función para convertir texto a mayúsculas y quitar acentos
         function convertirTexto(e) {
             // Convertir a mayúsculas y quitar acentos
             e.value = e.value

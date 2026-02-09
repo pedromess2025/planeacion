@@ -95,7 +95,7 @@
                                             <select id="slcArea" name="area" class="form-select" required></select>
                                         </div>
                                         <div class="col-md-4">
-                                            <label class="form-label small text-uppercase fw-bold text-muted">Ing. que Trae Equipo</label>
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Quién Envía</label>
                                             <select id="slcIngTrae" name="slcIngTrae" class="form-select">
                                                 <option value="0">Selecciona...</option>
                                             </select>

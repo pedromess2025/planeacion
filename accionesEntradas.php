@@ -19,6 +19,8 @@ include_once 'conn.php';
     $correo_cliente = isset($_POST['correo_cliente']) ? $_POST['correo_cliente'] : '';
 
     $contacto = $telefono . ($correo_cliente ? ' / ' . $correo_cliente : '');
+
+    $noEmpleado = isset($_COOKIE['noEmpleado']) ? intval($_COOKIE['noEmpleado']) : 0;
     
     // CAPTURAR IDs DE INGENIEROS
     $slcRespoonsable = (isset($_POST['slcRespoonsable']) && $_POST['slcRespoonsable'] != '0') ? intval($_POST['slcRespoonsable']) : '';
@@ -27,7 +29,6 @@ include_once 'conn.php';
     
     // Concatenar IDs de ingenieros (opcional, solo si existen)
     $ingenieros = array_filter([$slcRespoonsable, $slcRespoonsable2, $slcRespoonsable3]);
-    $noEmpleado = isset($_COOKIE['noEmpleado']) ? intval($_COOKIE['noEmpleado']) : 0;
 
     //INGENIERO ASIGNADO
     $id_registro = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
@@ -193,7 +194,7 @@ include_once 'conn.php';
                     WHERE ent.estatus != 'Terminado'
                     AND eli_filtro.id_ing = ?
                     AND eli_filtro.estatus = 'ASIGNADO'
-                    ORDER BY ent.fecha_registro DESC";
+                    ORDER BY ent.fecha_promesa_entrega DESC";
             
             $stmt = $conn->prepare($sql);
             $stmt->bind_param('i', $usuario);
@@ -268,6 +269,11 @@ include_once 'conn.php';
             $stmtUpd->bind_param("i", $equipo_id);
             $stmtUpd->execute();
             $stmtUpd->close();
+
+            require_once 'enviaNotificacionEntrada.php';
+            if (function_exists('enviaNotificacionEntrada')) {
+                enviaNotificacionEntrada($conn, $equipo_id);
+            }
             
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
@@ -472,6 +478,39 @@ include_once 'conn.php';
         } else {
             header('Content-Type: application/json');
             echo json_encode(['success' => false, 'message' => 'Equipo no encontrado']);
+        }
+        exit;
+    }
+
+    // MODIFICAR CAMPOS DE ENTRADA (solo encargados)
+    if ($accion == 'modificarEntrada') {
+        $usuariosEncargados = array(523, 45, 177, 276, 183, 555);
+        $esEncargado = in_array($noEmpleado, $usuariosEncargados);
+
+        header('Content-Type: application/json');
+        if (!$esEncargado) {
+            echo json_encode(['success' => false, 'message' => 'Sin permisos']);
+            exit;
+        }
+
+        if ($id_registro <= 0) {
+            echo json_encode(['success' => false, 'message' => 'ID invalido']);
+            exit;
+        }
+
+        $marca_mod = isset($_POST['marca']) ? trim($_POST['marca']) : '';
+        $modelo_mod = isset($_POST['modelo']) ? trim($_POST['modelo']) : '';
+        $serie_mod = isset($_POST['no_serie']) ? trim($_POST['no_serie']) : '';
+
+        $stmt = $conn->prepare("UPDATE entrada_registros SET marca = ?, modelo = ?, no_serie = ? WHERE id_registro = ?");
+        $stmt->bind_param('sssi', $marca_mod, $modelo_mod, $serie_mod, $id_registro);
+        $ok = $stmt->execute();
+        $stmt->close();
+
+        if ($ok) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se pudo actualizar']);
         }
         exit;
     }

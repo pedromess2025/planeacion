@@ -1,71 +1,87 @@
 <?php
-    include 'conn.php';
+include_once 'conn.php';
 
-    header('Content-Type: text/html; charset=utf-8');
-    $deAsunto = "Asignación de Equipo - MESS";
+if (!function_exists('enviaNotificacionEntrada')) {
+    function enviaNotificacionEntrada($conn, $id_entrada) {
+        $deAsunto = "Asignación de Equipo - MESS";
 
-    require("PHPMailer-master/src/Exception.php");
-    require("PHPMailer-master/src/PHPMailer.php");
-    require("PHPMailer-master/src/SMTP.php");
-    
-    // Crear carpeta de logs si no existe
-    if (!is_dir(__DIR__ . '/logs')) {
-        mkdir(__DIR__ . '/logs', 0777, true);
-    }
-    
-    $logFile = __DIR__ . '/logs/notificacion_entrada.log';
-    
-    function logMessage($msg) {
-        global $logFile;
-        $timestamp = date('Y-m-d H:i:s');
-        file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
-    }
-    
-    // Obtener ID de entrada
-    $id_entrada = isset($_POST['id_entrada']) ? intval($_POST['id_entrada']) : 0;
-    
-    if ($id_entrada <= 0) {
-        exit;
-    }
+        require_once("PHPMailer-master/src/Exception.php");
+        require_once("PHPMailer-master/src/PHPMailer.php");
+        require_once("PHPMailer-master/src/SMTP.php");
 
-    // Obtener datos del equipo y correos de ingenieros asignados
-    $sqlCorreo = "SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
+        $logDir = __DIR__ . '/logs';
+        if (!is_dir($logDir)) {
+            mkdir($logDir, 0777, true);
+        }
+
+        $logFile = $logDir . '/notificacion_entrada.log';
+        $logMessage = function ($msg) use ($logFile) {
+            $timestamp = date('Y-m-d H:i:s');
+            file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
+        };
+
+        $id_entrada = intval($id_entrada);
+        if ($id_entrada <= 0) {
+            $logMessage("ID de entrada invalido para notificacion.");
+            return false;
+        }
+
+        $sqlCorreo = "SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
                   FROM entrada_registros er
-                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro
-                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
-                  WHERE er.id_registro = $id_entrada AND eli.estatus = 'ASIGNADO'
+                  LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro AND eli.estatus = 'ASIGNADO'
+                  LEFT JOIN usuarios u ON eli.id_ing = u.noEmpleado
+                  WHERE er.id_registro = $id_entrada
                   GROUP BY er.id_registro";
-    $resCorreo = $conn->query($sqlCorreo);
+        $resCorreo = $conn->query($sqlCorreo);
 
-    $rowCorreo = $resCorreo->fetch_assoc();
-    $correoResponsable = $rowCorreo["correos_ing"];
-    $cliente = $rowCorreo["cliente"];
-    $marca = $rowCorreo["marca"];
-    $modelo = $rowCorreo["modelo"];
-    $serie = $rowCorreo["no_serie"];
-    $area = $rowCorreo["area"];
+        if (!$resCorreo || $resCorreo->num_rows === 0) {
+            $logMessage("Sin datos para notificar, id_registro: $id_entrada.");
+            return false;
+        }
 
-    if (empty($correoResponsable)) {
-        exit;
-    }
+        $rowCorreo = $resCorreo->fetch_assoc();
+        $correoResponsable = $rowCorreo["correos_ing"];
+        $cliente = $rowCorreo["cliente"];
+        $marca = $rowCorreo["marca"];
+        $modelo = $rowCorreo["modelo"];
+        $serie = $rowCorreo["no_serie"];
+        $area = $rowCorreo["area"];
 
-    $mail = new PHPMailer\PHPMailer\PHPMailer();
-    
-    $mail->IsSMTP();
-    $mail->SMTPDebug = 0;
-    $mail->SMTPAuth = true; 
-    $mail->SMTPSecure = 'ssl';
-    $mail->Host = "smtp.gmail.com";
-    $mail->Port = 465;
-    $mail->IsHTML(true);
-    $mail->CharSet = 'UTF-8';
-    
-    $mail->Username = "mess.metrologia@gmail.com";
-    $mail->Password = "hglidvwsxcbbefhe";
-    
-    $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Entrada de Equipos MESS");
-    $mail->Subject = $deAsunto;
-    $mail->Body = ' 
+        // Obtener correos de administradores (No. Empleado)
+        //$adminIds = array(45, 177, 555);
+        $adminIds = array(523);
+        $adminIdList = implode(',', array_map('intval', $adminIds));
+        $adminCorreos = array();
+
+        if (!empty($adminIdList)) {
+            $sqlAdmins = "SELECT correo FROM usuarios WHERE noEmpleado IN ($adminIdList)";
+            $resAdmins = $conn->query($sqlAdmins);
+            if ($resAdmins) {
+                while ($rowAdmin = $resAdmins->fetch_assoc()) {
+                    if (!empty($rowAdmin['correo'])) {
+                        $adminCorreos[] = $rowAdmin['correo'];
+                    }
+                }
+            }
+        }
+
+        $mail = new PHPMailer\PHPMailer\PHPMailer();
+
+        $mail->IsSMTP();
+        $mail->SMTPDebug = 0;
+        $mail->SMTPAuth = true;
+        $mail->SMTPSecure = 'ssl';
+        $mail->Host = "smtp.gmail.com";
+        $mail->Port = 465;
+        $mail->IsHTML(true);
+        $mail->CharSet = 'UTF-8';
+
+        $mail->Username = "mess.metrologia@gmail.com";
+        $mail->Password = "hglidvwsxcbbefhe";
+
+        $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Entrada de Equipos MESS");
+        $mail->Subject = $deAsunto;
+        $mail->Body = ' 
 <html lang="es">
 <head>
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet">    
@@ -123,15 +139,43 @@
 </body>
 </html>';
 
-    // Envío de correo
-    $Arraycorreos = explode(",", $correoResponsable);
-    
-    foreach ($Arraycorreos as $correo) {
-        $correo = trim($correo);
-        if (filter_var($correo, FILTER_VALIDATE_EMAIL)) {
-            $mail->addAddress($correo);
+        $Arraycorreos = array();
+        if (!empty($correoResponsable)) {
+            $Arraycorreos = explode(",", $correoResponsable);
         }
+        $Arraycorreos = array_merge($Arraycorreos, $adminCorreos);
+        if (!empty($adminCorreos)) {
+            $logMessage("Correos admin: " . implode(',', $adminCorreos));
+        }
+        $destinatarios = 0;
+
+        foreach ($Arraycorreos as $correo) {
+            $correo = trim($correo);
+            if (filter_var($correo, FILTER_VALIDATE_EMAIL)) {
+                $mail->addAddress($correo);
+                $destinatarios++;
+            }
+        }
+
+        if ($destinatarios === 0) {
+            $logMessage("No hay correos validos para id_registro: $id_entrada.");
+            return false;
+        }
+
+        $logMessage("Enviando correo para id_registro: $id_entrada a $destinatarios destinatarios.");
+        $ok = $mail->send();
+        if (!$ok) {
+            $logMessage("Error al enviar correo para id_registro: $id_entrada. " . $mail->ErrorInfo);
+        } else {
+            $logMessage("Correo enviado para id_registro: $id_entrada.");
+        }
+
+        return $ok;
     }
-    
-    $mail->send();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_entrada'])) {
+    header('Content-Type: text/html; charset=utf-8');
+    enviaNotificacionEntrada($conn, $_POST['id_entrada']);
+}
 ?>

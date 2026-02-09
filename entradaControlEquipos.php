@@ -83,16 +83,22 @@
                                                 </select>
                                             </div>
                                         </div>
-                                            <div class="col-sm-3 mb-0">
+                                            <div class="col-sm-1 mb-0">
                                                 <label for="btnAgregar">+ Ing.</label>
                                                 <div class="input-group">
                                                     <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
                                                     <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                                                 </div>
                                             </div>
-                                        <div class="col-md-5">
+                                        <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Área</label>
                                             <select id="slcArea" name="area" class="form-select" required></select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Ing. que Trae Equipo</label>
+                                            <select id="slcIngTrae" name="slcIngTrae" class="form-select">
+                                                <option value="0">Selecciona...</option>
+                                            </select>
                                         </div>
                                     </div>
                                     <div class="row mb-4">
@@ -219,6 +225,7 @@
             empleadoSolicita('#slcRespoonsable');
             empleadoSolicita('#slcRespoonsable2');
             empleadoSolicita('#slcRespoonsable3');
+            cargarIngenierosTrae();
             //cargar areas
             cargarAreas();
             
@@ -246,6 +253,11 @@
                 });
                 $('#slcArea').select2({
                     placeholder: 'Buscar área...',
+                    allowClear: true,
+                    width: '100%'
+                });
+                $('#slcIngTrae').select2({
+                    placeholder: 'Buscar ingeniero...',
                     allowClear: true,
                     width: '100%'
                 });
@@ -346,6 +358,36 @@
                     Swal.fire({
                         title: "La solicitúd no se pudo procesar!",
                         icon: "error",
+                        draggable: true
+                    });
+                }
+            });
+        }
+
+        function cargarIngenierosTrae() {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { accion: 'obtenerIngenieros' },
+                success: function(response) {
+                    var select = $('#slcIngTrae');
+                    select.empty();
+                    select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+
+                    if (response && response.success && Array.isArray(response.data)) {
+                        response.data.forEach(function(ingeniero) {
+                            var option = $('<option></option>')
+                                .attr('value', ingeniero.id_usuario)
+                                .text(ingeniero.nombre);
+                            select.append(option);
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error al cargar ingenieros',
+                        icon: 'error',
                         draggable: true
                     });
                 }

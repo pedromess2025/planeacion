@@ -17,8 +17,8 @@ include_once 'conn.php';
     $contacto_nombre = isset($_POST['nombre_cliente']) ? $_POST['nombre_cliente'] : '';
     $telefono = isset($_POST['contacto']) ? $_POST['contacto'] : '';
     $correo_cliente = isset($_POST['correo_cliente']) ? $_POST['correo_cliente'] : '';
-
     $contacto = $telefono . ($correo_cliente ? ' / ' . $correo_cliente : '');
+    $id_ing_trae = isset($_POST['slcIngTrae']) ? intval($_POST['slcIngTrae']) : 0;
 
     $noEmpleado = isset($_COOKIE['noEmpleado']) ? intval($_COOKIE['noEmpleado']) : 0;
     
@@ -47,13 +47,13 @@ include_once 'conn.php';
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
         
         // "s" = string, "i" = integer
-        $stmt->bind_param("ssssssssiss", 
-            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto
+        $stmt->bind_param("ssssssssisss", 
+            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae
         );
         
         if ($stmt->execute()) {
@@ -188,7 +188,7 @@ include_once 'conn.php';
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#MET-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#MET-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                     FROM entrada_registros ent
                     INNER JOIN entrada_log_ingenieros eli_filtro ON ent.id_registro = eli_filtro.id_registro
                     WHERE ent.estatus != 'Terminado'
@@ -410,7 +410,7 @@ include_once 'conn.php';
         
         if ($equipo) {
             // Generar folio
-            $folio = '#MET-' . date('Y', strtotime($equipo['fecha_registro'])) . '-' . str_pad($equipo['id_registro'], 2, '0', STR_PAD_LEFT);
+            $folio = '#MET-' . $equipo['area'] . '-' . date('Y', strtotime($equipo['fecha_registro'])) . '-' . str_pad($equipo['id_registro'], 2, '0', STR_PAD_LEFT);
             $equipo['folio'] = $folio;
             
             // Buscar fotos desde BD (entrada_fotos) - solo fotos de entrada (patrón: entrada_x_xxx_x)

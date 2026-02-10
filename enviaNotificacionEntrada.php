@@ -29,7 +29,7 @@ if (!function_exists('enviaNotificacionEntrada')) {
         $sqlCorreo = "SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
                   FROM entrada_registros er
                   LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro AND eli.estatus = 'ASIGNADO'
-                  LEFT JOIN usuarios u ON eli.id_ing = u.noEmpleado
+                  LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
                   WHERE er.id_registro = $id_entrada
                   GROUP BY er.id_registro";
         $resCorreo = $conn->query($sqlCorreo);

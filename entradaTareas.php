@@ -268,7 +268,8 @@
                         $('#cliente').text('Cliente: ' + (equipo.cliente || 'N/A')) ;
                         $('#contacto').text('Contacto: ' + (equipo.contacto || 'N/A'));    
                         // Diagnóstico
-                        $('#diagnostico').text(equipo.notas_recepcion || 'Sin diagnóstico inicial');
+                        var diagnosticoText = equipo.notas_recepcion && equipo.fecha_registro ? `Registrado el ${equipo.fecha_registro}<br> Diagnóstico: ${equipo.notas_recepcion}` : 'Sin diagnóstico inicial';
+                        $('#diagnostico').html(diagnosticoText); 
                         
                         // Nota Ing. - Ahora es un array de objetos con html y fotos
                         if (equipo.notas_seguimiento && equipo.notas_seguimiento.length > 0) {

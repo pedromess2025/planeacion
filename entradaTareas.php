@@ -251,7 +251,7 @@
                         const equipo = response.data;
                         
                         // Folio
-                        $('#folio').text(equipo.folio || '#MET-0000-00');
+                        $('#folio').text(equipo.folio || '#ENT-0000-00');
                         
                         // Ingeniero
                         const nombresStr = equipo.ingeniero_nombre || equipo.nombres_ingenieros || 'Sin asignar';

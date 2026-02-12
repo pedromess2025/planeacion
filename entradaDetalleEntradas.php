@@ -55,10 +55,10 @@
                                     <th style="width: 15%;">Folio</th>
                                     <th style="width: 15%;">Cliente / Área</th>
                                     <th style="width: 15%;">Marca / Modelo / No Serie</th>
-                                    <th style="width: 15%;">Estatus</th>
-                                    <th style="width: 15%;">Fecha Compromiso</th>
+                                    <th style="width: 10%;">Estatus</th>
+                                    <th style="width: 20%;">Fecha Compromiso</th>
                                     <th style="width: 15%;">Ingeniero</th>
-                                    <th style="width: 25%;">Acciones</th>
+                                    <th style="width: 10%;">Acciones</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -295,7 +295,7 @@
 
                 // Construir HTML de fila
                 let fila = [
-                    `<span class="fw-bold text-primary fs-6">${equipo.folio}</span>`,
+                    `<span class="fw-bold text-primary small">${equipo.folio}</span>`,
                     `
                     <div>
                         <small class="d-block">${equipo.cliente}</small>

@@ -68,7 +68,7 @@ if (empty($notas_seguimiento)) {
 }
 
 // Preparar datos para el PDF
-$folio = '#MET-' . ($equipo['area'] ?? '00') . '-' . 
+$folio = '#ENT-' . ($equipo['area'] ?? '00') . '-' . 
          date('Y', strtotime($equipo['fecha_registro'] ?? date('Y-m-d'))) . '-' . 
          str_pad($equipo['id_registro'] ?? '0', 2, '0', STR_PAD_LEFT);
 $ingenieros = $equipo['nombres_ingenieros'] ?? 'No asignado';

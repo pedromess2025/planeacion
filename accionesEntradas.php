@@ -163,7 +163,7 @@ include_once 'conn.php';
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#MET-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                     FROM entrada_registros ent
                     WHERE ent.estatus != 'Terminado'
                     ORDER BY ent.fecha_registro DESC";
@@ -188,7 +188,7 @@ include_once 'conn.php';
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#MET-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                     FROM entrada_registros ent
                     INNER JOIN entrada_log_ingenieros eli_filtro ON ent.id_registro = eli_filtro.id_registro
                     WHERE ent.estatus != 'Terminado'
@@ -410,7 +410,7 @@ include_once 'conn.php';
         
         if ($equipo) {
             // Generar folio
-            $folio = '#MET-' . $equipo['area'] . '-' . date('Y', strtotime($equipo['fecha_registro'])) . '-' . str_pad($equipo['id_registro'], 2, '0', STR_PAD_LEFT);
+            $folio = '#ENT-' . $equipo['area'] . '-' . date('Y', strtotime($equipo['fecha_registro'])) . '-' . str_pad($equipo['id_registro'], 2, '0', STR_PAD_LEFT);
             $equipo['folio'] = $folio;
             
             // Buscar fotos desde BD (entrada_fotos) - solo fotos de entrada (patrón: entrada_x_xxx_x)

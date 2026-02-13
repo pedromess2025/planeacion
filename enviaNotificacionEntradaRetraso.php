@@ -8,7 +8,7 @@
     require("PHPMailer-master/src/PHPMailer.php");
     require("PHPMailer-master/src/SMTP.php");
     
-    // Buscar entradas cuya fecha de promesa es hoy o ya pasó y siguen sin terminar/entregar
+    // Buscar entradas con fecha promesa vencida y que no esten terminadas
     $sqlCorreo = "SELECT 
                     er.id_registro,
                     er.cliente,
@@ -21,9 +21,9 @@
                   FROM entrada_registros er
                   LEFT JOIN entrada_log_ingenieros eli ON er.id_registro = eli.id_registro AND eli.estatus = 'ASIGNADO'
                   LEFT JOIN usuarios u ON eli.id_ing = u.id_usuario
-                  WHERE er.estatus IN ('Terminado')
-                    AND er.fecha_promesa_entrega IS NOT NULL
-                    AND DATE(er.fecha_promesa_entrega) <= CURDATE()
+                                    WHERE er.estatus NOT IN ('Terminado')
+                                        AND er.fecha_promesa_entrega IS NOT NULL
+                                        AND DATE(er.fecha_promesa_entrega) < CURDATE()
                   GROUP BY er.id_registro";
     
     $resCorreo = $conn->query($sqlCorreo);

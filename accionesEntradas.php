@@ -361,14 +361,23 @@ include_once 'conn.php';
                 }
             }
         }
-        
-        // Actualizar estatus y fecha de término
-        if ($nuevo_estatus !== '') {
-            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = ?, fechaTermino = IFNULL(?, fechaTermino) WHERE id_registro = ?");
+
+        // Actualizar estatus y fecha de término        
+        if ($nuevo_estatus == "TERMINADO" || $nuevo_estatus === "SINENVIAR") {            
+            $sqlEstatus = "UPDATE entrada_registros SET estatus = ?, fechaTermino = ? WHERE id_registro = ?";
+            $stmtUpd = $conn->prepare($sqlEstatus);
             $stmtUpd->bind_param('ssi', $nuevo_estatus, $fecha_termino, $id_registro);
-            $stmtUpd->execute();
-            $stmtUpd->close();
+        } else {
+            $sqlEstatus = "UPDATE entrada_registros SET estatus = ? WHERE id_registro = ?";
+            $stmtUpd = $conn->prepare($sqlEstatus);
+            $stmtUpd->bind_param('si', $nuevo_estatus, $id_registro);
         }
+
+        // Ejecución única para evitar repetir código
+        if ($stmtUpd->execute()) {      
+
+        }
+        $stmtUpd->close();
         /*
         // Actualizar fecha_actualizacion en entrada_log_ingenieros
         $stmtIngActual = $conn->prepare("UPDATE entrada_log_ingenieros SET fecha_actualizacion = NOW() WHERE id_registro = ?");

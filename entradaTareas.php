@@ -102,7 +102,7 @@
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-bold small text-muted">ESTATUS ACTUAL:</label>
                                                     <select name="nuevo_estatus" class="form-select border-primary fw-bold">
-                                                        <option value="RECIBIDO" selected>📥 Entrada</option>
+                                                        <option value="ENTRADA" selected>📥 Entrada</option>
                                                         <option value="DIAGNOSTICO">🔍 En Diagnóstico</option>
                                                         <option value="REPARACION">🛠️ En Reparación</option>
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>

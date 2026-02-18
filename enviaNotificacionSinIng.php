@@ -112,7 +112,7 @@
             ⏱️ Días sin asignar: '.$diasPasados.' días
         </span>
         <br><br>
-        <a href="https://messbook.com.mx/planeacion" class="btn btn-outline-danger btn-block">
+        <a href="https://messbook.com.mx/planeacion/entradaTareas.php?id='.$rowCorreo["id_registro"].'" class="btn btn-outline-danger btn-block">
             <i class="fas fa-user-plus fa-lg"></i><br>Asignar Ingeniero
         </a>
     </h2>

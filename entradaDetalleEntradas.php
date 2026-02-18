@@ -288,6 +288,18 @@
                 fechaCompromiso.setHours(0, 0, 0, 0);
                 let diferenciaDias = Math.ceil((fechaCompromiso - hoy) / (1000 * 60 * 60 * 24));
 
+                estatusBadge = `<span class="badge bg-warning">${equipo.estatus}</span>`
+                if(equipo.estatus === 'CANCELADO') {
+                    estatusBadge = `<span class="badge bg-danger">${equipo.estatus}</span>`;
+                }
+                if(equipo.estatus === 'TERMINADO') {
+                    estatusBadge = `<span class="badge bg-success">${equipo.estatus}</span>`;
+                }
+                if(equipo.estatus === 'ENTRADA' ) {
+                    estatusBadge = `<span class="badge bg-info">${equipo.estatus}</span>`;
+                }
+
+
                 //Si la fecha ya pasó o es hoy 
                 if (diferenciaDias < 0) claseFecha = 'fecha-danger'; 
                 //Si la fecha está por llegar en 3 días o menos
@@ -306,7 +318,7 @@
                         <small class="d-block">${equipo.marca} | ${equipo.modelo || 'S/R'}</small>
                         <small class="text-muted">${equipo.no_serie || 'S/R'}</small>
                     </div>`,
-                    `<span class="badge bg-primary">${equipo.estatus}</span>`,
+                    estatusBadge,
                     `
                     <div>
                         <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">

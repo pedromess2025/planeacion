@@ -164,8 +164,7 @@ include_once 'conn.php';
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
                         CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
-                    FROM entrada_registros ent
-                    WHERE ent.estatus != 'Terminado'
+                    FROM entrada_registros ent                    
                     ORDER BY ent.fecha_registro DESC";
             
             $result = $conn->query($sql);
@@ -191,8 +190,7 @@ include_once 'conn.php';
                         CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
                     FROM entrada_registros ent
                     INNER JOIN entrada_log_ingenieros eli_filtro ON ent.id_registro = eli_filtro.id_registro
-                    WHERE ent.estatus != 'Terminado'
-                    AND eli_filtro.id_ing = ?
+                    WHERE eli_filtro.id_ing = ?
                     AND eli_filtro.estatus = 'ASIGNADO'
                     ORDER BY ent.fecha_promesa_entrega DESC";
             

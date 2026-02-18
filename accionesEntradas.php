@@ -19,6 +19,8 @@ include_once 'conn.php';
     $correo_cliente = isset($_POST['correo_cliente']) ? $_POST['correo_cliente'] : '';
     $contacto = $telefono . ($correo_cliente ? ' / ' . $correo_cliente : '');
     $id_ing_trae = isset($_POST['slcIngTrae']) ? intval($_POST['slcIngTrae']) : 0;
+    $fecha_real_entrada = isset($_POST['fecha_real_entrada']) ? $_POST['fecha_real_entrada'] : '';
+    $ov_ot = isset($_POST['ov_ot']) ? $_POST['ov_ot'] : '';
 
     $noEmpleado = isset($_COOKIE['noEmpleado']) ? intval($_COOKIE['noEmpleado']) : 0;
     
@@ -47,13 +49,14 @@ include_once 'conn.php';
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae, fecha_real_entrada, ov_ot)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
         
         // "s" = string, "i" = integer
-        $stmt->bind_param("ssssssssisss", 
-            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae
+        // Orden: cliente(s), area(s), marca(s), modelo(s), no_serie(s), diagnostico_inicial(s), fecha_estimada(s), estatus(s), demo(i), contacto_nombre(s), contacto(s), id_ing_trae(i), fecha_real_entrada(s), ov_ot(s)
+        $stmt->bind_param("ssssssssississ", 
+            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae, $fecha_real_entrada, $ov_ot
         );
         
         if ($stmt->execute()) {
@@ -148,8 +151,11 @@ include_once 'conn.php';
             // Mostrar TODOS los registros
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
                         ent.fecha_promesa_entrega AS fecha_compromiso, 
+                        ent.fecha_real_entrada,
                         ent.notas_recepcion AS diagnostico_inicial, 
                         ent.estatus,
+                        ent.num_reprogramaciones,
+                        ent.fecha_reprogramacion,
                         (
                             SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
                             FROM entrada_log_ingenieros eli
@@ -172,8 +178,11 @@ include_once 'conn.php';
             // Mostrar solo registros donde el ingeniero está asignado
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
                         ent.fecha_promesa_entrega AS fecha_compromiso, 
+                        ent.fecha_real_entrada,
                         ent.notas_recepcion AS diagnostico_inicial, 
                         ent.estatus,
+                        ent.num_reprogramaciones,
+                        ent.fecha_reprogramacion,
                         (
                             SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
                             FROM entrada_log_ingenieros eli

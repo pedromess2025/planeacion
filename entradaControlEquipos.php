@@ -128,17 +128,24 @@
                                     </div>
 
                                     <div class="row mb-4">
-                                        <div class="col-md-6">
+                                        <div class="col-md-3">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">Fecha de Entrada</label>
+                                            <input type="date" name="fecha_real_entrada" class="form-control" required>
+                                        </div>
+                                        <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Promesa de Entrega (Estimado)</label>
                                             <input type="date" name="fecha_estimada" class="form-control" required>
                                         </div>
-                                        <div class="col-md-6">
+                                        <div class="col-md-3">
+                                            <label class="form-label small text-uppercase fw-bold text-muted">OV / OT</label>
+                                            <input type="text" name="ov_ot" class="form-control" placeholder="S/R">
+                                        </div>
+                                        <div class="col-md-3">
                                             <label class="form-label fw-bold small text-muted">Fotos del Equipo</label>
                                             <input type="file" id="fotos" name="fotos[]" class="form-control" multiple accept="image/*" data-max-files="3" required>
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado. Máximo 3 fotos. </small>
                                         </div>
                                     </div>
-
                                     <div class="row mb-4">
                                         <div class="col-md-4">
                                         </div>

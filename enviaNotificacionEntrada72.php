@@ -107,7 +107,7 @@
             📅 Fecha de Entrega Estimada: '.date('d/m/Y', strtotime($fechaPromesa)).'
         </span>
         <br><br>
-        <a href="https://messbook.com.mx/planeacion/entradaDetalleEntradas" class="btn btn-outline-primary btn-block">
+        <a href="https://messbook.com.mx/planeacion/entradaTareas.php?id='.$rowCorreo["id_registro"].'" class="btn btn-outline-primary btn-block">
             <i class="fas fa-list fa-lg"></i><br>Revisar Sistema
         </a>
     </h2>

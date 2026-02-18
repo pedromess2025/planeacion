@@ -56,6 +56,7 @@
                                     <th style="width: 15%;">Cliente / Área</th>
                                     <th style="width: 15%;">Marca / Modelo / No Serie</th>
                                     <th style="width: 10%;">Estatus</th>
+                                    <th style="width: 10%;">Fecha Entrada</th>
                                     <th style="width: 20%;">Fecha Compromiso</th>
                                     <th style="width: 15%;">Ingeniero</th>
                                     <th style="width: 10%;">Acciones</th>
@@ -232,7 +233,7 @@
                 searching: true,
                 order: [], // No aplicar ordenamiento automático, respetar orden del servidor
                 columnDefs: [
-                    { targets: 5, orderable: false } // Desactivar ordenamiento en columna de acciones
+                    { targets: 7, orderable: false } // Desactivar ordenamiento en columna de acciones
                 ],
                 dom: '<"top"f>rt<"bottom"lp><"clear">',
                 drawCallback: function() {
@@ -255,7 +256,7 @@
                         llenarTablaEquipos(response.data);
                     } else {
                         $('#tablaEquipos tbody').html(
-                            '<tr><td colspan="6" class="text-center text-muted py-5">No hay equipos pendientes</td></tr>'
+                            '<tr><td colspan="8" class="text-center text-muted py-5">No hay equipos pendientes</td></tr>'
                         );
                     }
                 },
@@ -319,13 +320,31 @@
                         <small class="text-muted">${equipo.no_serie || 'S/R'}</small>
                     </div>`,
                     estatusBadge,
-                    `
-                    <div>
-                        <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">
-                            <i class="fas fa-calendar-alt"></i> ${formatearFecha(equipo.fecha_compromiso)}
-                        </small>
-                        <small class="text-muted d-block">"${equipo.diagnostico_inicial}"</small>
-                    </div>`,
+                    `<small class="d-block"><i class="fas fa-calendar-alt"></i> ${(equipo.fecha_real_entrada && equipo.fecha_real_entrada !== '0000-00-00') ? formatearFecha(equipo.fecha_real_entrada) : 'S/R'}</small>`,
+                    (() => {
+                        let fechaCompromisoHTML = `<div>`;
+                        
+                        // Si hay reprogramaciones, mostrar solo la nueva fecha
+                        if (equipo.num_reprogramaciones && equipo.num_reprogramaciones > 0) {
+                            fechaCompromisoHTML += `
+                            <small class="d-block fw-bold text-primary">
+                                <i class="fas fa-clock"></i> ${formatearFecha(equipo.fecha_reprogramacion)}
+                            </small>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">(${equipo.num_reprogramaciones} reprogramación${equipo.num_reprogramaciones > 1 ? 'es' : ''})</small>`;
+                        } else {
+                            // Si no hay reprogramaciones, mostrar la fecha original
+                            fechaCompromisoHTML += `
+                            <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">
+                                <i class="fas fa-calendar-alt"></i> ${formatearFecha(equipo.fecha_compromiso)}
+                            </small>`;
+                        }
+                        
+                        fechaCompromisoHTML += `
+                            <small class="text-muted d-block">"${equipo.diagnostico_inicial}"</small>
+                        </div>`;
+                        
+                        return fechaCompromisoHTML;
+                    })(),
                     (() => {
                         const nombresStr = (equipo.nombres_ingenieros || equipo.nombre || '').toString();
 
@@ -369,7 +388,7 @@
                         // Agregar botón para modificar ingenieros si hay al menos 1 asignado Y puede asignar
                         const botonModificar = (cantidadIngenieros > 0 && puedeAsignar)
                             ? `<button class="btn btn-sm btn-outline-primary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
-                                <i class="fas fa-user-edit"></i>
+                                <i class="fas fa-user-minus"></i>
                             </button>`
                             : '';
                         const botonEditar = (puedeAsignar)
@@ -397,10 +416,14 @@
             tablaEquiposDataTable.draw();
         }
 
-        // Función para formatear fechas
+        // Función para formatear fechas (sin conversión de zona horaria)
         function formatearFecha(fecha) {
+            // Parsear fecha como local (YYYY-MM-DD) sin interpretarla como UTC
+            const [año, mes, dia] = fecha.split('-');
+            const fecha_local = new Date(año, mes - 1, dia);
+            
             const opciones = { year: 'numeric', month: 'short', day: 'numeric' };
-            return new Date(fecha).toLocaleDateString('es-MX', opciones);
+            return fecha_local.toLocaleDateString('es-MX', opciones);
         }
         
         // Funcion para cargar ingenieros 

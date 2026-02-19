@@ -138,25 +138,73 @@
 
     <!-- Modal Editar Entrada -->
     <div class="modal fade" id="modalEditarEntrada" tabindex="-1" aria-labelledby="modalEditarEntradaLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content border-0 shadow">
-                <div class="modal-header border-bottom-0 py-3">
+                <div class="modal-header modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="modalEditarEntradaLabel">Editar Entrada</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-3">
                     <input type="hidden" id="editarEntradaId" value="">
-                    <div class="mb-3">
-                        <label class="form-label">Marca</label>
-                        <input type="text" class="form-control" id="editarMarca" maxlength="80">
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Cliente</label>
+                            <input type="text" class="form-control" id="editarCliente">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Nombre del contacto</label>
+                            <input type="text" class="form-control" id="editarContacto">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Contacto</label>
+                            <input type="text" class="form-control" id="editarTelefono">
+                        </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Modelo</label>
-                        <input type="text" class="form-control" id="editarModelo" maxlength="80">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label">Área</label>
+                            <select name="editarArea" id="editarArea" class="form-select">                                                          
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Quien Envia</label>
+                            <select name="editarQuienEnvia" id="editarQuienEnvia" class="form-select">                                
+                            </select>
+                        </div>
                     </div>
-                    <div class="mb-0">
-                        <label class="form-label">No. Serie</label>
-                        <input type="text" class="form-control" id="editarSerie" maxlength="120">
+                    <div class="row mb-4">
+                        <div class="col-md-4">                        
+                            <label class="form-label">Marca</label>
+                            <input type="text" class="form-control" id="editarMarca" name="editarMarca">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Modelo</label>
+                            <input type="text" class="form-control" id="editarModelo" name="editarModelo">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">No. Serie</label>
+                            <input type="text" class="form-control" id="editarSerie" name="editarSerie">
+                        </div>
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <label class="form-label">Notas de recepción - Diagnóstico inicial</label>
+                            <textarea class="form-control" id="editarNotas" rows="3"></textarea>
+                        </div>                    
+                    </div>
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha real de entrada</label>
+                            <input type="date" class="form-control" id="editarFechaReal">                                                    
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Fecha de compromiso</label>
+                            <input type="date" class="form-control" id="editarFechaCompromiso">                                                    
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">OV/OT</label>
+                            <input type="text" class="form-control" id="editarOV_OT">
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
@@ -212,6 +260,9 @@
         $(document).ready(function() {
             inicializarTablaEquipos();
             cargarEquipos();
+
+            cargarIngenierosTrae();
+            cargarAreas();
         });
 
         // Variables globales
@@ -686,10 +737,27 @@
                 success: function(response) {
                     if (response && response.success && response.data && response.data.id_registro) {
                         const data = response.data;
-                        document.getElementById('editarEntradaId').value = data.id_registro;
-                        document.getElementById('editarMarca').value = data.marca || '';
-                        document.getElementById('editarModelo').value = data.modelo || '';
-                        document.getElementById('editarSerie').value = data.no_serie || '';
+
+                        $('#editarEntradaId').val(data.id_registro);
+
+                        $('#editarCliente').val(data.cliente || '');
+                        $('#editarContacto').val(data.contacto_nombre || '');
+                        $('#editarTelefono').val(data.contacto || '');                        
+
+                        $('#editarArea').val(data.area);
+                        $('#editarQuienEnvia').val(data.id_ing_trae);
+                        
+                        $('#editarMarca').val(data.marca || '');
+                        $('#editarModelo').val(data.modelo || '');
+                        $('#editarSerie').val(data.no_serie || '');
+
+                        $('#editarNotas').val(data.notas_recepcion || '');
+
+                        $('#editarFechaReal').val(data.fecha_real_entrada ? data.fecha_real_entrada.split(' ')[0] : '');
+                        $('#editarFechaCompromiso').val(data.fecha_promesa_entrega ? data.fecha_promesa_entrega.split(' ')[0] : '');
+                        $('#editarOV_OT').val(data.ov_ot || '');
+
+                        $('#modalEditarEntrada').modal('show');
 
                         const modalEl = document.getElementById('modalEditarEntrada');
                         modalEditarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
@@ -706,10 +774,23 @@
 
         // Función para guardar edición de entrada
         function guardarEdicionEntrada() {
-            const equipoId = document.getElementById('editarEntradaId').value;
-            const marca = document.getElementById('editarMarca').value.trim();
-            const modelo = document.getElementById('editarModelo').value.trim();
-            const serie = document.getElementById('editarSerie').value.trim();
+            const equipoId = $('#editarEntradaId').val();
+
+            const cliente = $('#editarCliente').val().trim();
+            const contacto = $('#editarContacto').val().trim();
+            const telefono = $('#editarTelefono').val().trim();
+            
+            const area = $('#editarArea').val();
+            const quienEnvia = $('#editarQuienEnvia').val();
+
+            const marca = $('#editarMarca').val().trim();
+            const modelo = $('#editarModelo').val().trim();
+            const serie = $('#editarSerie').val().trim();
+
+            const notas = $('#editarNotas').val().trim();
+            const fechaReal = $('#editarFechaReal').val();
+            const fechaCompromiso = $('#editarFechaCompromiso').val();
+            const ov_ot = $('#editarOV_OT').val().trim();
 
             if (!equipoId) {
                 Swal.fire({ icon: 'warning', title: 'Atención', text: 'Falta el ID de la entrada.' });
@@ -723,9 +804,18 @@
                 data: {
                     accion: 'modificarEntrada',
                     id_registro: equipoId,
+                    cliente: cliente,
+                    contacto: contacto,
+                    telefono: telefono,
+                    areaedit: area,
+                    quienEnvia: quienEnvia,
                     marca: marca,
                     modelo: modelo,
-                    no_serie: serie
+                    no_serie: serie,
+                    notas: notas,
+                    fechaReal: fechaReal,
+                    fechaCompromiso: fechaCompromiso,
+                    ov_ot: ov_ot                    
                 },
                 success: function(response) {
                     if (response.success) {
@@ -777,6 +867,70 @@
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
+        }
+
+        function cargarIngenierosTrae() {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { accion: 'obtenerIngenieros' },
+                success: function(response) {
+                    var select = $('#editarQuienEnvia');
+                    select.empty();
+                    select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+
+                    if (response && response.success && Array.isArray(response.data)) {
+                        response.data.forEach(function(ingeniero) {
+                            var option = $('<option></option>')
+                                .attr('value', ingeniero.id_usuario)
+                                .text(ingeniero.nombre);
+                            select.append(option);
+                        });
+                    }
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error al cargar ingenieros',
+                        icon: 'error',
+                        draggable: true
+                    });
+                }
+            });
+        }
+
+        function cargarAreas() {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {accion: "obtenerAreas"},
+                success: function(data) {
+                    var select = $('#editarArea');
+                    // soportar tanto respuesta directa como { success: true, data: [...] }
+                    var areas = [];
+                    if (Array.isArray(data)) {
+                        areas = data;
+                    } else if (data && Array.isArray(data.data)) {
+                        areas = data.data;
+                    }
+                    // Añadir opción por defecto si no existe
+                    if (select.find('option[value="0"]').length === 0) {
+                        select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+                    }
+                    areas.forEach(function(area) {
+                        var option = $('<option></option>').attr('value', area.CDAREA).text(area.AREA);
+                        select.append(option);
+                    });
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    Swal.fire({
+                        title: "Error al cargar las áreas",
+                        icon: "error",
+                        draggable: true
+                    });
+                }
+            });
         }
     </script>
 </body>

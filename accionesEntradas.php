@@ -1,6 +1,7 @@
 <?php
 include_once 'conn.php';
-
+header('Content-Type: application/json');
+    
     $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
     $usuario = isset($_COOKIE['id_usuarioL']) ? $_COOKIE['id_usuarioL'] : ''; // Usuario que registra la entrada
     
@@ -44,6 +45,9 @@ include_once 'conn.php';
     $nuevo_estatus = isset($_POST['nuevo_estatus']) ? $_POST['nuevo_estatus'] : '';
     $fecha_termino = isset($_POST['fecha_termino']) ? $_POST['fecha_termino'] : null;
     
+    // REPROGRAMAR FECHA COMPROMISO
+    $nueva_fecha = isset($_POST['nueva_fecha']) ? trim($_POST['nueva_fecha']) : '';
+
     // OBTENER INGENIEROS ASIGNADOS (solo id y nombre)
     $id_registro_param = isset($_POST['id_registro']) ? intval($_POST['id_registro']) : 0;
 
@@ -144,10 +148,10 @@ include_once 'conn.php';
     if ($accion == 'obtenerEquipos') {
         // Usuarios que pueden ver todos los registros (encargados de área)
         // 523-SEBAS, 45-SERGIO, 177-ZAYI, 276-PEDRO, 183-AMRAM, 555-LIZ
-        $usuariosEncargados = array(523, 45, 177, 276, 183, 555);
-        $esEncargado = in_array($noEmpleado, $usuariosEncargados);
+        //$usuariosEncargados = array(523, 45, 177, 276, 183, 555);
+        $esEncargado = isset($_POST['esEncargado']) ? $_POST['esEncargado'] : '';
         
-        if ($esEncargado) {
+        if ($esEncargado === 'Esencargado') {
             // Mostrar TODOS los registros
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
                         ent.fecha_promesa_entrega AS fecha_compromiso, 
@@ -272,16 +276,11 @@ include_once 'conn.php';
         if ($stmtInsert->execute()) {
             // 2. Actualizar estatus del equipo si es necesario
             // Solo actualizar fecha_asignacion si aún no existe (es NULL)
-            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET estatus = 'RECIBIDO', fecha_asignacion = IF(fecha_asignacion IS NULL, NOW(), fecha_asignacion) WHERE id_registro = ?");
+            $stmtUpd = $conn->prepare("UPDATE entrada_registros SET fecha_asignacion = IF(fecha_asignacion IS NULL, NOW(), fecha_asignacion) WHERE id_registro = ?");
             $stmtUpd->bind_param("i", $equipo_id);
             $stmtUpd->execute();
             $stmtUpd->close();
 
-            require_once 'enviaNotificacionEntrada.php';
-            if (function_exists('enviaNotificacionEntrada')) {
-                enviaNotificacionEntrada($conn, $equipo_id);
-            }
-            
             header('Content-Type: application/json');
             echo json_encode(['success' => true]);
         } else {
@@ -307,6 +306,29 @@ include_once 'conn.php';
             $stmtUpd->close();
         } else {
             echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+        }
+        exit;
+    }
+
+    // REPROGRAMAR FECHA COMPROMISO
+    if ($accion == 'reprogramarFecha') {
+        if ($id_registro <= 0 || $nueva_fecha === '') {
+            echo json_encode(['success' => false, 'message' => 'Parametros invalidos']);
+            exit;
+        }
+
+        $stmtRepro = $conn->prepare("UPDATE entrada_registros 
+            SET fecha_reprogramacion = ?, 
+                num_reprogramaciones = IFNULL(num_reprogramaciones, 0) + 1
+            WHERE id_registro = ?");
+        $stmtRepro->bind_param('si', $nueva_fecha, $id_registro);
+        $ok = $stmtRepro->execute();
+        $stmtRepro->close();
+
+        if ($ok) {
+            echo json_encode(['success' => true]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se pudo reprogramar la fecha']);
         }
         exit;
     }
@@ -407,12 +429,14 @@ include_once 'conn.php';
                     SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
                     FROM entrada_log_ingenieros eli
                     WHERE eli.id_registro = ent.id_registro
+                    AND eli.estatus = 'ASIGNADO'
                 ) AS ids_ingenieros,
                 (
                     SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
                     FROM entrada_log_ingenieros eli
                     INNER JOIN usuarios us ON (us.id_usuario = eli.id_ing)
                     WHERE eli.id_registro = ent.id_registro
+                    AND eli.estatus = 'ASIGNADO'
                 ) AS ingeniero_nombre
                 FROM entrada_registros ent
                 WHERE ent.id_registro = ?";

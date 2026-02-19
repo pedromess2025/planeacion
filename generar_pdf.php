@@ -19,6 +19,7 @@ $query = "SELECT
         FROM entrada_log_ingenieros eli
         INNER JOIN usuarios us ON us.id_usuario = eli.id_ing
         WHERE eli.id_registro = ent.id_registro
+        AND eli.estatus = 'ASIGNADO'
     ) AS nombres_ingenieros
 FROM entrada_registros ent
 WHERE ent.id_registro = ?";
@@ -73,7 +74,7 @@ $folio = '#ENT-' . ($equipo['area'] ?? '00') . '-' .
          str_pad($equipo['id_registro'] ?? '0', 2, '0', STR_PAD_LEFT);
 $ingenieros = $equipo['nombres_ingenieros'] ?? 'No asignado';
 $equipo_info = 'Equipo: ' . ($equipo['marca'] ?? 'N/A') . ' - ' . 
-               ($equipo['modelo'] ?? 'N/A') . ' - S/N: ' . 
+               ($equipo['modelo'] ?? 'N/A') . ' - ' . 
                ($equipo['no_serie'] ?? 'S/N');
 $cliente_info = 'Cliente: ' . ($equipo['cliente'] ?? 'N/A');
 $contacto_info = 'Contacto: ' . ($equipo['contacto'] ?? 'N/A');

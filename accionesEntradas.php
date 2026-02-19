@@ -514,12 +514,26 @@ include_once 'conn.php';
             exit;
         }
 
+        $cliente_mod = isset($_POST['cliente']) ? trim($_POST['cliente']) : '';
+        $contacto_mod = isset($_POST['contacto']) ? trim($_POST['contacto']) : '';
+        $telefono_mod = isset($_POST['telefono']) ? trim($_POST['telefono']) :'';
+
+        $area_mod = $area_mod = isset($_POST['areaedit']) ? trim($_POST['areaedit']) : '';
+        $quienEnvia_mod = isset($_POST['quienEnvia']) ? trim($_POST['quienEnvia']) : '';
+        
         $marca_mod = isset($_POST['marca']) ? trim($_POST['marca']) : '';
         $modelo_mod = isset($_POST['modelo']) ? trim($_POST['modelo']) : '';
         $serie_mod = isset($_POST['no_serie']) ? trim($_POST['no_serie']) : '';
 
-        $stmt = $conn->prepare("UPDATE entrada_registros SET marca = ?, modelo = ?, no_serie = ? WHERE id_registro = ?");
-        $stmt->bind_param('sssi', $marca_mod, $modelo_mod, $serie_mod, $id_registro);
+        $notas_mod = isset($_POST['notas']) ? trim($_POST['notas']) : '';
+        $fechaReal_mod = isset($_POST['fechaReal']) ? trim($_POST['fechaReal']) : '';
+        $fechaCompromiso_mod = isset($_POST['fechaCompromiso']) ? trim($_POST['fechaCompromiso']) : '';
+        $ov_ot_mod = isset($_POST['ov_ot']) ? trim($_POST['ov_ot']) : '';
+
+        $stmt = $conn->prepare("UPDATE entrada_registros 
+                                SET cliente = ?, contacto_nombre = ?, contacto = ?, area = ?, id_ing_trae = ?, marca = ?, modelo = ?, no_serie = ?, notas_recepcion = ?, fecha_real_entrada = ?, fecha_promesa_entrega = ?, ov_ot = ?
+                                WHERE id_registro = ?");
+        $stmt->bind_param('ssssssssssssi', $cliente_mod, $contacto_mod, $telefono_mod, $area_mod, $quienEnvia_mod, $marca_mod, $modelo_mod, $serie_mod, $notas_mod, $fechaReal_mod, $fechaCompromiso_mod, $ov_ot_mod, $id_registro);
         $ok = $stmt->execute();
         $stmt->close();
 

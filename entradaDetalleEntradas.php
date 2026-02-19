@@ -163,14 +163,12 @@
                     <div class="row mb-4">
                         <div class="col-md-6">
                             <label class="form-label">Área</label>
-                            <select name="editarArea" id="editarArea" class="form-select">
-                                <option value="">Selecciona un área...</option>                                
+                            <select name="editarArea" id="editarArea" class="form-select">                                                          
                             </select>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Quien Envia</label>
-                            <select name="editarQuienEnvia" id="editarQuienEnvia" class="form-select">
-                                <option value="">Selecciona quien envía...</option>
+                            <select name="editarQuienEnvia" id="editarQuienEnvia" class="form-select">                                
                             </select>
                         </div>
                     </div>
@@ -202,6 +200,10 @@
                         <div class="col-md-4">
                             <label class="form-label">Fecha de compromiso</label>
                             <input type="date" class="form-control" id="editarFechaCompromiso">                                                    
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">OV/OT</label>
+                            <input type="text" class="form-control" id="editarOV_OT">
                         </div>
                     </div>
                 </div>
@@ -258,6 +260,9 @@
         $(document).ready(function() {
             inicializarTablaEquipos();
             cargarEquipos();
+
+            cargarIngenierosTrae();
+            cargarAreas();
         });
 
         // Variables globales
@@ -721,9 +726,6 @@
 
         // Función para abrir modal de edición y cargar detalles de la entrada
         function editarEntrada(equipoId) {
-
-            cargarIngenierosTrae();
-            cargarAreas();
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
@@ -742,8 +744,8 @@
                         $('#editarContacto').val(data.contacto_nombre || '');
                         $('#editarTelefono').val(data.contacto || '');                        
 
-                        $('#editarArea').html(`<option value="${data.area}" selected>${data.area}</option>`);
-                        $('#editarQuienEnvia').html(`<option value="${data.id_ing_trae}" selected>${data.nombre_ing_trae}</option>`);
+                        $('#editarArea').val(data.area);
+                        $('#editarQuienEnvia').val(data.id_ing_trae);
                         
                         $('#editarMarca').val(data.marca || '');
                         $('#editarModelo').val(data.modelo || '');
@@ -753,6 +755,7 @@
 
                         $('#editarFechaReal').val(data.fecha_real_entrada ? data.fecha_real_entrada.split(' ')[0] : '');
                         $('#editarFechaCompromiso').val(data.fecha_promesa_entrega ? data.fecha_promesa_entrega.split(' ')[0] : '');
+                        $('#editarOV_OT').val(data.ov_ot || '');
 
                         $('#modalEditarEntrada').modal('show');
 
@@ -787,6 +790,7 @@
             const notas = $('#editarNotas').val().trim();
             const fechaReal = $('#editarFechaReal').val();
             const fechaCompromiso = $('#editarFechaCompromiso').val();
+            const ov_ot = $('#editarOV_OT').val().trim();
 
             if (!equipoId) {
                 Swal.fire({ icon: 'warning', title: 'Atención', text: 'Falta el ID de la entrada.' });
@@ -801,16 +805,17 @@
                     accion: 'modificarEntrada',
                     id_registro: equipoId,
                     cliente: cliente,
-                    contacto_nombre: contacto,
-                    correo_cliente: telefono,
-                    area: area,
-                    slcIngTrae: quienEnvia,
+                    contacto: contacto,
+                    telefono: telefono,
+                    areaedit: area,
+                    quienEnvia: quienEnvia,
                     marca: marca,
                     modelo: modelo,
                     no_serie: serie,
-                    diagnostico_inicial: notas,
-                    fecha_real: fechaReal,
-                    fecha_compromiso: fechaCompromiso                    
+                    notas: notas,
+                    fechaReal: fechaReal,
+                    fechaCompromiso: fechaCompromiso,
+                    ov_ot: ov_ot                    
                 },
                 success: function(response) {
                     if (response.success) {

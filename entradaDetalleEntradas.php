@@ -295,8 +295,6 @@
             cargarAreas();
         });
 
-        // Funcion para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
-        async function verificarAccesoSiEsEncargado() {
         // Escucha el cierre de CUALQUIER modal
         document.addEventListener('hidden.bs.modal', function () {            
             const backdrops = document.querySelectorAll('.modal-backdrop');
@@ -308,8 +306,10 @@
             document.body.style.paddingRight = '';                        
         });
 
-        // Funcion para verificar accesos
-        async function verificarAcceso() {
+        // Funcion para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
+        async function verificarAccesoSiEsEncargado() {
+            // Funcion para verificar accesos
+            async function verificarAcceso() {
             // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
             const respuesta = await validaOpciones('entradasEq', 'verBotonesDetalleEq');
             
@@ -323,6 +323,9 @@
             }else {
                 return "Esencargado"; // Tiene acceso, se permite la acción
             }
+        }
+
+        return await verificarAcceso(); //
         }
 
         // Variables globales
@@ -1060,7 +1063,7 @@
                     });
                 }
             });
-        }
+        } 
     </script>
 </body>
 </html>

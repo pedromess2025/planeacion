@@ -10,10 +10,15 @@
         background-color: #ff7300ff !important;
         color: #ffffffff !important;
     }
-    .btn-logistica{
+    .btn-orange{
         --bs-bg-opacity: 1;
-        background-color: #bf00ffff !important;
+        background-color: #ff7300ff !important;
         color: #ffffffff !important;
+    }
+    .btn-outline-orange{
+        --bs-bg-opacity: 1;
+        color: #ff7300ff !important;
+        border-color: #ff7300ff !important;
     }
 </style>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">

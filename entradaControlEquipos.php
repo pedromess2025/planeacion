@@ -153,7 +153,6 @@
                                             <button type="button" class="btn btn-outline-success text-uppercase" onclick="guardarEntrada()">Registrar Entrada de Equipo</button>
                                         </div>                                        
                                     </div>
-
                                     <input type="hidden" name="estatus" value="ENTRADA">
                                 </form>
                             </div>

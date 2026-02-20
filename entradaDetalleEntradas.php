@@ -49,7 +49,7 @@
 
                     <!-- TABLA DE EQUIPOS CON DATATABLE -->
                     <div class="card shadow-sm border-0">
-                        <table class="table table-hover mb-0" id="tablaEquipos">
+                        <table class="table table-hover mb-0 table-responsive" id="tablaEquipos">
                             <thead class="table-light">
                                 <tr>
                                     <th style="width: 15%;">Folio</th>
@@ -57,7 +57,7 @@
                                     <th style="width: 15%;">Marca / Modelo / No Serie</th>
                                     <th style="width: 10%;">Estatus</th>
                                     <th style="width: 10%;">Fecha Entrada</th>
-                                    <th style="width: 20%;">Fecha Compromiso</th>
+                                    <th style="width: 15%;">Fecha Compromiso</th>
                                     <th style="width: 15%;">Ingeniero</th>
                                     <th style="width: 10%;">Acciones</th>
                                 </tr>
@@ -105,7 +105,6 @@
                     </select>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-outline-primary" onclick="guardarAsignacion()">Confirmar</button>
                 </div>
             </div>
@@ -197,7 +196,7 @@
                             <label class="form-label">Fecha real de entrada</label>
                             <input type="date" class="form-control" id="editarFechaReal">                                                    
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4" hidden>
                             <label class="form-label">Fecha de compromiso</label>
                             <input type="date" class="form-control" id="editarFechaCompromiso">                                                    
                         </div>
@@ -210,6 +209,34 @@
                 <div class="modal-footer border-top-0 pt-0">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-outline-primary" onclick="guardarEdicionEntrada()">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reprogramar Entrada -->
+    <div class="modal fade" id="modalReprogramarEntrada" tabindex="-1" aria-labelledby="modalReprogramarEntradaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header modal-header bg-primary text-white py-3">
+                    <h5 class="modal-title fw-bold" id="modalReprogramarEntradaLabel">Reprogramar Entrada</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body py-3">
+                    <input type="hidden" id="reprogramarEntradaId" value="">
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Fecha compromiso actual</label>
+                            <input type="date" class="form-control" id="reprogramarFechaActual" readonly>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Nueva fecha</label>
+                            <input type="date" class="form-control" id="reprogramarFechaNueva">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0">
+                    <button type="button" class="btn btn-outline-primary" onclick="guardarReprogramacion()">Guardar</button>
                 </div>
             </div>
         </div>
@@ -256,6 +283,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+    <!-- Funciones Globales -->
+    <script src="../loginMaster/funcionesGlobales.js"></script>
+
     <script type="text/javascript">
         $(document).ready(function() {
             inicializarTablaEquipos();
@@ -265,11 +295,30 @@
             cargarAreas();
         });
 
+        // Funcion para verificar accesos
+        async function verificarAcceso() {
+            // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
+            const respuesta = await validaOpciones('entradasEq', 'verBotonesDetalleEq');
+            
+            // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
+            const cuantos = (respuesta && respuesta.status === 'success') 
+                            ? parseInt(respuesta.data[0].cuantos) 
+                            : 0;
+
+            if (cuantos <= 0) {            
+                return "Noesencargado"; // No tiene acceso, se puede bloquear la acción o redirigir
+            }else {
+                return "Esencargado"; // Tiene acceso, se permite la acción
+            }
+        }
+
+
         // Variables globales
         let tablaEquiposDataTable;
         let modalAsignarInstance = null;
         let modalModificarInstance = null;
         let modalEditarInstance = null;
+        let modalReprogramarInstance = null;
 
         // Función para inicializar DataTable
         function inicializarTablaEquipos() {
@@ -294,13 +343,15 @@
         }
 
         // Función para cargar equipos dinámicamente 
-        function cargarEquipos() {
+        async function cargarEquipos() {
+            const esEncargado = await verificarAcceso(); // Verificar acceso 
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
                 dataType: 'json',
                 data: {
-                    accion: 'obtenerEquipos'
+                    accion: 'obtenerEquipos',
+                    esEncargado
                 },
                 success: function(response) {
                     if (response.success && response.data.length > 0) {
@@ -351,7 +402,7 @@
                     estatusBadge = `<span class="badge bg-info">${equipo.estatus}</span>`;
                 }
 
-
+                let fechaBaseReprogramar = ''; 
                 //Si la fecha ya pasó o es hoy 
                 if (diferenciaDias < 0) claseFecha = 'fecha-danger'; 
                 //Si la fecha está por llegar en 3 días o menos
@@ -375,8 +426,10 @@
                     (() => {
                         let fechaCompromisoHTML = `<div>`;
                         
+                        
                         // Si hay reprogramaciones, mostrar solo la nueva fecha
-                        if (equipo.num_reprogramaciones && equipo.num_reprogramaciones > 0) {
+                        if (equipo.num_reprogramaciones > 0) {
+                            fechaBaseReprogramar = equipo.fecha_reprogramacion;
                             fechaCompromisoHTML += `
                             <small class="d-block fw-bold text-primary">
                                 <i class="fas fa-clock"></i> ${formatearFecha(equipo.fecha_reprogramacion)}
@@ -384,6 +437,7 @@
                             <small class="text-muted d-block" style="font-size: 0.75rem;">(${equipo.num_reprogramaciones} reprogramación${equipo.num_reprogramaciones > 1 ? 'es' : ''})</small>`;
                         } else {
                             // Si no hay reprogramaciones, mostrar la fecha original
+                            fechaBaseReprogramar = equipo.fecha_compromiso;
                             fechaCompromisoHTML += `
                             <small class="d-block fw-bold ${claseFecha === 'fecha-danger' ? 'text-danger' : claseFecha === 'fecha-warning' ? 'text-warning' : 'text-success'}">
                                 <i class="fas fa-calendar-alt"></i> ${formatearFecha(equipo.fecha_compromiso)}
@@ -428,34 +482,41 @@
                         const cantidadIngenieros = idsIngenieros.length > 0 ? idsIngenieros.split(',').length : 0;
                         
                         // Solo mostrar botones si usuario puede asignar (es encargado)
-                        const puedeAsignar = equipo.puede_asignar === true || equipo.puede_asignar === 1 || equipo.puede_asignar === '1';
+                        const puedeAsignar = equipo.puede_asignar === 'Esencargado';
                         
-                        // Mostrar botón de asignar solo si tiene menos de 3 ingenieros Y puede asignar
-                        const botonAsignar = (cantidadIngenieros < 3 && puedeAsignar)
-                            ? `<button class="btn btn-sm btn-outline-success" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
-                                <i class="fas fa-user-plus"></i>
-                            </button>`
-                            : '';
-                        // Agregar botón para modificar ingenieros si hay al menos 1 asignado Y puede asignar
-                        const botonModificar = (cantidadIngenieros > 0 && puedeAsignar)
-                            ? `<button class="btn btn-sm btn-outline-primary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
-                                <i class="fas fa-user-minus"></i>
-                            </button>`
-                            : '';
-                        const botonEditar = (puedeAsignar)
-                            ? `<button class="btn btn-sm btn-outline-info" onclick="editarEntrada(${equipo.id})" title="Editar Entrada">
-                                <i class="fas fa-pen"></i>
-                            </button>`
-                            : '';
-                        
-                        return `<div class="d-flex gap-2">
-                            ${botonAsignar}
-                            ${botonModificar}
-                            ${botonEditar}
-                            <button class="btn btn-sm btn-outline-warning" onclick="verFicha(${equipo.id})" title="Ver Ficha">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>`;
+                            
+                            // Mostrar botón de asignar solo si tiene menos de 3 ingenieros Y puede asignar
+                            const botonAsignar = (cantidadIngenieros < 3 && puedeAsignar)
+                                ? `<button class="btn btn-sm btn-outline-success" onclick="asignarIngeniero(${equipo.id})" title="Asignar Ingeniero">
+                                    <i class="fas fa-user-plus"></i>
+                                </button>`
+                                : '';
+                            // Agregar botón para modificar ingenieros si hay al menos 1 asignado Y puede asignar
+                            const botonModificar = (cantidadIngenieros > 0 && puedeAsignar)
+                                ? `<button class="btn btn-sm btn-outline-primary" onclick="modificarIngenieros(${equipo.id})" title="Modificar Ingenieros">
+                                    <i class="fas fa-user-minus"></i>
+                                </button>`
+                                : '';
+                            const botonEditar = (puedeAsignar)
+                                ? `<button class="btn btn-sm btn-outline-info" onclick="editarEntrada(${equipo.id})" title="Editar Entrada">
+                                    <i class="fas fa-pen"></i>
+                                </button>`
+                                : '';
+
+                            const botonReprogramar = (puedeAsignar)
+                                ? `<button class="btn btn-sm btn-outline-orange" onclick="reprogramarEntrada(${equipo.id}, '${fechaBaseReprogramar}')" title="Reprogramar Entrada">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </button>`
+                                : '';
+                            return `<div class="btn-group" role="group" aria-label="Acciones">
+                                ${botonAsignar}
+                                ${botonModificar}
+                                ${botonEditar}
+                                ${botonReprogramar}
+                                <button class="btn btn-sm btn-outline-secondary" onclick="verFicha(${equipo.id})" title="Ver Ficha">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>`;
                     })()
                 ];
 
@@ -632,8 +693,7 @@
                         Swal.fire({ icon: 'success', 
                                     title: 'Listo', 
                                     text: 'Ingeniero retirado.', 
-                                    timer: 2000, 
-                                    timerProgressBar: true }).then(() => {
+                                    }).then(() => {
                             if (modalModificarInstance) {
                                 modalModificarInstance.hide();
                             } else {
@@ -681,15 +741,17 @@
                     ingeniero_id: ingeniero_id
                 },
                 success: function(response) {
-                    if (response.success) {
+                    /*if (response.success) {
+                        $.ajax({
+                            url: 'enviaNotificacionEntrada.php',
+                            method: 'POST',
+                            data: { id_entrada: equipoId },
+                            async: true
+                        });
                         Swal.fire({
                             icon: 'success',
                             title: 'Asignación Exitosa',
-                            text: 'El ingeniero ha sido asignado correctamente.',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            timer: 2000,
-                            timerProgressBar: true
+                            text: 'El ingeniero ha sido asignado correctamente.'
                         })
                         .then(() => {
                             // Cerrar modal usando Bootstrap
@@ -712,7 +774,7 @@
                             title: 'Error',
                             text: 'No se pudo asignar el ingeniero.'
                         });
-                    }
+                    }*/
                 },
                 error: function() {
                     Swal.fire({
@@ -768,6 +830,72 @@
                 },
                 error: function() {
                     Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la entrada.' });
+                }
+            });
+        }
+
+        // Funcion para abrir modal de reprogramacion
+        function reprogramarEntrada(equipoId, fechaCompromiso) {
+            const fechaSolo = (fechaCompromiso || '').toString().split(' ')[0];
+            $('#reprogramarEntradaId').val(equipoId);
+            $('#reprogramarFechaActual').val(fechaSolo);
+            $('#reprogramarFechaNueva').val('');
+
+            const modalEl = document.getElementById('modalReprogramarEntrada');
+            modalReprogramarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
+            modalReprogramarInstance.show();
+        }
+
+        // Funcion para guardar reprogramacion
+        function guardarReprogramacion() {
+            const equipoId = $('#reprogramarEntradaId').val();
+            const fechaNueva = $('#reprogramarFechaNueva').val();
+
+            if (!equipoId) {
+                Swal.fire({ icon: 'warning', title: 'Atencion', text: 'Falta el ID de la entrada.' });
+                return;
+            }
+            if (!fechaNueva) {
+                Swal.fire({ icon: 'warning', title: 'Atencion', text: 'Seleccione la nueva fecha.' });
+                return;
+            }
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'reprogramarFecha',
+                    id_registro: equipoId,
+                    nueva_fecha: fechaNueva
+                },
+                success: function(response) {
+                    if (response.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Reprogramado',
+                            text: 'La fecha se actualizo correctamente.',
+                            timer: 1500,
+                            timerProgressBar: true
+                        }).then(() => {
+                            if (modalReprogramarInstance) {
+                                modalReprogramarInstance.hide();
+                            } else {
+                                const modalEl = document.getElementById('modalReprogramarEntrada');
+                                if (modalEl) {
+                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+                                }
+                            }
+                            document.body.classList.remove('modal-open');
+                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cargarEquipos();
+                        });
+                    } else {
+                        Swal.fire({ icon: 'error', title: 'Error', text: response.message || 'No se pudo reprogramar la fecha.' });
+                    }
+                },
+                error: function() {
+                    Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo reprogramar la fecha.' });
                 }
             });
         }
@@ -869,6 +997,7 @@
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
 
+        // Función para cargar ingenieros en el select de edición
         function cargarIngenierosTrae() {
             $.ajax({
                 url: 'accionesEntradas.php',
@@ -899,6 +1028,7 @@
             });
         }
 
+        // Función para cargar áreas en el select de edición
         function cargarAreas() {
             $.ajax({
                 url: 'accionesEntradas.php',

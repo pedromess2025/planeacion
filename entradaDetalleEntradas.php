@@ -112,7 +112,7 @@
     </div>
 
     <!-- Modal Modificar Ingenieros -->
-    <div class="modal fade" id="modalModificarIngenieros" tabindex="-1" aria-labelledby="modalModificarIngLabel" aria-hidden="true">
+    <div class="modal fade" id="modalModificarIngLabel" tabindex="-1" aria-labelledby="modalModificarIngLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 py-3">
@@ -293,6 +293,17 @@
 
             cargarIngenierosTrae();
             cargarAreas();
+        });
+
+        // Escucha el cierre de CUALQUIER modal
+        document.addEventListener('hidden.bs.modal', function () {            
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+
+            // Limpiar el body para restaurar el scroll y eliminar bloqueos
+            document.body.classList.remove('modal-open');
+            document.body.style.overflow = '';
+            document.body.style.paddingRight = '';                        
         });
 
         // Funcion para verificar accesos
@@ -750,7 +761,7 @@
                     ingeniero_id: ingeniero_id
                 },
                 success: function(response) {
-                    /*if (response.success) {
+                    if (response.success) {
                         $.ajax({
                             url: 'enviaNotificacionEntrada.php',
                             method: 'POST',
@@ -783,7 +794,7 @@
                             title: 'Error',
                             text: 'No se pudo asignar el ingeniero.'
                         });
-                    }*/
+                    }
                 },
                 error: function() {
                     Swal.fire({

@@ -42,11 +42,11 @@ $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 1
 if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
 ?>
     <li class="nav-item">
-    <a class="nav-link" href="index">
-        <i class="fas fa-fw fa-check text-gray-400 mb-0"></i>
-        <span>Registrar actividad</span>
-    </a>
-</li>
+        <a class="nav-link" href="index">
+            <i class="fas fa-fw fa-check text-gray-400 mb-0"></i>
+            <span>Registrar actividad</span>
+        </a>
+    </li>
 <?php
 }
 ?>

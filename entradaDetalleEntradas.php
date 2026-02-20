@@ -123,7 +123,7 @@
                     <small class="text-muted d-block mt-2">Selecciona un ingeniero para retirar.</small>
                     <input type="hidden" id="equipoIdModificar" value="">
                     <label class="small text-muted">Ingenieros asignados</label>
-                    <select id="selectModificarIngeniero" class="form-select form-select-lg">
+                    <select id="selectModificarIngeniero" class="form-select">
                         <option value="">Cargando...</option>
                     </select>
                 </div>
@@ -629,7 +629,8 @@
         // Función para abrir modal de modificación y cargar ingenieros asignados
         function modificarIngenieros(equipoId) {
             document.getElementById('equipoIdModificar').value = equipoId;
-
+            $('#modalModificarIngLabel').modal('show');
+            
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
@@ -652,20 +653,6 @@
                             selectElement.append($('<option></option>').attr('value', '').text('No hay ingenieros asignados'));
                         }
 
-                        // Inicializar Select2 en modal (dropdownParent apunta al modal-content)
-                        if ($.fn.select2) {
-                            selectElement.select2({
-                                language: 'es',
-                                placeholder: 'Buscar ingeniero...',
-                                allowClear: false,
-                                width: '100%',
-                                dropdownParent: $('#modalModificarIngenieros .modal-content')
-                            });
-                        }
-
-                        const modalEl = document.getElementById('modalModificarIngenieros');
-                        modalModificarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-                        modalModificarInstance.show();
                         
                         // Permitir cerrar el modal con botones y X
                         document.querySelectorAll('#modalModificarIngenieros [data-bs-dismiss="modal"]').forEach(btn => {

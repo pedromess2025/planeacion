@@ -295,6 +295,8 @@
             cargarAreas();
         });
 
+        // Funcion para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
+        async function verificarAccesoSiEsEncargado() {
         // Escucha el cierre de CUALQUIER modal
         document.addEventListener('hidden.bs.modal', function () {            
             const backdrops = document.querySelectorAll('.modal-backdrop');

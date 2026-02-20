@@ -297,8 +297,8 @@
             cargarAreas();
         });
 
-        // Funcion para verificar accesos
-        async function verificarAcceso() {
+        // Funcion para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
+        async function verificarAccesoSiEsEncargado() {
             // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
             const respuesta = await validaOpciones('entradasEq', 'verBotonesDetalleEq');
             
@@ -313,7 +313,6 @@
                 return "Esencargado"; // Tiene acceso, se permite la acción
             }
         }
-
 
         // Variables globales
         let tablaEquiposDataTable;
@@ -346,7 +345,7 @@
 
         // Función para cargar equipos dinámicamente 
         async function cargarEquipos() {
-            const esEncargado = await verificarAcceso(); // Verificar acceso 
+            const esEncargado = await verificarAccesoSiEsEncargado(); // Verificar acceso 
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
@@ -383,7 +382,7 @@
             // Limpiar tabla anterior
             tablaEquiposDataTable.clear();
 
-            // Agregar nuevas filas
+            // Agregar nuevas filas  
             equipos.forEach(function(equipo) {
                 // Determinar clase de fecha (danger/warning/success)
                 let claseFecha = 'fecha-success';
@@ -990,15 +989,6 @@
         // Función para ver ficha del equipo
         function verFicha(equipoId) {
             window.location.href = 'entradaTareas.php?id=' + equipoId;
-        }
-        
-        // Función para convertir texto a mayúsculas y quitar acentos
-        function convertirTexto(e) {
-            // Convertir a mayúsculas y quitar acentos
-            e.value = e.value
-            .toUpperCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
         }
 
         // Función para obtener el valor de una cookie

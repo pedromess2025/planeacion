@@ -27,7 +27,7 @@
 <!-- Sidebar -->
 <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 <!-- Sidebar - Brand -->
-<a class="sidebar-brand d-flex align-items-center justify-content-center" href="inicio">
+<a class="sidebar-brand d-flex align-items-center justify-content-center" href="/loginMaster/inicio">
     <div class="sidebar-brand-icon rotate-n-1">
         <img class="sidebar-card-illustration mb-2" href="" src="img/MESS_07_CuboMess_2.png" width="40" alt="Logo">
     </div>
@@ -36,14 +36,7 @@
 <div class="sidebar-heading">
     <span class="badge text-xl-white">Opciones</span>
 </div>
-<!-- Divider -->
-<?php
-//USUARIOS ENCARGADOS QUE PUEDEN REGISTRAR ENTRADAS Y ASIGNAR/MODIFICAR INGENIEROS
-// 523-SEBAS, 45-SERGIO, 177-ZAYI, 276-PEDRO, 183-AMRAM, 555-LIZ
-$usuariosEncargados = array(523, 45, 177, 276, 183, 555);
 
-if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
-?>
 <hr class="sidebar-divider my-0 alert-light">
 <li class="nav-item">
     <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseEntradas" aria-expanded="false" aria-controls="collapseEntradas">
@@ -53,7 +46,7 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
     </a>
     <div id="collapseEntradas" class="collapse" aria-labelledby="headingEntradas" data-bs-parent="#accordionSidebar">
         <div class="bg-white py-2 collapse-inner rounded">
-            <a class="collapse-item" href="entradaControlEquipos">
+            <a class="collapse-item disabled" href="entradaControlEquipos" id="verOpcionRegistroMenu" name="verOpcionRegistroMenu" >
                 <i class="fas fa-fw fa-plus text-primary"></i> Registro
             </a>
             <a class="collapse-item" href="entradaDetalleEntradas">
@@ -62,23 +55,10 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
         </div>
     </div>
 </li>
-<?php
-} else {
-    // Ingenieros regulares: solo pueden ver entradas
-?>
-<hr class="sidebar-divider my-0 alert-light">
-<li class="nav-item">
-    <a class="nav-link" href="entradaDetalleEntradas">
-        <i class="fas fa-fw fa-inbox text-gray-400"></i>
-        <span>Ver Entradas</span>
-    </a>
-</li>
-<?php
-}
-?>
+
 <hr class="sidebar-divider my-0 alert-light">
 <li class = "nav-item">
-    <a class = "nav-link" href = "#" data-toggle = "modal" data-target = "#logoutModalN">
+    <a class = "nav-link" href = "#" data-bs-toggle = "modal" data-bs-target = "#logoutModalN">
         <i class = "fas fa-sign-out-alt text-gray-100"></i>
         Salir
     </a>
@@ -90,3 +70,28 @@ if (in_array($_COOKIE['noEmpleado'], $usuariosEncargados)) {
     <button class="rounded-circle border-0" id="sidebarToggle"></button> 
 </div>
 </ul>
+<!-- Funciones Globales -->
+<script src="../loginMaster/funcionesGlobales.js"></script>
+
+<script type="text/javascript">
+    $(document).ready(function() {
+        verificarVistaMenu();
+    });
+
+    // Funcion para validar si puede ver la opción de registro en el menú de entradas (solo encargados pueden verla)
+    async function verificarVistaMenu() {
+        // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
+        const respuesta = await validaOpciones('entradasEq', 'verOpcionRegistroMenu');
+        
+        // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
+        const cuantos = (respuesta && respuesta.status === 'success') 
+                        ? parseInt(respuesta.data[0].cuantos) 
+                        : 0;
+        if (cuantos <= 0) {            
+            $("#verOpcionRegistroMenu").hide(); // No tiene acceso, se oculta la opción
+        }else {
+            $("#verOpcionRegistroMenu").show(); // Tiene acceso, se muestra la opción
+        }
+    }
+
+</script>

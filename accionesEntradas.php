@@ -146,9 +146,6 @@ header('Content-Type: application/json');
 
     // CARGAS DE REGISTROS DE ENTRADAS
     if ($accion == 'obtenerEquipos') {
-        // Usuarios que pueden ver todos los registros (encargados de área)
-        // 523-SEBAS, 45-SERGIO, 177-ZAYI, 276-PEDRO, 183-AMRAM, 555-LIZ
-        //$usuariosEncargados = array(523, 45, 177, 276, 183, 555);
         $esEncargado = isset($_POST['esEncargado']) ? $_POST['esEncargado'] : '';
         
         if ($esEncargado === 'Esencargado') {
@@ -412,13 +409,6 @@ header('Content-Type: application/json');
 
         }
         $stmtUpd->close();
-        /*
-        // Actualizar fecha_actualizacion en entrada_log_ingenieros
-        $stmtIngActual = $conn->prepare("UPDATE entrada_log_ingenieros SET fecha_actualizacion = NOW() WHERE id_registro = ?");
-        $stmtIngActual->bind_param('i', $id_registro);
-        $stmtIngActual->execute();
-        $stmtIngActual->close();*/
-        
         header('Content-Type: application/json');
         echo json_encode(['success' => true]);
         exit;
@@ -527,9 +517,6 @@ header('Content-Type: application/json');
 
     // MODIFICAR CAMPOS DE ENTRADA (solo encargados)
     if ($accion == 'modificarEntrada') {
-        $usuariosEncargados = array(523, 45, 177, 276, 183, 555);
-        $esEncargado = in_array($noEmpleado, $usuariosEncargados);
-
         header('Content-Type: application/json');
         if (!$esEncargado) {
             echo json_encode(['success' => false, 'message' => 'Sin permisos']);

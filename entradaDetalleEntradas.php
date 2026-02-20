@@ -194,7 +194,9 @@
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <label class="form-label">Fecha real de entrada</label>
-                            <input type="date" class="form-control" id="editarFechaReal">                                                    
+                            <div class="mt-2">
+                                <span id="diasTranscurridos" class="badge bg-info text-dark"></span>
+                            </div>
                         </div>
                         <div class="col-md-4" hidden>
                             <label class="form-label">Fecha de compromiso</label>
@@ -422,7 +424,16 @@
                         <small class="text-muted">${equipo.no_serie || 'S/R'}</small>
                     </div>`,
                     estatusBadge,
-                    `<small class="d-block"><i class="fas fa-calendar-alt"></i> ${(equipo.fecha_real_entrada && equipo.fecha_real_entrada !== '0000-00-00') ? formatearFecha(equipo.fecha_real_entrada) : 'S/R'}</small>`,
+                    (() => {
+                        let fechaEntrada = equipo.fecha_real_entrada && equipo.fecha_real_entrada !== '0000-00-00' ? formatearFecha(equipo.fecha_real_entrada) : 'S/R';
+                        let diasTranscurridos = '';
+                        if (typeof equipo.dias_transcurridos !== 'undefined' && equipo.dias_transcurridos !== null) {
+                            if (equipo.dias_transcurridos >= 0) {
+                                diasTranscurridos = `<span class="badge bg-info text-dark ms-1">${equipo.dias_transcurridos} días</span>`;
+                            }
+                        }
+                        return `<small class="d-block"><i class="fas fa-calendar-alt"></i> ${fechaEntrada} ${diasTranscurridos}</small>`;
+                    })(),
                     (() => {
                         let fechaCompromisoHTML = `<div>`;
                         

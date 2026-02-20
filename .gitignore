@@ -1,4 +1,2 @@
 imgEntradas/
-/logs
-/logs
-/logs
+*.log

@@ -173,7 +173,10 @@ header('Content-Type: application/json');
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio,
+                        CASE WHEN ent.fecha_real_entrada IS NULL OR ent.fecha_real_entrada = '0000-00-00' THEN NULL
+                             ELSE DATEDIFF(CURDATE(), ent.fecha_real_entrada)
+                        END AS dias_transcurridos
                     FROM entrada_registros ent                    
                     ORDER BY ent.fecha_registro DESC";
             

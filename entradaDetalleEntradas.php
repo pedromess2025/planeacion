@@ -323,7 +323,6 @@
             }
         }
 
-
         // Variables globales
         let tablaEquiposDataTable;
         let modalAsignarInstance = null;
@@ -355,7 +354,7 @@
 
         // Función para cargar equipos dinámicamente 
         async function cargarEquipos() {
-            const esEncargado = await verificarAcceso(); // Verificar acceso 
+            const esEncargado = await verificarAccesoSiEsEncargado(); // Verificar acceso 
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
@@ -392,7 +391,7 @@
             // Limpiar tabla anterior
             tablaEquiposDataTable.clear();
 
-            // Agregar nuevas filas
+            // Agregar nuevas filas  
             equipos.forEach(function(equipo) {
                 // Determinar clase de fecha (danger/warning/success)
                 let claseFecha = 'fecha-success';
@@ -986,15 +985,6 @@
         // Función para ver ficha del equipo
         function verFicha(equipoId) {
             window.location.href = 'entradaTareas.php?id=' + equipoId;
-        }
-        
-        // Función para convertir texto a mayúsculas y quitar acentos
-        function convertirTexto(e) {
-            // Convertir a mayúsculas y quitar acentos
-            e.value = e.value
-            .toUpperCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
         }
 
         // Función para obtener el valor de una cookie

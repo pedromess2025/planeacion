@@ -227,6 +227,7 @@
     <script type="text/javascript">
         
         $(document).ready(function() {   
+            ValidaAccesoLinkRegistro();
             //cargar empleados
             empleadoSolicita('#slcRespoonsable');
             empleadoSolicita('#slcRespoonsable2');
@@ -470,15 +471,6 @@
             });
         }
 
-        // Función para convertir texto a mayúsculas y quitar acentos
-        function convertirTexto(e) {
-            // Convertir a mayúsculas y quitar acentos
-            e.value = e.value
-            .toUpperCase()
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "");
-        }
-
         // Función para obtener el valor de una cookie por su nombre
         function getCookie(name) {
             let value = "; " + document.cookie;
@@ -486,6 +478,21 @@
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
 
+        // Función para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
+            // Funcion para verificar si el usuario es encargado 
+        async function ValidaAccesoLinkRegistro() {
+            // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
+            const respuesta = await validaOpciones('entradasEq', 'verOpcionRegistroMenu');
+            
+            // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
+            const cuantos = (respuesta && respuesta.status === 'success') 
+                            ? parseInt(respuesta.data[0].cuantos) 
+                            : 0;
+            console.log("Respuesta del servidor:", respuesta); // Depuración: Ver la respuesta completa del servidor
+            if (cuantos <= 0) {            
+                window.location.assign("entradaDetalleEntradas"); // No tiene acceso, se redirige al login
+            }
+        }
     </script>
 </body>
 

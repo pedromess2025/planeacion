@@ -194,13 +194,11 @@
                     <div class="row mb-4">
                         <div class="col-md-4">
                             <label class="form-label">Fecha real de entrada</label>
-                            <div class="mt-2">
-                                <span id="diasTranscurridos" class="badge bg-info text-dark"></span>
-                            </div>
+                            <input type="date" class="form-control" id="editarFechaReal">                            
                         </div>
                         <div class="col-md-4" hidden>
                             <label class="form-label">Fecha de compromiso</label>
-                            <input type="date" class="form-control" id="editarFechaCompromiso">                                                    
+                            <input type="date" class="form-control" id="editarFechaCompromiso">
                         </div>
                         <div class="col-md-4">
                             <label class="form-label">OV/OT</label>

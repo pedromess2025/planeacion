@@ -9,46 +9,56 @@
     require("PHPMailer-master/src/SMTP.php");
     
     // Buscar entradas sin ingenieros asignados después de 2 días
-        $sqlCorreo = "SELECT 
+        $sqlBuscaRegistros="SELECT 
                         er.id_registro,
                         er.cliente,
                         er.marca,
                         er.modelo,
                         er.no_serie,
                         er.area,
-                        er.fecha_registro,
-                        u.nombre as registrado_por,
-                        u.correo as correo_responsable
+                        er.fecha_registro
                     FROM entrada_registros er
-                    LEFT JOIN usuarios u ON er.id_usuarioL = u.id_usuario
-                    WHERE er.estatus NOT IN ('Terminado', 'Entregado')
-                        AND DATEDIFF(CURDATE(), er.fecha_registro) >= 2
-                        AND NOT EXISTS (
-                                SELECT 1
-                                FROM entrada_log_ingenieros eli
-                                WHERE eli.id_registro = er.id_registro
-                        )
-                    GROUP BY er.id_registro";
+                    WHERE DATEDIFF(CURDATE(), er.fecha_registro) >= 2
+                    AND NOT EXISTS (
+                        SELECT 1
+                        FROM entrada_log_ingenieros eli
+                        WHERE eli.id_registro = er.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                            AND eli.id_ing IS NOT NULL)";
+    $resEquipoSinIng = $conn->query($sqlBuscaRegistros);
     
-    $resCorreo = $conn->query($sqlCorreo);
-    
-    if ($resCorreo->num_rows == 0) {
+    if ($resEquipoSinIng->num_rows == 0) {
         exit; // No hay entradas sin asignar
     }
 
-    while ($rowCorreo = $resCorreo->fetch_assoc()) {
-        $correoResponsable = $rowCorreo["correo_responsable"];
-        $nombreResponsable = $rowCorreo["registrado_por"];
-        $cliente = $rowCorreo["cliente"];
-        $marca = $rowCorreo["marca"];
-        $modelo = $rowCorreo["modelo"];
-        $serie = $rowCorreo["no_serie"];
-        $area = $rowCorreo["area"];
-        $fechaRegistro = $rowCorreo["fecha_registro"];
+    while ($rowEquipoSinIng = $resEquipoSinIng->fetch_assoc()) {
+        $cliente = $rowEquipoSinIng["cliente"];
+        $marca = $rowEquipoSinIng["marca"];
+        $modelo = $rowEquipoSinIng["modelo"];
+        $serie = $rowEquipoSinIng["no_serie"];
+        $area = $rowEquipoSinIng["area"];
+        $fechaRegistro = $rowEquipoSinIng["fecha_registro"];
         $diasPasados = floor((strtotime(date('Y-m-d')) - strtotime($fechaRegistro)) / 86400);
-        
-        if (empty($correoResponsable)) {
-            continue; // Si no hay correo del responsable, pasar al siguiente
+
+        // Obtener correos de administradores (No. Empleado) 
+        $adminIds = array(45, 177, 555, 523);
+        $adminIdList = implode(',', array_map('intval', $adminIds));
+        $adminCorreos = array();
+
+        if (!empty($adminIdList)) {
+            $sqlAdmins = "SELECT correo FROM usuarios WHERE noEmpleado IN ($adminIdList)";
+            $resAdmins = $conn->query($sqlAdmins);
+            if ($resAdmins) {
+                while ($rowAdmin = $resAdmins->fetch_assoc()) {
+                    if (!empty($rowAdmin['correo'])) {
+                        $adminCorreos[] = $rowAdmin['correo'];
+                    }
+                }
+            }
+        }
+
+        if (empty($adminCorreos)) {
+            continue; // Si no hay correos, pasar al siguiente
         }
 
         $mail = new PHPMailer\PHPMailer\PHPMailer();
@@ -65,7 +75,7 @@
         $mail->Username = "mess.metrologia@gmail.com";
         $mail->Password = "hglidvwsxcbbefhe";
         
-        $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Planeación MESS");
+        $mail->SetFrom("mess.metrologia@gmail.com", "Sistema de Entrada de Equipos MESS");
         $mail->Subject = $deAsunto;
         $mail->Body = ' 
 <html lang="es">
@@ -112,7 +122,7 @@
             ⏱️ Días sin asignar: '.$diasPasados.' días
         </span>
         <br><br>
-        <a href="https://messbook.com.mx/planeacion/entradaTareas.php?id='.$rowCorreo["id_registro"].'" class="btn btn-outline-danger btn-block">
+        <a href="https://messbook.com.mx/planeacion/entradaDetalleEntradas.php?id='.$rowEquipoSinIng["id_registro"].'" class="btn btn-outline-danger btn-block">
             <i class="fas fa-user-plus fa-lg"></i><br>Asignar Ingeniero
         </a>
     </h2>
@@ -131,16 +141,17 @@
 </body>
 </html>';
 
-        // Envío de correo al responsable
-        $mail->addAddress($correoResponsable);
-        
-        // También enviar copia a supervisores (opcional)
-        //$mail->addAddress('...@mess.com.mx');
-        
+        // Envío de correo solo a administradores
+        foreach ($adminCorreos as $correoAdmin) {
+            if (!empty($correoAdmin)) {
+                $mail->addAddress($correoAdmin);
+            }
+        }
+
         if(!$mail->send()) {
             error_log("Error al enviar alerta sin asignar: " . $mail->ErrorInfo);
         } else {
-            error_log("Alerta enviada para entrada ID: " . $rowCorreo["id_registro"]);
+            error_log("Alerta enviada para entrada ID: " . $rowEquipoSinIng["id_registro"]);
         }
         
         $mail->clearAddresses();

@@ -103,6 +103,8 @@
                                                     <label class="form-label fw-bold small text-muted">ESTATUS ACTUAL:</label>
                                                     <select name="nuevo_estatus" class="form-select border-primary fw-bold">
                                                         <option value="ENTRADA" selected>📥 Entrada</option>
+                                                        <option value="CUARENTENA">⏳ Cuarentena</option>
+                                                        <option value="DEMO">🕹️ En Demo</option>
                                                         <option value="DIAGNOSTICO">🔍 En Diagnóstico</option>
                                                         <option value="REPARACION">🛠️ En Reparación</option>
                                                         <option value="REFACCIONES">📦 Espera de Refacciones</option>
@@ -197,7 +199,7 @@
             <footer class="sticky-footer bg-white border-top mt-auto">
                 <div class="container my-auto">
                     <div class="copyright text-center my-auto">
-                        <span>Copyright &copy; MESS 2025</span>
+                        <span>Copyright &copy; MESS <?php echo date('Y'); ?></span>
                     </div>
                 </div>
             </footer>

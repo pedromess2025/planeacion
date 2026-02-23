@@ -172,7 +172,9 @@ header('Content-Type: application/json');
                         ) AS nombres_ingenieros,
                         CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio,
                         CASE WHEN ent.fecha_real_entrada IS NULL THEN NULL
-                             ELSE DATEDIFF(CURDATE(), ent.fecha_real_entrada)
+                            ELSE 
+                            IF (ent.estatus = 'TERMINADO', DATEDIFF(ent.fechaTermino, ent.fecha_real_entrada), 
+                                DATEDIFF(CURDATE(), ent.fecha_real_entrada))
                         END AS dias_transcurridos
                     FROM entrada_registros ent                    
                     ORDER BY ent.fecha_registro DESC";

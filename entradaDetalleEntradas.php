@@ -22,6 +22,28 @@
     <!-- DataTables CSS -->
     <link href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/responsive/2.5.0/css/responsive.dataTables.min.css" rel="stylesheet">
+
+    <style>
+        /* Forzar que la fila de filtros sea siempre visible */
+        #tablaEquipos thead tr#fila-filtros th {
+            display: table-cell !important;
+            background-color: #f9f9f9;
+            padding: 4px !important;            
+        }
+
+        /* Quitar las flechas de ordenamiento de la fila de filtros */
+        #tablaEquipos thead tr#fila-filtros th::before,
+        #tablaEquipos thead tr#fila-filtros th::after {
+            content: "" !important;
+            display: none !important;
+        }
+
+        /* Ajuste de tamaño para los select */
+        #fila-filtros select {
+            width: 100% !important;
+            min-width: 80px;            
+        }
+    </style>
     
 </head>
 
@@ -41,25 +63,53 @@
                 ?>
                 <!-- Begin Page Content -->
                 <div class="container-fluid py-4">
-                    <div class="row mb-4">
+                    <div class="row mb-0">
                         <div class="col">
-                            <h2 class="fw-bold text-dark mb-1">Entrada de Equipos</h2>
+                            <h3 class="fw-bold text-dark mb-1">Entrada de Equipos</h3>
                         </div>
                     </div>
+                    <div class="row" id="filtrosPrincipales" style="display: none;">
+                        <!-- FILTROS PARA LA TABLA DE REGISTRO DE ENTRADAS-->
+                        <div class="col-md-2 mb-3">
+                            <input type="text" id="filtroCliente" class="form-control form-control-sm mb-2" placeholder="Filtrar por cliente...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="text" id="filtroEstatus" class="form-control form-control-sm mb-2" placeholder="Filtrar por estatus...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="text" id="filtroIngeniero" class="form-control form-control-sm mb-2" placeholder="Filtrar por ingeniero...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <input type="text" id="filtroArea" class="form-control form-control-sm mb-2" placeholder="Filtrar por área...">
+                        </div>
+                        <div class="col-md-2 mb-3">
+                            <button type="button" id="filtrarBtn" class="btn btn-sm btn-primary w-100" onclick="aplicarFiltros()">Filtrar</button>
+                        </div>
 
+                    </div>
                     <!-- TABLA DE EQUIPOS CON DATATABLE -->
-                    <div class="card shadow-sm border-0">
-                        <table class="table table-hover mb-0 table-responsive" id="tablaEquipos">
-                            <thead class="table-light">
+                    <div class="row shadow-sm border-0">
+                        <table class="table table-hover mb-0 table-responsive" id="tablaEquipos">                            
+                            <thead class="table-secondary">
                                 <tr>
                                     <th style="width: 15%;">Folio</th>
                                     <th style="width: 15%;">Cliente / Área</th>
-                                    <th style="width: 15%;">Marca / Modelo / No Serie</th>
+                                    <th style="width: 15%;">Marca / Mod / No Ser.</th>
                                     <th style="width: 10%;">Estatus</th>
                                     <th style="width: 10%;">Fecha Entrada</th>
                                     <th style="width: 15%;">Fecha Compromiso</th>
                                     <th style="width: 15%;">Ingeniero</th>
                                     <th style="width: 10%;">Acciones</th>
+                                </tr>
+                                <tr id="fila-filtros">
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
+                                    <th></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -292,7 +342,7 @@
             cargarEquipos();
 
             cargarIngenierosTrae();
-            cargarAreas();
+            cargarAreas();            
         });
 
         // Escucha el cierre de CUALQUIER modal
@@ -341,22 +391,14 @@
                 language: {
                     url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
                 },
-                paging: true,
-                pageLength: 10,
                 responsive: true,
-                ordering: true,
-                searching: true,
-                order: [], // No aplicar ordenamiento automático, respetar orden del servidor
+                orderCellsTop: true, // Indica que la primera fila es la que ordena                
+                order: [],
                 columnDefs: [
-                    { targets: 7, orderable: false } // Desactivar ordenamiento en columna de acciones
-                ],
-                dom: '<"top"f>rt<"bottom"lp><"clear">',
-                drawCallback: function() {
-                    // Callback después de redibujar la tabla
-                }
+                    { targets: 7, orderable: false, searchable: false }
+                ]
             });
         }
-
         // Función para cargar equipos dinámicamente 
         async function cargarEquipos() {
             const esEncargado = await verificarAccesoSiEsEncargado(); // Verificar acceso 
@@ -546,10 +588,59 @@
 
                 // Agregar fila a la tabla
                 let row = tablaEquiposDataTable.row.add(fila);
+                crearFiltrosDinamicos(tablaEquiposDataTable);
             });
 
             // Redibujar tabla
             tablaEquiposDataTable.draw();
+        }
+
+        function crearFiltrosDinamicos(api) {
+            api.columns().every(function (index) {
+                var column = this;
+                var cell = $('#fila-filtros th').eq(index);
+
+                // --- Definir qué columnas NO llevan filtro ---                
+                if (index === 4 ||index === 5 || index === 7  || index === 1 || index === 2) {
+                    cell.empty();
+                    return;
+                }
+
+                // Filtros de Texto Libre
+                if (index === 2 || index === 6) {
+                    var input = $('<input type="text" class="form-control form-control-sm" placeholder="🔍 Buscar..." />')
+                        .appendTo(cell.empty())
+                        .on('keyup', function () {
+                            // Búsqueda parcial (no exacta)
+                            column.search(this.value).draw();
+                        })
+                        .on('click', function(e) { e.stopPropagation(); });
+                    return;
+                }
+                
+                // Filtros con select (Select2)
+                var select = $('<select class="form-control select2-filter"><option value="">Filtrar...</option></select>')
+                    .appendTo(cell.empty());
+
+                column.data().unique().sort().each(function (d) {
+                    var text = $('<div>').html(d).text().trim();
+                    if (text !== "") {
+                        select.append('<option value="' + text + '">' + text + '</option>');
+                    }
+                });
+
+                select.select2({                                
+                    allowClear: true,
+                    placeholder: 'Ver todos',
+                    dropdownParent: cell
+                });
+
+                // Evento para Select2
+                select.on('change', function () {
+                    var val = $.fn.dataTable.util.escapeRegex($(this).val());
+                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                });
+            });
         }
 
         // Función para formatear fechas (sin conversión de zona horaria)
@@ -1064,6 +1155,24 @@
                 }
             });
         } 
+
+        // Aplicar filtros dinámicos después de cargar los equipos
+        function aplicarFiltros(){
+            tablaEquiposDataTable.columns().every(function (index) {
+                var column = this;
+                var cell = $('#fila-filtros th').eq(index);
+                var input = cell.find('input');
+                var select = cell.find('select');
+
+                if (input.length > 0) {
+                    var val = input.val();
+                    column.search(val).draw();
+                } else if (select.length > 0) {
+                    var val = $.fn.dataTable.util.escapeRegex(select.val());
+                    column.search(val ? '^' + val + '$' : '', true, false).draw();
+                }
+            });
+        }
     </script>
 </body>
 </html>

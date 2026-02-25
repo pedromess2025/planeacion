@@ -25,18 +25,7 @@
             clip-path: polygon(0% 0%, 100% 0%, 100% calc(100% - 37px), 0% calc(100% - 37px));
         }
     </style>
-
-<?php
-    $usuariosRegistran = array(183, 521, 276, 523, 33);
-
-    if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
-        // El usuario tiene permiso para ver la página
-    } else {
-        header("Location: seguimiento_actividades.php");
-    }
-?>
 </head>
-
 <body id="page-top">
 
     <!-- Page Wrapper -->
@@ -269,12 +258,15 @@
     
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Funciones Globales -->
+    <script src="funcionesGlobales.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
             // Cargar la información al iniciar la página
+            verificarAccesoRegistroActividadesDim();
             //cargar ciudades
             cargarCiudades();
             //cargar empleados
@@ -321,20 +313,14 @@
                 placeholder: "Seleccione...",
                 width: '100%'
             });
-            
-            
-            
-
-            
         });
 
+        // Función para mostrar u ocultar el mensaje informativo según el estatus seleccionado
         function generarSolicitud() {            
-            
             var formData = getFormData('formPlaneacion');
             var responsable = formData["slcRespoonsable"];
             var responsable2 = formData["slcRespoonsable2"];
-            var responsable3 = formData["slcRespoonsable3"];
-            
+            var responsable3 = formData["slcRespoonsable3"];  
             //validacion de que no se repitan los responsables
             if (responsable !== "0" && (responsable === responsable2 || responsable === responsable3 || (responsable2 !== "0" && responsable2 === responsable3))) {
                 Swal.fire({
@@ -524,8 +510,8 @@
 
         }
 
-        function cargarCiudades() {
-            //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES        
+        //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES 
+        function cargarCiudades() {   
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
@@ -550,23 +536,24 @@
                 }
             });
         }
-
-        function convertirTexto(e) {
-            // Convertir a mayúsculas y quitar acentos
+        
+        // Convertir a mayúsculas y quitar acentos
+        function convertirTexto(e) {    
             e.value = e.value
             .toUpperCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
         }
 
+        // Función para obtener el valor de una cookie por su nombre
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
-
-        function cargarVehiculos() {
-        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS        
+        
+        //FUNCION PARA CARGAR INFORMACIÓN DE LOS VEHÍCULOS 
+        function cargarVehiculos() {       
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
@@ -620,6 +607,7 @@
             }
         }
 
+        // Función para mostrar u ocultar los select adicionales de ingenieros
         function divsIng(accion) {
             if (accion === 'agrega') {
                 if ($('#Divsolicita2').is(':hidden')) {
@@ -651,6 +639,22 @@
                         draggable: true
                     });
                 }
+            }
+        }
+
+        // Validar Accceso 
+        async function verificarAccesoRegistroActividadesDim() {
+            // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
+            const respuesta = await validaOpciones('planeacion', 'verRegistrarActividadesDim');
+            
+            // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
+            const cuantos = (respuesta && respuesta.status === 'success') 
+                            ? parseInt(respuesta.data[0].cuantos) 
+                            : 0;
+            if (cuantos <= 0) {            
+                window.location.href = 'seguimiento_actividades.php';
+            }else {
+                //Se puede continuar (Se agrega la funcionalidad que se requiera)
             }
         }
     </script>

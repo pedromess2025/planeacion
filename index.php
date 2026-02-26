@@ -26,15 +26,6 @@
         }
     </style>
 
-<?php
-    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 177, 45, 26, 525, 435, 489, 523, 298, 81, 203, 8, 278, 206, 123, 516, 555,525,288, 360, 487);
-
-    if (in_array($_COOKIE['noEmpleado'], $usuariosRegistran)) {
-        // El usuario tiene permiso para ver la página
-    } else {
-        header("Location: seguimiento_actividades.php");
-    }
-?>
 </head>
 
 <body id="page-top">
@@ -269,12 +260,15 @@
     
     <!-- Select2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- ACCESOS ESPECIALES -->
+    <script src="../loginMaster/funcionesGlobales.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
             // Cargar la información al iniciar la página
+            accesoRegistrarActividad();
             //cargar ciudades
             cargarCiudades();
             //cargar empleados
@@ -321,6 +315,7 @@
             
         });
 
+        // Función para generar la solicitud
         function generarSolicitud() {            
             
             var formData = getFormData('formPlaneacion');
@@ -407,87 +402,88 @@
         }
 
         // Validaciones consolidadas
-function validarFormularioConsolidado(formData) {
+        function validarFormularioConsolidado(formData) {
 
-    // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
-    // Define todos los campos que requieren validación.
-    const camposAValidar = [
-        // Campos que no pueden ser cadena vacía ("") o "0"
-        { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
-        { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
-        { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
-        { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
-        { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
-        
-        // Campos de texto que deben validarse con .trim() para evitar solo espacios
-        { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",      esTexto: true },
-        // Los campos txtDuracion y txtDuracionViaje se validarán en el Paso 3
-    ];
+            // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
+            // Define todos los campos que requieren validación.
+            const camposAValidar = [
+                // Campos que no pueden ser cadena vacía ("") o "0"
+                { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
+                { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
+                { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
+                { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
+                { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
+                
+                // Campos de texto que deben validarse con .trim() para evitar solo espacios
+                { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",      esTexto: true },
+                // Los campos txtDuracion y txtDuracionViaje se validarán en el Paso 3
+            ];
 
-    const mensajesDeError = [];
-    
-    // --- 2. Validar Responsables (Lógica Especial) ---
-    // Regla: Al menos uno de los tres campos de responsable debe tener un valor diferente de "0" o "".
-    const resp1 = formData["slcRespoonsable"];
-    const resp2 = formData["slcRespoonsable2"];
-    const resp3 = formData["slcRespoonsable3"];
-    
-    const responsablesVacios = (resp1 === "0" || resp1 === "") && 
-                                (resp2 === "0" || resp2 === "") && 
-                                (resp3 === "0" || resp3 === "");
+            const mensajesDeError = [];
+            
+            // --- 2. Validar Responsables (Lógica Especial) ---
+            // Regla: Al menos uno de los tres campos de responsable debe tener un valor diferente de "0" o "".
+            const resp1 = formData["slcRespoonsable"];
+            const resp2 = formData["slcRespoonsable2"];
+            const resp3 = formData["slcRespoonsable3"];
+            
+            const responsablesVacios = (resp1 === "0" || resp1 === "") && 
+                                        (resp2 === "0" || resp2 === "") && 
+                                        (resp3 === "0" || resp3 === "");
 
-    if (responsablesVacios) {
-        mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
-    }
-
-    // --- 3. Validar Campos de Duración (Nuevo Requisito: Mayor que Cero) ---
-    const duracion = parseFloat(formData["txtDuracion"]);
-    const duracionViaje = parseFloat(formData["txtDuracionViaje"]);
-
-    // Validar Duración (Estimada)
-    if (isNaN(duracion) || duracion <= 0) {
-        mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
-    }
-
-    // Validar Duración del Viaje
-    if (isNaN(duracionViaje) || duracionViaje <= 0) { // Permitimos cero si no hay viaje, pero no negativo
-        // Si el requisito estricto es > 0, usar duracionViaje <= 0.
-        // Aquí usamos < 0 para permitir 0 si no hay viaje. Si debe ser > 0, cambie a <= 0.
-        mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
-    }
-
-
-    // --- 4. Validar Campos Generales ---
-    for (const campo of camposAValidar) {
-        let valor = campo.valor || ""; // Asegura que el valor sea una cadena para la comprobación
-        
-        if (campo.esTexto) {
-            // Validar campos de texto con trim()
-            if (valor.trim() === "") {
-                mensajesDeError.push(campo.mensaje);
+            if (responsablesVacios) {
+                mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
             }
-        } else {
-            // Validar selects y otros campos por cadena vacía o "0"
-            if (valor === "" || valor === "0") {
-                mensajesDeError.push(campo.mensaje);
+
+            // --- 3. Validar Campos de Duración (Nuevo Requisito: Mayor que Cero) ---
+            const duracion = parseFloat(formData["txtDuracion"]);
+            const duracionViaje = parseFloat(formData["txtDuracionViaje"]);
+
+            // Validar Duración (Estimada)
+            if (isNaN(duracion) || duracion <= 0) {
+                mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
             }
+
+            // Validar Duración del Viaje
+            if (isNaN(duracionViaje) || duracionViaje <= 0) { // Permitimos cero si no hay viaje, pero no negativo
+                // Si el requisito estricto es > 0, usar duracionViaje <= 0.
+                // Aquí usamos < 0 para permitir 0 si no hay viaje. Si debe ser > 0, cambie a <= 0.
+                mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
+            }
+
+
+            // --- 4. Validar Campos Generales ---
+            for (const campo of camposAValidar) {
+                let valor = campo.valor || ""; // Asegura que el valor sea una cadena para la comprobación
+                
+                if (campo.esTexto) {
+                    // Validar campos de texto con trim()
+                    if (valor.trim() === "") {
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                } else {
+                    // Validar selects y otros campos por cadena vacía o "0"
+                    if (valor === "" || valor === "0") {
+                        mensajesDeError.push(campo.mensaje);
+                    }
+                }
+            }
+
+            // --- 5. Mostrar Alerta Única o Continuar ---
+            if (mensajesDeError.length > 0) {
+                Swal.fire({
+                    title: "Campos Incompletos",
+                    html: "Por favor, corrige lo siguiente:<br><br>• " + mensajesDeError.join('<br>• '),
+                    icon: "warning",
+                    draggable: true
+                });
+                return false; // Validación fallida
+            }
+
+            return true; // Validación exitosa
         }
-    }
 
-    // --- 5. Mostrar Alerta Única o Continuar ---
-    if (mensajesDeError.length > 0) {
-        Swal.fire({
-            title: "Campos Incompletos",
-            html: "Por favor, corrige lo siguiente:<br><br>• " + mensajesDeError.join('<br>• '),
-            icon: "warning",
-            draggable: true
-        });
-        return false; // Validación fallida
-    }
-
-    return true; // Validación exitosa
-}
-
+        // Función para convertir el formulario a un objeto de datos
         function getFormData(formId) {
             var formArray = $('#' + formId).serializeArray();
             var formData = {};
@@ -497,6 +493,7 @@ function validarFormularioConsolidado(formData) {
             return formData;
         }        
 
+        // Función para cargar empleados en los select de responsables
         function empleadoSolicita(seleccionado) {
             opcion = "empleados";
             $.ajax({
@@ -529,8 +526,8 @@ function validarFormularioConsolidado(formData) {
 
         }
 
+        //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES
         function cargarCiudades() {
-            //FUNCION PARA CARGAR INFORMACIÓN DE LAS CIUDADES        
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
@@ -556,20 +553,22 @@ function validarFormularioConsolidado(formData) {
             });
         }
 
+        // Convertir a mayúsculas y quitar acentos
         function convertirTexto(e) {
-            // Convertir a mayúsculas y quitar acentos
             e.value = e.value
             .toUpperCase()
             .normalize("NFD")
             .replace(/[\u0300-\u036f]/g, "");
         }
 
+        // Función para obtener el valor de una cookie
         function getCookie(name) {
             let value = "; " + document.cookie;
             let parts = value.split("; " + name + "=");
             if (parts.length === 2) return parts.pop().split(";").shift();
         }
 
+        // Función para enviar notificación de nueva actividad
         function enviaNotificacionActividad(idActividad) {
             if (!idActividad) {
                 return;
@@ -582,6 +581,7 @@ function validarFormularioConsolidado(formData) {
             });
         }
 
+        // Función para enviar notificación de nueva actividad a los responsables
         function enviaNotificacionNuevaAct(idActividad) {
             if (!idActividad) {
                 return;
@@ -682,6 +682,23 @@ function validarFormularioConsolidado(formData) {
                         draggable: true
                     });
                 }
+            }
+        }
+
+        // FUNCION PARA ACCESOS ESPECIALES
+        async function accesoRegistrarActividad() {
+            // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
+            const respuesta = await validaOpciones('planeacion', 'verRegistrarActividades');
+            
+            // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
+            const cuantos = (respuesta && respuesta.status === 'success') 
+                            ? parseInt(respuesta.data[0].cuantos) 
+                            : 0;
+            if (cuantos <= 0) {            
+                //No tiene acceso (Se agrega la funcionalidad que se requiera)
+                window.location.href = 'seguimiento_actividades.php';
+            }else {
+                //Se puede continuar (Se agrega la funcionalidad que se requiera)
             }
         }
     </script>

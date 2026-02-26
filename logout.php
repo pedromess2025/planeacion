@@ -31,7 +31,7 @@
 				document.cookie = "SesionLogin=00; expires=Thu, 01 Jan 1970 00:00:00 UTC";
 				window.location.assign("../loginMaster/inicio");
 			} else {
-				window.location.assign("https://www.messbook.com.mx/ControlVehicular/");
+				window.location.assign("../loginMaster");
 			}
 		});
 

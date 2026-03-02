@@ -53,14 +53,11 @@ header('Content-Type: application/json');
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae, fecha_real_entrada, ov_ot)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae, fecha_real_entrada, ov_ot, capturado_por)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
-        
-        // "s" = string, "i" = integer
-        // Orden: cliente(s), area(s), marca(s), modelo(s), no_serie(s), diagnostico_inicial(s), fecha_estimada(s), estatus(s), demo(i), contacto_nombre(s), contacto(s), id_ing_trae(i), fecha_real_entrada(s), ov_ot(s)
-        $stmt->bind_param("ssssssssississ", 
-            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae, $fecha_real_entrada, $ov_ot
+        $stmt->bind_param("ssssssssississi", 
+            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae, $fecha_real_entrada, $ov_ot, $noEmpleado
         );
         
         if ($stmt->execute()) {

@@ -1,16 +1,33 @@
 <?php
     include 'conn.php';
-    $servicio =$_POST['servicio'];
-    $sql = "SELECT u.correo, s.order_code, s.city, s.ds_cliente FROM servicios_planeados_mess s
-INNER JOIN usuarios u ON s.capturado_por = u.noEmpleado
-WHERE s.id = '$servicio'";
+    $servicio = isset($_POST['servicio']) && trim($_POST['servicio']) !== '' ? trim($_POST['servicio']) : '1386';
+    $sql = "SELECT s.order_code, s.city, s.ds_cliente, s.capturado_por
+FROM servicios_planeados_mess s
+WHERE s.id = '" . $conn->real_escape_string($servicio) . "'
+LIMIT 1";
     $result = $conn->query($sql);
-    $correo = [];
-    if ($result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $correo = $row['correo'];
-            $orderCode = $row['order_code'];
+    $correo = '';
+    $orderCode = '';
+    $city = '';
+    $ds_cliente = '';
+
+    if ($result && $result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $orderCode = $row['order_code'] ?? '';
+        $city = $row['city'] ?? '';
+        $ds_cliente = $row['ds_cliente'] ?? '';
+
+        $capturadoPor = $row['capturado_por'] ?? '';
+        if ($capturadoPor !== '') {
+            $sqlCorreo = "SELECT correo FROM usuarios WHERE noEmpleado = '" . $conn->real_escape_string($capturadoPor) . "' LIMIT 1";
+            $resCorreo = $conn->query($sqlCorreo);
+            if ($resCorreo && $resCorreo->num_rows > 0) {
+                $rowCorreo = $resCorreo->fetch_assoc();
+                $correo = $rowCorreo['correo'] ?? '';
+            }
         }
+    } else {
+        echo "Sin resultados para SQL";
     }
 
     header('Content-Type: text/html; charset=utf-8');
@@ -72,8 +89,8 @@ WHERE s.id = '$servicio'";
         Logisitica solicita apoyo para entrega/recoleccion.<br>
         <b>Servicio</b>'.utf8_decode($orderCode).'<br><br>
         <b>Detalles del servicio: </b><br>
-        Ciudad: '.utf8_decode($row['city']).'<br>
-        Cliente: '.utf8_decode($row['ds_cliente']).'<br><br>
+        Ciudad: '.utf8_decode($city).'<br>
+        Cliente: '.utf8_decode($ds_cliente).'<br><br>
 
         <b>Por favor ingresa al sistema de PLANEACI&Oacute;N para darle seguimiento a la solicitud.</b><br>
 

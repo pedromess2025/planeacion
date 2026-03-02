@@ -35,9 +35,9 @@
     <hr class="sidebar-divider my-2 alert-light">
     <!-- Nav Item - Pages Collapse Menu -->
 
-    <!--81 203 8  usuarios norte
+    <!--
     //USUARIOS QUE PUEDEN REGISTRAR ACTIVIDADES
-    $usuariosRegistran = array(212, 14, 42, 161, 403, 183, 521, 276, 26, 147, 189, 177, 45, 26, 525, 435, 489, 523, 298, 81, 203, 8, 278, 206, 123, 516, 555, 525, 288, 360, 487);
+    $usuariosRegistran = array(8, 14, 26, 42, 45, 81, 123, 147, 161, 177, 183, 189, 203, 206, 212, 276, 278, 288, 298, 360, 403, 435, 487, 489, 516, 521, 523, 525, 555);
     -->
     <li class="nav-item">
         <a id="verRegistrarActividades" class="nav-link" href="index" style="display:none;">

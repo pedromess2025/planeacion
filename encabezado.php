@@ -14,6 +14,14 @@
 
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
+    <!-- Boton de Notificaciones 
+    <li class="nav-item">
+        <button class="btn btn-link nav-link fw-bold text-dark position-relative" type="button" data-bs-toggle="modal" data-bs-target="#notificacionesModal">
+            <i class="fas fa-bell text-dark"></i>
+            <span id="badgeNotificaciones" class="position-absolute badge rounded-pill bg-danger d-none" style="top: 2px; right: 2px; font-size: .62rem; min-width: 1rem; padding: .2em .35em; line-height: 1; pointer-events: none;">0</span>
+        </button>
+    </li>
+    -->
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->
     <li class = "nav-item dropdown no-arrow d-sm-none">
         <a class = "nav-link dropdown-toggle" href = "#" id = "searchDropdown" role = "button"
@@ -46,19 +54,6 @@
         </a>
         <!-- Dropdown - User Information -->
         <div class = "dropdown-menu dropdown-menu-right shadow animated--grow-in" aria-labelledby = "userDropdown">
-            <!--<button type="button" class="dropdown-item" data-bs-toggle="modal" data-bs-target="#staticBackdrop">
-                <i class="fas fa-user fa-sm fa-fw mr-2 text-gray-400"></i>
-                Cambiar Contraseña
-            </button>
-
-            <a class = "dropdown-item" href = "#">
-                <i class = "fas fa-cogs fa-sm fa-fw mr-2 text-gray-400"></i>
-                Settings
-            </a>
-            <a class = "dropdown-item" href = "#">
-                <i class = "fas fa-list fa-sm fa-fw mr-2 text-gray-400"></i>
-                Activity Log
-            </a>-->
             <div class = "dropdown-divider"></div>
             <a class = "dropdown-item" href = "#" data-toggle = "modal" data-target = "#logoutModalN">
                 <i class = "fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i>
@@ -66,6 +61,23 @@
             </a>
         </div>
     </li>
+    <!-- Modal de Notificaciones -->
+    <div class = "modal fade" id = "notificacionesModal" tabindex = "-1" role = "dialog" aria-labelledby = "notificacionesModalLabel" aria-hidden = "true">
+        <div class = "modal-dialog" role = "document">
+            <div class = "modal-content">
+                <div class = "modal-header">
+                    <h5 class = "modal-title" id = "notificacionesModalLabel">Notificaciones</h5>
+                    <button class = "btn-close" type = "button" data-bs-dismiss = "modal" aria-label = "Close"></button>
+                </div>
+                <div class = "modal-body">
+                    <div id="notificacionesContenido">No tienes nuevas notificaciones.</div>
+                </div>
+                <div class = "modal-footer">
+                    <button class = "btn btn-secondary" type = "button" data-bs-dismiss = "modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
 </ul>
     <!-- Logout Modal-->
@@ -88,66 +100,16 @@
     </div>
     
     <script>
-    // Función para mostrar/ocultar contraseñas
-    /*document.getElementById('showPassword').addEventListener('change', function () {
-        var passwordField = document.getElementById('nuevapass');
-        var confirmPasswordField = document.getElementById('confirmapass');
-        
-        if (this.checked) {
-          // Mostrar contraseñas (tipo 'text')
-            passwordField.type = 'text';
-            confirmPasswordField.type = 'text';
-        } else {
-          // Ocultar contraseñas (tipo 'password')
-          passwordField.type = 'password';
-          confirmPasswordField.type = 'password';
-        }
-    });*/
-    
-    //Funcion para validar las contraseñas
-    function validarContrasenas() {
-        var password = $('#nuevapass').val()
-        var confirmPassword = $('#confirmapass').val()
-        var error = document.getElementById("error");
+    document.addEventListener('DOMContentLoaded', function() {
+        cargarTotalNotificaciones();
 
-        // Si las contraseñas no coinciden
-        if (password !== confirmPassword) {
-            $('#msgPassword').text("Las constraseñas no coinciden."); 
-        } else {
-            Confirmar();
+        var notificacionesModal = document.getElementById('notificacionesModal');
+        if (notificacionesModal) {
+            notificacionesModal.addEventListener('show.bs.modal', function () {
+                cargarNotificaciones();
+            });
         }
-    }
-    
-    //Funcion para Enviar los datos
-    function Confirmar(){
-        var password = $('#nuevapass').val();
-        var noEmpleado = $('#noEmpleado').val();
-        var accion = "CambioPassword";
-        
-        $.ajax({
-            url: 'acciones_contrasena.php',
-            method: 'POST',
-            async: false,
-            dataType: 'json',
-            data:{accion, password, noEmpleado},
-            success: function(Registros) {
-                Swal.fire({
-                    title: "Confirmado!",
-                    text: "Contraseña cambiada!",
-                    icon: "success",
-                    timer: 2000,
-                    timerProgressBar: true
-                }).then(function() {
-                    // Limpiar los campos después de cerrar la alerta
-                    $('#nuevapass').val('');
-                    $('#confirmapass').val('');
-                    $('#staticBackdrop').modal('hide');
-                });
-            },error: function(jqXHR, textStatus, errorThrown) {
-                console.error('Error al aplicar el cambio', error);
-            }
-        });
-    }
+    });
 
     //Funcion para leer cookies
     function getCookie(name) {
@@ -156,15 +118,95 @@
         if (parts.length === 2) return parts.pop().split(";").shift();
         return null; // Si no encuentra la cookie, retorna null
     }
-    // Asignar el valor de la cookie al input
-    window.onload = function() {
-        var cookieValue = getCookie("noEmpleado"); // Aquí "noEmpleadoCookie" es el nombre de la cookie
-    
-        // Verificar si la cookie existe y asignar el valor al input
-        if (cookieValue) {
-            //document.getElementById("noEmpleado").value = cookieValue;
+
+    // Funcion para mostrar el modal de notificaciones
+    function mostrarNotificaciones() {
+        var modalElement = document.getElementById('notificacionesModal');
+        if (!modalElement) {
+            return;
         }
-    };
+
+        var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
+        modal.show();
+    }
+
+    function cargarNotificaciones() {
+        $.ajax({
+            url: 'acciones_notificaciones',
+            method: 'POST',
+            data: { accion: 'cargarNotificaciones' },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    var notificaciones = response.notificaciones;
+                    var contenido = '';
+
+                    if (notificaciones.length > 0) {
+                        notificaciones.forEach(function(notificacion) {
+                            contenido += '<div class="alert alert-info d-flex justify-content-between align-items-center">';
+                            contenido += '<span>' + notificacion.mensaje + '</span>';
+                            contenido += '<button class="btn btn-sm btn-primary" onclick="marcarNotificacionLeida(' + notificacion.id + ')">Marcar como leída</button>';
+                            contenido += '</div>';
+                        });
+                    } else {
+                        contenido = 'No tienes nuevas notificaciones.';
+                    }
+
+                    $('#notificacionesContenido').html(contenido);
+                } else {
+                    $('#notificacionesContenido').html('Error al cargar notificaciones.');
+                }
+            },
+            error: function() {
+                $('#notificacionesContenido').html('Error al cargar notificaciones.');
+            }
+        });
+    }
+
+    function cargarTotalNotificaciones() {
+        var badge = $('#badgeNotificaciones');
+
+        $.ajax({
+            url: 'acciones_notificaciones',
+            method: 'POST',
+            dataType: 'json',
+            data: { accion: 'contarNotificaciones' },
+            success: function(response) {
+                if (!response.success) {
+                    badge.addClass('d-none').text('0');
+                    return;
+                }
+
+                var total = parseInt(response.total, 10) || 0;
+                if (total > 0) {
+                    badge.removeClass('d-none').text(total > 99 ? '99+' : total);
+                } else {
+                    badge.addClass('d-none').text('0');
+                }
+            },
+            error: function() {
+                badge.addClass('d-none').text('0');
+            }
+        });
+    }
+
+    function marcarNotificacionLeida(idNotificacion) {
+        $.ajax({
+            url: 'acciones_notificaciones',
+            method: 'POST',
+            dataType: 'json',
+            data: {
+                accion: 'marcarLeida',
+                idNotificacion: idNotificacion
+            },
+            success: function(response) {
+                if (response.success) {
+                    cargarNotificaciones();
+                    cargarTotalNotificaciones();
+                }
+            }
+        });
+    }
     </script>
 </nav>
 <!-- End of Topbar -->

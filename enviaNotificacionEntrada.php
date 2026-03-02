@@ -9,22 +9,11 @@ if (!function_exists('enviaNotificacionEntrada')) {
         require_once("PHPMailer-master/src/PHPMailer.php");
         require_once("PHPMailer-master/src/SMTP.php");
 
-        $logDir = __DIR__ . '/logs';
-        if (!is_dir($logDir)) {
-            mkdir($logDir, 0777, true);
-        }
-
-        $logFile = $logDir . '/notificacion_entrada.log';
-        $logMessage = function ($msg) use ($logFile) {
-            $timestamp = date('Y-m-d H:i:s');
-            file_put_contents($logFile, "[$timestamp] $msg\n", FILE_APPEND);
-        };
-
         $id_entrada = intval($id_entrada);
-        if ($id_entrada <= 0) {
+        /*if ($id_entrada <= 0) {
             $logMessage("ID de entrada invalido para notificacion.");
             return false;
-        }
+        }*/
 
         $sqlCorreo = "SELECT er.*, GROUP_CONCAT(u.correo SEPARATOR ',') as correos_ing, GROUP_CONCAT(u.nombre SEPARATOR ',') as nombres_ing
                   FROM entrada_registros er
@@ -34,11 +23,11 @@ if (!function_exists('enviaNotificacionEntrada')) {
                   GROUP BY er.id_registro";
         $resCorreo = $conn->query($sqlCorreo);
 
-        if (!$resCorreo || $resCorreo->num_rows === 0) {
+        /*if (!$resCorreo || $resCorreo->num_rows === 0) {
             $logMessage("Sin datos para notificar, id_registro: $id_entrada.");
             return false;
-        }
-
+        }*/
+            
         $rowCorreo = $resCorreo->fetch_assoc();
         $correoResponsable = $rowCorreo["correos_ing"];
         $cliente = $rowCorreo["cliente"];
@@ -144,7 +133,7 @@ if (!function_exists('enviaNotificacionEntrada')) {
         }
         $Arraycorreos = array_merge($Arraycorreos, $adminCorreos);
         if (!empty($adminCorreos)) {
-            $logMessage("Correos admin: " . implode(',', $adminCorreos));
+            //$logMessage("Correos admin: " . implode(',', $adminCorreos));
         }
         $destinatarios = 0;
 
@@ -156,7 +145,7 @@ if (!function_exists('enviaNotificacionEntrada')) {
             }
         }
 
-        if ($destinatarios === 0) {
+        /*if ($destinatarios === 0) {
             $logMessage("No hay correos validos para id_registro: $id_entrada.");
             return false;
         }
@@ -168,8 +157,8 @@ if (!function_exists('enviaNotificacionEntrada')) {
         } else {
             $logMessage("Correo enviado para id_registro: $id_entrada.");
         }
-
         return $ok;
+        */
     }
 }
 

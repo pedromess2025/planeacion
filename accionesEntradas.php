@@ -409,7 +409,7 @@ header('Content-Type: application/json');
         }
         $stmtUpd->close();
         header('Content-Type: application/json');
-        echo json_encode(['success' => true]);
+        echo json_encode(['success' => true, 'id_seguimiento' => $id_seguimiento]);
         exit;
     }
 

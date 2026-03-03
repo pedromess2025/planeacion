@@ -18,7 +18,7 @@
     <li class="nav-item">
         <button class="btn btn-link nav-link fw-bold text-dark position-relative" type="button" id="btnNotificaciones" onclick="mostrarNotificacionesFlotantes()">
             <i class="fas fa-bell text-dark"></i>
-            <span id="badgeNotificaciones" class="position-absolute badge rounded-pill bg-danger d-none" style="top: 2px; right: 2px; font-size: .62rem; min-width: 1rem; padding: .2em .35em; line-height: 1; pointer-events: none;">0</span>
+            <span id="badgeNotificaciones" class="position-absolute badge rounded-pill bg-danger d-none" style="top: 2px; right: 2px; font-size: .80rem; min-width: 1rem; padding: .2em .35em; line-height: 1; pointer-events: none;">0</span>
         </button>
     </li>
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->
@@ -125,9 +125,9 @@
         html += '  <div class="toast-body p-2">';
         html += '      <div class="d-flex justify-content-between align-items-start gap-4">';
         html += '          <div class="d-flex align-items-start gap-4">';
-        html += '              <span class="badge rounded-pill bg-primary mt-1">' + iniciales + '</span>';
+        html += '              <span class="badge rounded-pill bg-primary mt-1">' + iniciales + ' - ' + notificacion.accion + '</span>';
         html += '              <div>';
-        html += '                  <div class="small text-dark fw-semibold">' + accion + '</div>';
+        html += '                  <div class="small text-dark fw-semibold">' + nota + '</div>';
         html += '                  <div class="small text-muted">' + fecha + '</div>';
         html += '              </div>';
         html += '          </div>';

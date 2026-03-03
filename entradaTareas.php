@@ -119,7 +119,6 @@
                                                 </div>
                                             </div>
                                         </div>
-
                                         <div class="mb-4">
                                             <label class="form-label fw-bold small text-muted">BITÁCORA DE SERVICIO / NOTAS TÉCNICAS</label>
                                             <textarea name="notas_ingeniero" class="form-control" rows="6" placeholder="Escriba aquí los hallazgos, componentes reemplazados o procedimientos realizados..." required></textarea>
@@ -130,7 +129,12 @@
                                             <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*" data-max-files="1">
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado.</small>
                                         </div>
-
+                                        <div class="mb-4">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" id="notificacion" name="notificacion" value="1" checked>
+                                                <label class="form-check-label fw-bold small text-muted" for="notificacion">Notificación</label>
+                                            </div>
+                                        </div>
                                         <div class="d-flex justify-content-between align-items-center">
                                             <button type="button" class="btn btn-outline-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
                                                 Guardar Avance
@@ -343,6 +347,8 @@
             // Llenar el campo oculto con el valor de la cookie
             $('input[name="id_usuarioL"]').val(getCookie('id_usuarioL'));
             var formData = new FormData($('#actualizar')[0]);
+            const notificacionMarcada = $('#notificacion').is(':checked');
+            const idRegistro = $('input[name="id_registro"]').val();
             
             $.ajax({
                 url: 'accionesEntradas.php',
@@ -353,14 +359,31 @@
                 contentType: false,
                 success: function(response) {
                     if (response.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Éxito!',
-                            text: 'Los cambios se han guardado correctamente.',
-                            confirmButtonText: 'Aceptar'
-                        }).then(() => {
-                            location.reload();
-                        });
+                        if (notificacionMarcada && idRegistro) {
+                            registrarNotificacionEntrada(idRegistro, response.id_seguimiento, function(notificacionOk) {
+                                const textoExito = notificacionOk
+                                    ? 'Los cambios se han guardado correctamente.'
+                                    : 'Los cambios se guardaron, pero no se pudo registrar la notificación.';
+
+                                Swal.fire({
+                                    icon: notificacionOk ? 'success' : 'warning',
+                                    title: notificacionOk ? '¡Éxito!' : 'Atención',
+                                    text: textoExito,
+                                    confirmButtonText: 'Aceptar'
+                                }).then(() => {
+                                    location.reload();
+                                });
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'success',
+                                title: '¡Éxito!',
+                                text: 'Los cambios se han guardado correctamente.',
+                                confirmButtonText: 'Aceptar'
+                            }).then(() => {
+                                location.reload();
+                            });
+                        }
                     } else {
                         Swal.fire({
                             icon: 'error',
@@ -380,6 +403,25 @@
                         text: 'No se pudo registrar la información.',
                         confirmButtonText: 'Aceptar'
                     });
+                }
+            });
+        }
+
+        function registrarNotificacionEntrada(idRegistro, idSeguimiento, callback) {
+            $.ajax({
+                url: 'acciones_notificaciones.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'registrarNotificacionEntrada',
+                    id_registro_referencia: idRegistro, 
+                    id_seguimiento: idSeguimiento
+                },
+                success: function(response) {
+                    callback(!!(response && response.success));
+                },
+                error: function() {
+                    callback(false);
                 }
             });
         }

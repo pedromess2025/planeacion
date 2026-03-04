@@ -153,6 +153,84 @@ function cargaOpcionesSelect(selectSelector, action, labelKey, valueKey, onLoade
     });
 }
 
+// Carga catálogo de empleados en un select de ingenieros responsables
+function empleadoSolicita(selectSelector) {
+    const opcion = 'empleados';
+
+    $.ajax({
+        url: 'acciones_solicitud.php',
+        method: 'POST',
+        dataType: 'json',
+        data: { opcion: opcion },
+        success: function(data) {
+            const select = $(selectSelector);
+            select.empty();
+            select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+
+            if (!Array.isArray(data)) {
+                return;
+            }
+
+            data.forEach(function(usuario) {
+                select.append(
+                    $('<option></option>')
+                        .attr('value', usuario.noEmpleado)
+                        .text(usuario.nombre)
+                );
+            });
+        },
+        error: function() {
+            muestraAlerta('error', 'Error', 'La solicitud no se pudo procesar.');
+        }
+    });
+}
+
+// Carga catálogo de ingenieros para el campo "Quién Envía"
+function cargarIngenierosTrae(selectSelector = '#slcIngTrae') {
+    creaAJAX('obtenerIngenieros', {}, function(response) {
+        const select = $(selectSelector);
+        select.empty();
+        select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+
+        if (!response || !response.success || !Array.isArray(response.data)) {
+            return;
+        }
+
+        response.data.forEach(function(ingeniero) {
+            select.append(
+                $('<option></option>')
+                    .attr('value', ingeniero.id_usuario)
+                    .text(ingeniero.nombre)
+            );
+        });
+    });
+}
+
+// Carga catálogo de áreas para selects de entrada
+function cargarAreas(selectSelector = 'select[name="area"]') {
+    creaAJAX('obtenerAreas', {}, function(response) {
+        const select = $(selectSelector);
+        let areas = [];
+
+        if (Array.isArray(response)) {
+            areas = response;
+        } else if (response && Array.isArray(response.data)) {
+            areas = response.data;
+        }
+
+        select.empty();
+        select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
+
+        areas.forEach(function(area) {
+            select.append(
+                $('<option></option>')
+                    .attr('value', area.CDAREA)
+                    .text(area.AREA)
+            );
+        });
+    });
+}
+
 // ============ VALIDATION HELPER ============
 // Valida campos obligatorios
 // Muestra alerta si está vacío

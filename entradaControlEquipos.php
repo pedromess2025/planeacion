@@ -223,6 +223,7 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="funciones_entradas.js"></script>
 
     <script type="text/javascript">
         
@@ -311,7 +312,6 @@
                                 async: true // Enviar en background
                             });
                         }
-                        
                         Swal.fire({
                             title: "¡Guardado!",
                             text: "La entrada se registró con éxito.",
@@ -337,65 +337,6 @@
                         title: "Error de Servidor",
                         text: "No se pudo registrar la entrada. Revise la consola.",
                         icon: "error"
-                    });
-                }
-            });
-        }
-
-        function empleadoSolicita(seleccionado) {
-            opcion = "empleados";
-            $.ajax({
-                url: 'acciones_solicitud.php',
-                method: 'POST',
-                dataType: 'json',
-                data: {opcion},
-                success: function(data) {
-                    var select = $(seleccionado);
-                    i = 0;
-                    data.forEach(function(usuarios) {
-                        if (i = 0) {
-                            var option = $('<option></option>').attr('value', '0').text('Selecciona...');
-                            select.append(option);
-                        }
-                        var option = $('<option></option>').attr('value', usuarios.noEmpleado).text(usuarios.nombre);
-                        select.append(option);
-                    });
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    Swal.fire({
-                        title: "La solicitúd no se pudo procesar!",
-                        icon: "error",
-                        draggable: true
-                    });
-                }
-            });
-        }
-
-        function cargarIngenierosTrae() {
-            $.ajax({
-                url: 'accionesEntradas.php',
-                method: 'POST',
-                dataType: 'json',
-                data: { accion: 'obtenerIngenieros' },
-                success: function(response) {
-                    var select = $('#slcIngTrae');
-                    select.empty();
-                    select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
-
-                    if (response && response.success && Array.isArray(response.data)) {
-                        response.data.forEach(function(ingeniero) {
-                            var option = $('<option></option>')
-                                .attr('value', ingeniero.id_usuario)
-                                .text(ingeniero.nombre);
-                            select.append(option);
-                        });
-                    }
-                },
-                error: function() {
-                    Swal.fire({
-                        title: 'Error al cargar ingenieros',
-                        icon: 'error',
-                        draggable: true
                     });
                 }
             });
@@ -436,48 +377,6 @@
             }
         }
         
-        //Funcion para cargar areas
-        function cargarAreas() {
-            $.ajax({
-                url: 'accionesEntradas.php',
-                method: 'POST',
-                dataType: 'json',
-                data: {accion: "obtenerAreas"},
-                success: function(data) {
-                    var select = $('select[name="area"]');
-                    // soportar tanto respuesta directa como { success: true, data: [...] }
-                    var areas = [];
-                    if (Array.isArray(data)) {
-                        areas = data;
-                    } else if (data && Array.isArray(data.data)) {
-                        areas = data.data;
-                    }
-                    // Añadir opción por defecto si no existe
-                    if (select.find('option[value="0"]').length === 0) {
-                        select.append($('<option></option>').attr('value', '0').text('Selecciona...'));
-                    }
-                    areas.forEach(function(area) {
-                        var option = $('<option></option>').attr('value', area.CDAREA).text(area.AREA);
-                        select.append(option);
-                    });
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    Swal.fire({
-                        title: "Error al cargar las áreas",
-                        icon: "error",
-                        draggable: true
-                    });
-                }
-            });
-        }
-
-        // Función para obtener el valor de una cookie por su nombre
-        function getCookie(name) {
-            let value = "; " + document.cookie;
-            let parts = value.split("; " + name + "=");
-            if (parts.length === 2) return parts.pop().split(";").shift();
-        }
-
         // Función para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
             // Funcion para verificar si el usuario es encargado 
         async function ValidaAccesoLinkRegistro() {

@@ -27,11 +27,11 @@ $noEmpleado = $_POST['noEmpleado']    ?? $_POST['noEmpleado']    ?? '';
         echo '<script>document.cookie = "rol='.$rol.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "SesionLogin=LoginMaster; expires=" + new Date(Date.now() + 99999000).toUTCString() + ";SameSite=Lax;";</script>';
         
-        if($_POST['id_usuarioPla'] == '' || $_POST['id_usuarioPla'] == null){
+        /*if($_POST['id_usuarioPla'] == '' || $_POST['id_usuarioPla'] == null){
             echo '<script>window.location.assign("entradaDetalleEntradas.php")</script>';    
         } else{
             echo '<script>window.location.assign("seguimiento_actividades.php")</script>';
-        }
+        }*/
         session_start();
         $_SESSION['nombredelusuario'] = $nombreEmpleado;
         $_SESSION['noEmpleado'] = $noEmpleado;
@@ -39,7 +39,10 @@ $noEmpleado = $_POST['noEmpleado']    ?? $_POST['noEmpleado']    ?? '';
         $_SESSION['correo'] = $usuario;
         $_SESSION['id_usuario'] = $id_usuario;
 
-        echo json_encode(['success' => true]);        
+        echo json_encode([
+            'success' => true,
+            'url' => '../planeacion/' . $archivo . '?id=' . $idRegistro
+        ]);      
         exit;
     }
     // Si no hay usuario válido

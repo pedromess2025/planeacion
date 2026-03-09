@@ -12,13 +12,64 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<style>
+    #btnNotificaciones {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        top: 5px;
+        padding: 0 !important;
+        margin: 0 !important;
+        min-width: 0;
+        min-height: 0 !important;
+        height: auto !important;
+        line-height: 1 !important;
+        border-radius: 0.2rem;
+        border: 0;
+        background: transparent;
+    }
+
+    #btnNotificaciones:focus,
+    #btnNotificaciones:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 0.12rem rgba(255, 0, 0, 0.25);
+    }
+
+    .noti-icon-wrap {
+        position: relative;
+        display: inline-block;
+        line-height: 1;
+    }
+
+    #btnNotificaciones .noti-icon-wrap > i {
+        display: inline-block;
+        transform: translateY(14px);
+    }
+
+    .noti-badge {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        min-width: 14px;
+        height: 14px;
+        padding: 0 3px !important;
+        font-size: 0.54rem !important;
+        line-height: 14px;
+        font-weight: 700;
+        pointer-events: none;
+    }
+</style>
+
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
     <!-- Boton de Notificaciones  -->
     <li class="nav-item">
-        <button class="btn btn-link nav-link fw-bold text-dark position-relative" type="button" id="btnNotificaciones" onclick="mostrarNotificacionesFlotantes()">
-            <i class="fas fa-bell text-dark"></i>
-            <span id="badgeNotificaciones" class="position-absolute badge rounded-pill bg-danger d-none" style="top: 2px; right: 2px; font-size: .80rem; min-width: 1rem; padding: .2em .35em; line-height: 1; pointer-events: none;">0</span>
+        <button class="btn btn-link nav-link fw-bold text-dark" type="button" id="btnNotificaciones" onclick="mostrarNotificacionesFlotantes()">
+            <span class="noti-icon-wrap">
+                <i class="fas fa-bell text-dark"></i>
+                <span id="badgeNotificaciones" class="badge rounded-pill bg-danger d-none noti-badge">0</span>
+            </span>
         </button>
     </li>
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->

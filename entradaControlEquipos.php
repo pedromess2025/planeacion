@@ -34,7 +34,7 @@
             <!-- Main Content -->
             <div id="content">
                 <?php
-                    include 'encabezado.php';
+                    include 'encabezadoEntradas.php';
                 ?>
                 <!-- Begin Page Content -->
                 <div class="container-fluid">

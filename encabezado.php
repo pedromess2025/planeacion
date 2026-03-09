@@ -12,13 +12,52 @@
 <!-- SweetAlert2 CDN -->
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
+<style>
+    #btnNotificaciones {
+        padding: 0.05rem 0.12rem !important;
+        margin: 0 !important;
+        min-width: 0;
+        line-height: 1 !important;
+        border-radius: 0.2rem;
+        border: 0;
+        background: transparent;
+    }
+
+    #btnNotificaciones:focus,
+    #btnNotificaciones:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 0.12rem rgba(255, 0, 0, 0.25);
+    }
+
+    .noti-icon-wrap {
+        position: relative;
+        display: inline-block;
+        line-height: 1;
+    }
+
+    .noti-badge {
+        position: absolute;
+        top: -8px;
+        right: -9px;
+        min-width: 12px;
+        height: 12px;
+        padding: 0 2px !important;
+        font-size: 0.42rem !important;
+        line-height: 12px;
+        font-weight: 700;
+        pointer-events: none;
+    }
+</style>
+
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
     <!-- Boton de Notificaciones 
     <li class="nav-item">
-        <button class="btn btn-link nav-link fw-bold text-dark position-relative" type="button" data-bs-toggle="modal" data-bs-target="#notificacionesModal">
-            <i class="fas fa-bell text-dark"></i>
-            <span id="badgeNotificaciones" class="position-absolute badge rounded-pill bg-danger d-none" style="top: 2px; right: 2px; font-size: .62rem; min-width: 1rem; padding: .2em .35em; line-height: 1; pointer-events: none;">0</span>
+        <button class="btn btn-link nav-link fw-bold text-dark" type="button" data-bs-toggle="modal" data-bs-target="#notificacionesModal">
+            <span class="noti-icon-wrap">
+                <i class="fas fa-bell text-dark"></i>
+                <span id="badgeNotificaciones" class="badge rounded-pill bg-danger d-none noti-badge">0</span>
+            </span>
         </button>
     </li>
     -->

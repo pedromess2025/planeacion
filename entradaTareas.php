@@ -37,7 +37,7 @@
 
         <div id="content-wrapper" class="d-flex flex-column w-100">
             <div id="content">
-                <?php include 'encabezado.php'; ?>
+                <?php include 'encabezadoEntradas.php'; ?>
 
                 <div class="container py-4">
                     <div class="row">
@@ -129,16 +129,17 @@
                                             <input type="file" name="fotos_salida[]" class="form-control" multiple accept="image/*" data-max-files="1">
                                             <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado.</small>
                                         </div>
-                                        <div class="mb-4">
-                                            <div class="form-check">
-                                                <input class="form-check-input" type="checkbox" id="notificacion" name="notificacion" value="1" checked>
-                                                <label class="form-check-label fw-bold small text-muted" for="notificacion">Notificación</label>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <div class="form-check m-0" style="min-width: 140px;">
+                                                <label class="form-check-label fw-bold small text-muted" for="notificacion">Notificación </label>
+                                                <input class="form-check-input ms-2" type="checkbox" id="notificacion" name="notificacion" value="1" checked>
                                             </div>
-                                        </div>
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <button type="button" class="btn btn-outline-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
-                                                Guardar Avance
-                                            </button>
+                                            <div class="flex-fill text-center">
+                                                <button type="button" class="btn btn-outline-primary px-5 fw-bold shadow-sm" onclick="guardarCambios(); return false;">
+                                                    Guardar Avance
+                                                </button>
+                                            </div>
+                                            <div style="min-width: 140px;"></div>
                                         </div>
                                     </form>
                                 </div>
@@ -268,11 +269,12 @@
                         //$('#noEmpleado').text('No. Empleado(s): ' + (equipo.ids_ingenieros || 'N/A'));
                         
                         // Equipo
-                        $('#equipo').text('Equipo: ' + (equipo.marca || '') + ' ' + (equipo.modelo ? '-' + equipo.modelo : ' - N/A') + ' ' + ('-' + equipo.no_serie || '- S/N '));                              
+                        const equipoTexto = `${equipo.marca || ''} ${equipo.modelo ? '-' + equipo.modelo : '- N/A'} ${equipo.no_serie ? '-' + equipo.no_serie : '- S/N'}`.trim();
+                        $('#equipo').text(equipoTexto);
 
                         // Cliente y contacto
-                        $('#cliente').text('Cliente: ' + (equipo.cliente || 'N/A')) ;
-                        $('#contacto').text('Contacto: ' + (equipo.contacto || 'N/A'));    
+                        $('#cliente').text(equipo.cliente || 'N/A');
+                        $('#contacto').text(equipo.contacto || 'N/A');
                         // Diagnóstico
                         var diagnosticoText = equipo.notas_recepcion && equipo.fecha_registro ? `Registrado el ${equipo.fecha_registro}<br> Diagnóstico: ${equipo.notas_recepcion}` : 'Sin diagnóstico inicial';
                         $('#diagnostico').html(diagnosticoText); 

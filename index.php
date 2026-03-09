@@ -262,9 +262,6 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
-    <!-- ACCESOS ESPECIALES -->
-    <script src="../loginMaster/funcionesGlobales.js"></script>
-
     <script type="text/javascript">
         $(document).ready(function() {
             // Cargar la información al iniciar la página

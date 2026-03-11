@@ -47,21 +47,27 @@
                             <div class="card card-minimal shadow-sm p-2">
                                 <form id="entradaForm" method="POST" enctype="multipart/form-data">
                                     <div class="row mb-4">
-                                        <div class="col-md-3">
+                                        <div class="col-md-0">
+                                            <div class="form-check form-switch">                                                
+                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">                                                
+                                                <label for="switchCheckDefault" class="form-label small text-uppercase fw-bold text-muted">Demo</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3" id="grupoCliente">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Cliente</label>
-                                            <input type="text" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
+                                            <input type="text" id="cliente" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-3 campo-contacto" id="grupoNombreContacto">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
-                                            <input type="text" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
+                                            <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-3 campo-contacto" id="grupoTelefonoContacto">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Teléfono de Contacto</label>
-                                            <input type="text" name="contacto" class="form-control" placeholder="Teléfono" required>
+                                            <input type="text" id="contacto" name="contacto" class="form-control" placeholder="Teléfono" required>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-3 campo-contacto" id="grupoCorreoContacto">
                                             <label class="form-label    small text-uppercase fw-bold text-muted">Correo de Contacto</label> 
-                                            <input type="email" name="correo_cliente" class="form-control" placeholder="Correo electrónico" required>
+                                            <input type="email" id="correo_cliente" name="correo_cliente" class="form-control" placeholder="Correo electrónico" required>
                                         </div>                                        
                                     </div>
                                     <div class="row mb-4">
@@ -102,12 +108,6 @@
                                         </div>
                                     </div>
                                     <div class="row mb-4">
-                                        <div class="col-md-0">
-                                            <div class="form-check form-switch">                                                
-                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">                                                
-                                                <label for="switchCheckDefault" class="form-label small text-uppercase fw-bold text-muted">Demo</label>
-                                            </div>
-                                        </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Marca</label>
                                             <input type="text" name="marca" class="form-control" placeholder="Marca" required>
@@ -226,6 +226,41 @@
     <script src="funciones_entradas.js"></script>
 
     <script type="text/javascript">
+        let valoresNoDemo = {
+            cliente: '',
+            nombre_cliente: '',
+            contacto: '',
+            correo_cliente: ''
+        };
+
+        function actualizaCamposDemo() {
+            const demoActivo = $('#switchCheckDefault').is(':checked');
+            const inputCliente = $('#cliente');
+            const camposContacto = $('.campo-contacto');
+            const inputsContacto = $('#nombre_cliente, #contacto, #correo_cliente');
+
+            if (demoActivo) {
+                valoresNoDemo.cliente = inputCliente.val();
+                valoresNoDemo.nombre_cliente = $('#nombre_cliente').val();
+                valoresNoDemo.contacto = $('#contacto').val();
+                valoresNoDemo.correo_cliente = $('#correo_cliente').val();
+
+                inputCliente.val('MESS').prop('readonly', true);
+                camposContacto.hide();
+                inputsContacto.each(function() {
+                    $(this).prop('required', false).prop('disabled', true).val('');
+                });
+            } else {
+                inputCliente.prop('readonly', false);
+                if (inputCliente.val() === 'MESS' && valoresNoDemo.cliente) {
+                    inputCliente.val(valoresNoDemo.cliente);
+                }
+                camposContacto.show();
+                $('#nombre_cliente').prop('disabled', false).prop('required', true).val(valoresNoDemo.nombre_cliente || '');
+                $('#contacto').prop('disabled', false).prop('required', true).val(valoresNoDemo.contacto || '');
+                $('#correo_cliente').prop('disabled', false).prop('required', true).val(valoresNoDemo.correo_cliente || '');
+            }
+        }
         
         $(document).ready(function() {   
             ValidaAccesoLinkRegistro();
@@ -236,6 +271,11 @@
             cargarIngenierosTrae();
             //cargar areas
             cargarAreas();
+            actualizaCamposDemo();
+
+            $('#switchCheckDefault').on('change', function() {
+                actualizaCamposDemo();
+            });
             
             // Validar límite de fotos
             $('#fotos').on('change', function() {

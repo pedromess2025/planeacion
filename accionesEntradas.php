@@ -44,6 +44,9 @@ header('Content-Type: application/json');
     $ingeniero_id = isset($_POST['ingeniero_id']) ? intval($_POST['ingeniero_id']) : 0;
     $nuevo_estatus = isset($_POST['nuevo_estatus']) ? $_POST['nuevo_estatus'] : '';
     $fecha_termino = isset($_POST['fecha_termino']) ? $_POST['fecha_termino'] : null;
+    $hrs_trabajadas = isset($_POST['hrs_trabajadas']) ? floatval($_POST['hrs_trabajadas']) : 0;
+    $refaccion = isset($_POST['refaccion']) ? trim($_POST['refaccion']) : '';
+    $precio_refaccion = isset($_POST['precio_refaccion']) && $_POST['precio_refaccion'] !== '' ? intval($_POST['precio_refaccion']) : 0;
     
     // REPROGRAMAR FECHA COMPROMISO
     $nueva_fecha = isset($_POST['nueva_fecha']) ? trim($_POST['nueva_fecha']) : '';
@@ -349,11 +352,28 @@ header('Content-Type: application/json');
 
     // GUARDAR SEGUIMIENTO / ACTUALIZACIÓN DE TRABAJO
     if ($accion == 'guardarSeguimiento') {
+        $estatusMayus = strtoupper((string)$nuevo_estatus);
+
+        if ($hrs_trabajadas <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Las horas trabajadas deben ser mayores a 0.']);
+            exit;
+        }
+
+        if ($estatusMayus === 'REFACCIONES') {
+            if ($refaccion === '' || $precio_refaccion < 0) {
+                header('Content-Type: application/json');
+                echo json_encode(['success' => false, 'message' => 'Para estatus REFACCIONES debes capturar refacción y precio válido.']);
+                exit;
+            }
+        }
+
         // Insertar nota si viene
         if ($nota !== '') {
-            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, fecha_actualizacion, estatus) 
-            VALUES (?, ?, ?, ?, NOW(), ?)");
-            $stmtSeg->bind_param('issss', $id_registro, $usuario, $nota, $fecha_termino, $nuevo_estatus);
+            $id_usuario_nota = intval($usuario);
+            $stmtSeg = $conn->prepare("INSERT INTO entrada_seguimiento (id_registro, id_usuario_nota, nota, fecha_seguimiento, fecha_actualizacion, hrs_trabajadas, refaccion, precio_refaccion, estatus) 
+            VALUES (?, ?, ?, ?, NOW(), ?, ?, ?, ?)");
+            $stmtSeg->bind_param('iissdsis', $id_registro, $id_usuario_nota, $nota, $fecha_termino, $hrs_trabajadas, $refaccion, $precio_refaccion, $nuevo_estatus);
             $stmtSeg->execute();
             $id_seguimiento = $conn->insert_id; // Obtener ID del seguimiento insertado
             $stmtSeg->close();
@@ -389,6 +409,61 @@ header('Content-Type: application/json');
                         $stmtFoto->close();
                     }
                 }
+            }
+        }
+
+        // MANEJO DE CERTIFICADO PDF CUANDO ESTATUS = TERMINADO
+        if ($estatusMayus === 'TERMINADO' && isset($_FILES['reporte_pdf']) && isset($id_seguimiento)) {
+            $archivoPdf = $_FILES['reporte_pdf'];
+
+            if ($archivoPdf['error'] === UPLOAD_ERR_OK && !empty($archivoPdf['name'])) {
+                $extension = strtolower(pathinfo($archivoPdf['name'], PATHINFO_EXTENSION));
+                if ($extension !== 'pdf') {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'El certificado debe ser un archivo PDF.']);
+                    exit;
+                }
+
+                // Construir folio para nombrar el archivo: Certificado_<folio>.pdf
+                $sqlFolio = "SELECT area, fecha_registro FROM entrada_registros WHERE id_registro = ? LIMIT 1";
+                $stmtFolio = $conn->prepare($sqlFolio);
+                $stmtFolio->bind_param('i', $id_registro);
+                $stmtFolio->execute();
+                $resFolio = $stmtFolio->get_result();
+                $rowFolio = $resFolio->fetch_assoc();
+                $stmtFolio->close();
+
+                $areaFolio = $rowFolio && !empty($rowFolio['area']) ? $rowFolio['area'] : '00';
+                $anioFolio = $rowFolio && !empty($rowFolio['fecha_registro']) ? date('Y', strtotime($rowFolio['fecha_registro'])) : date('Y');
+                $folio = 'ENT-' . $areaFolio . '-' . $anioFolio . '-' . str_pad((string)$id_registro, 2, '0', STR_PAD_LEFT);
+                $folioSeguro = preg_replace('/[^A-Za-z0-9\-]/', '', $folio);
+
+                $directorioBase = 'Certificados/';
+                $directorioFolio = $directorioBase . $folioSeguro . '/';
+                if (!file_exists($directorioFolio) && !mkdir($directorioFolio, 0777, true)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'No se pudo crear la carpeta del certificado.']);
+                    exit;
+                }
+
+                $nombrePdf = 'Certificado_' . $folioSeguro . '.pdf';
+                $rutaPdf = $directorioFolio . $nombrePdf;
+
+                if (!move_uploaded_file($archivoPdf['tmp_name'], $rutaPdf)) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['success' => false, 'message' => 'No se pudo guardar el certificado PDF.']);
+                    exit;
+                }
+
+                // Registrar ruta en tabla de entrada_fotos
+                /*
+                $fechaActual = date('Y-m-d H:i:s');
+                $sqlPdf = "INSERT INTO entrada_fotos (id_regEntrada, ruta, fecha) VALUES (?, ?, ?)";
+                $stmtPdf = $conn->prepare($sqlPdf);
+                $stmtPdf->bind_param('iss', $id_registro, $rutaPdf, $fechaActual);
+                $stmtPdf->execute();
+                $stmtPdf->close();
+                */
             }
         }
 
@@ -429,7 +504,12 @@ header('Content-Type: application/json');
                     INNER JOIN usuarios us ON (us.id_usuario = eli.id_ing)
                     WHERE eli.id_registro = ent.id_registro
                     AND eli.estatus = 'ASIGNADO'
-                ) AS ingeniero_nombre
+                ) AS ingeniero_nombre,
+                (
+                    SELECT COALESCE(SUM(es.hrs_trabajadas), 0)
+                    FROM entrada_seguimiento es
+                    WHERE es.id_registro = ent.id_registro
+                ) AS total_horas
                 FROM entrada_registros ent
                 WHERE ent.id_registro = ?";
         
@@ -501,6 +581,53 @@ header('Content-Type: application/json');
                 ];
             }
             $stmtSeg->close();
+
+            // Horas trabajadas por ingeniero
+            $sqlHorasIng = "SELECT es.id_usuario_nota,
+                                COALESCE(MAX(us.nombre), CONCAT('Ing #', es.id_usuario_nota)) AS nombre,
+                                COALESCE(SUM(es.hrs_trabajadas), 0) AS horas
+                            FROM entrada_seguimiento es
+                            LEFT JOIN usuarios us ON (us.id_usuario = es.id_usuario_nota OR us.id = es.id_usuario_nota)
+                            WHERE es.id_registro = ?
+                            GROUP BY es.id_usuario_nota
+                            ORDER BY nombre ASC";
+            $stmtHoras = $conn->prepare($sqlHorasIng);
+            $stmtHoras->bind_param('i', $id_registro);
+            $stmtHoras->execute();
+            $resHoras = $stmtHoras->get_result();
+            $horasPorIngeniero = [];
+            while ($rowHoras = $resHoras->fetch_assoc()) {
+                $horasPorIngeniero[] = [
+                    'id_usuario_nota' => intval($rowHoras['id_usuario_nota']),
+                    'nombre' => $rowHoras['nombre'],
+                    'horas' => floatval($rowHoras['horas'])
+                ];
+            }
+            $stmtHoras->close();
+
+            // Todas las refacciones registradas para mostrar en resumen del equipo
+            $sqlRefaccion = "SELECT es.refaccion, es.precio_refaccion
+                            FROM entrada_seguimiento es
+                            WHERE es.id_registro = ?
+                            AND es.refaccion IS NOT NULL
+                            AND TRIM(es.refaccion) <> ''
+                            ORDER BY es.fecha_actualizacion ASC";
+            $stmtRef = $conn->prepare($sqlRefaccion);
+            $stmtRef->bind_param('i', $id_registro);
+            $stmtRef->execute();
+            $resRef = $stmtRef->get_result();
+            $refacciones = [];
+            while ($rowRef = $resRef->fetch_assoc()) {
+                $refacciones[] = [
+                    'refaccion'       => trim((string)$rowRef['refaccion']),
+                    'precio_refaccion' => intval($rowRef['precio_refaccion'])
+                ];
+            }
+            $stmtRef->close();
+
+            $equipo['total_horas'] = floatval($equipo['total_horas']);
+            $equipo['horas_por_ingeniero'] = $horasPorIngeniero;
+            $equipo['refacciones'] = $refacciones;
             
             // Unir todas las notas con saltos de línea dobles, o mensaje por defecto si no hay
             $equipo['notas_seguimiento'] = !empty($seguimientos) ? $seguimientos : null;

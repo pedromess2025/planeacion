@@ -68,6 +68,57 @@ if (empty($notas_seguimiento)) {
     $notas_seguimiento = 'Sin notas de seguimiento registradas.';
 }
 
+// Obtener total de horas trabajadas
+$query_horas_total = "SELECT COALESCE(SUM(hrs_trabajadas), 0) AS total_horas
+                      FROM entrada_seguimiento
+                      WHERE id_registro = ?";
+$stmt_horas_total = $conn->prepare($query_horas_total);
+$stmt_horas_total->bind_param("i", $id_registro);
+$stmt_horas_total->execute();
+$result_horas_total = $stmt_horas_total->get_result();
+$row_horas_total = $result_horas_total->fetch_assoc();
+$total_horas = floatval($row_horas_total['total_horas'] ?? 0);
+$stmt_horas_total->close();
+
+// Obtener horas por ingeniero
+$query_horas_ing = "SELECT es.id_usuario_nota,
+                           COALESCE(MAX(u.nombre), CONCAT('Ing #', es.id_usuario_nota)) AS ingeniero,
+                           COALESCE(SUM(es.hrs_trabajadas), 0) AS horas
+                    FROM entrada_seguimiento es
+                    LEFT JOIN usuarios u ON (u.id_usuario = es.id_usuario_nota OR u.id = es.id_usuario_nota)
+                    WHERE es.id_registro = ?
+                    GROUP BY es.id_usuario_nota
+                    ORDER BY ingeniero ASC";
+$stmt_horas_ing = $conn->prepare($query_horas_ing);
+$stmt_horas_ing->bind_param("i", $id_registro);
+$stmt_horas_ing->execute();
+$result_horas_ing = $stmt_horas_ing->get_result();
+$horas_por_ingeniero = [];
+while ($row_horas_ing = $result_horas_ing->fetch_assoc()) {
+    $horas_por_ingeniero[] = $row_horas_ing;
+}
+$stmt_horas_ing->close();
+
+// Obtener refacciones utilizadas
+$query_refacciones = "SELECT refaccion, precio_refaccion
+                      FROM entrada_seguimiento
+                      WHERE id_registro = ?
+                      AND refaccion IS NOT NULL
+                      AND TRIM(refaccion) <> ''
+                      ORDER BY fecha_actualizacion ASC";
+$stmt_ref = $conn->prepare($query_refacciones);
+$stmt_ref->bind_param("i", $id_registro);
+$stmt_ref->execute();
+$result_ref = $stmt_ref->get_result();
+$refacciones_pdf = [];
+while ($row_ref = $result_ref->fetch_assoc()) {
+    $refacciones_pdf[] = [
+        'refaccion'        => trim((string)$row_ref['refaccion']),
+        'precio_refaccion' => intval($row_ref['precio_refaccion'])
+    ];
+}
+$stmt_ref->close();
+
 // Preparar datos para el PDF
 $folio = '#ENT-' . ($equipo['area'] ?? '00') . '-' . 
          date('Y', strtotime($equipo['fecha_registro'] ?? date('Y-m-d'))) . '-' . 
@@ -115,19 +166,40 @@ $pdf->Ln(5);
 // INGENIERO(S) ASIGNADO(S)
 // ========================================
 
-$pdf->SetFont('Arial', 'B', 10);
 $pdf->SetTextColor(0, 0, 0);
-$pdf->Cell(0, 5, utf8_decode('INGENIERO(S):'), 0, 1, 'L');
+$leftX = 15;
+$rightX = 105;
+$colW = 90;
+$yInicioBloque = $pdf->GetY();
 
-// Dividir ingenieros por comas
-$lista_ingenieros = explode(',', $ingenieros);
+// Columna izquierda: ingenieros
+$pdf->SetXY($leftX, $yInicioBloque);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell($colW, 5, utf8_decode('INGENIERO(S):'), 0, 1, 'L');
+
 $pdf->SetFont('Arial', '', 10);
-$pdf->SetTextColor(0, 0, 0);
+$lista_ingenieros = explode(',', $ingenieros);
 foreach($lista_ingenieros as $ingeniero) {
-    $pdf->Cell(5);
-    $pdf->Cell(0, 5, utf8_decode('- ' . trim($ingeniero)), 0, 1, 'L');
+    $nombreIng = trim($ingeniero);
+    if ($nombreIng === '') {
+        continue;
+    }
+    $pdf->SetX($leftX + 5);
+    $pdf->Cell($colW - 5, 5, utf8_decode('- ' . $nombreIng), 0, 1, 'L');
 }
-$pdf->Ln(3);
+$yFinalIzq = $pdf->GetY();
+
+// Columna derecha: total de horas trabajadas
+$pdf->SetXY($rightX, $yInicioBloque);
+$pdf->SetFont('Arial', 'B', 10);
+$pdf->Cell($colW, 5, utf8_decode('TOTAL HORAS TRABAJADAS:'), 0, 1, 'L');
+
+$pdf->SetFont('Arial', '', 10);
+$pdf->SetX($rightX + 5);
+$pdf->Cell($colW - 5, 5, utf8_decode('- ' . number_format($total_horas, 2) . ' hrs'), 0, 1, 'L');
+$yFinalDer = $pdf->GetY();
+
+$pdf->SetY(max($yFinalIzq, $yFinalDer) + 3);
 
 // Línea separadora
 $pdf->SetDrawColor(220, 220, 220);
@@ -183,32 +255,74 @@ $pdf->Ln(5);
 // INFORMACIÓN DEL EQUIPO Y CLIENTE
 // ========================================
 
+$leftX  = 15;
+$rightX = 120;
+$colWL  = 100; // ancho columna izquierda
+$colWR  = 75;  // ancho columna derecha
+$lineH  = 5;
+$yEncabezado = $pdf->GetY(); // Y del encabezado de sección
+
 $pdf->SetFont('Arial', 'B', 11);
 $pdf->SetTextColor(0, 0, 0);
-$pdf->Cell(0, 6, utf8_decode('DATOS DEL EQUIPO Y CLIENTE'), 0, 1, 'L');
-$pdf->Ln(2);
+$pdf->Cell($colWL, 6, utf8_decode('DATOS DEL EQUIPO Y CLIENTE'), 0, 0, 'L');
+
+// Encabezado derecho a la misma altura
+if (!empty($refacciones_pdf)) {
+    $pdf->SetFont('Arial', 'B', 11);
+    $pdf->SetXY($rightX, $yEncabezado);
+    $pdf->Cell($colWR, 6, utf8_decode('REFACCIONES UTILIZADAS:'), 0, 0, 'R');
+}
+$pdf->Ln(8);
 
 $equipo_val = preg_replace('/^Equipo:\s*/', '', $equipo_info);
 $cliente_val = preg_replace('/^Cliente:\s*/', '', $cliente_info);
 $contacto_val = preg_replace('/^Contacto:\s*/', '', $contacto_info);
 
 $pdf->SetTextColor(0, 0, 0);
+$yDatosInicio = $pdf->GetY();
 
+// --- Columna izquierda: Equipo / Cliente / Contacto ---
+$pdf->SetXY($leftX, $yDatosInicio);
 $pdf->SetFont('Arial', 'B', 9);
-$pdf->Cell(18, 5, utf8_decode('Equipo:'), 0, 0, 'L');
+$pdf->Cell(18, $lineH, utf8_decode('Equipo:'), 0, 0, 'L');
 $pdf->SetFont('Arial', '', 9);
-$pdf->MultiCell(0, 5, utf8_decode($equipo_val), 0, 'L');
+$pdf->MultiCell($colWL - 18, $lineH, utf8_decode($equipo_val), 0, 'L');
 
+$pdf->SetX($leftX);
 $pdf->SetFont('Arial', 'B', 9);
-$pdf->Cell(18, 5, utf8_decode('Cliente:'), 0, 0, 'L');
+$pdf->Cell(18, $lineH, utf8_decode('Cliente:'), 0, 0, 'L');
 $pdf->SetFont('Arial', '', 9);
-$pdf->MultiCell(0, 5, utf8_decode($cliente_val), 0, 'L');
+$pdf->MultiCell($colWL - 18, $lineH, utf8_decode($cliente_val), 0, 'L');
 
+$pdf->SetX($leftX);
 $pdf->SetFont('Arial', 'B', 9);
-$pdf->Cell(18, 5, utf8_decode('Contacto:'), 0, 0, 'L');
+$pdf->Cell(18, $lineH, utf8_decode('Contacto:'), 0, 0, 'L');
 $pdf->SetFont('Arial', '', 9);
-$pdf->MultiCell(0, 5, utf8_decode($contacto_val), 0, 'L');
-$pdf->Ln(3);
+$pdf->MultiCell($colWL - 18, $lineH, utf8_decode($contacto_val), 0, 'L');
+$yFinalIzqDatos = $pdf->GetY();
+
+// --- Columna derecha: Refacciones (datos) ---
+$yDerRef = $yDatosInicio;
+if (!empty($refacciones_pdf)) {
+    foreach ($refacciones_pdf as $ref) {
+        $pdf->SetXY($rightX, $yDerRef);
+        $pdf->SetFont('Arial', '', 9);
+        $pdf->MultiCell($colWR, $lineH, utf8_decode('* ' . $ref['refaccion']), 0, 'R');
+        $yDerRef = $pdf->GetY();
+        if ($ref['precio_refaccion'] > 0) {
+            $precioFmt = '$ ' . number_format($ref['precio_refaccion'], 0, '.', ',');
+            $pdf->SetXY($rightX, $yDerRef);
+            $pdf->SetFont('Arial', 'B', 9);
+            $pdf->SetTextColor(0, 128, 0);
+            $pdf->Cell($colWR, $lineH, utf8_decode($precioFmt), 0, 1, 'R');
+            $pdf->SetTextColor(0, 0, 0);
+            $yDerRef = $pdf->GetY();
+        }
+    }
+}
+
+$pdf->SetY(max($yFinalIzqDatos, $yDerRef) + 2);
+$pdf->Ln(1);
 
 // Línea separadora
 $pdf->Line(15, $pdf->GetY(), 195, $pdf->GetY());

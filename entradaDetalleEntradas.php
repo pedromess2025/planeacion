@@ -146,7 +146,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 py-3">
                     <h5 class="modal-title fw-bold" id="modalAsignarLabel">Asignar Ingeniero</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-4">
                     <input type="hidden" id="equipoIdModal" value="">
@@ -167,7 +167,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 py-3">
                     <h5 class="modal-title fw-bold" id="modalModificarIngLabel">Modificar Ingenieros Asignados</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding-top: 0;">
                     <small class="text-muted d-block mt-2">Selecciona un ingeniero para retirar.</small>
@@ -178,7 +178,6 @@
                     </select>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-outline-danger" onclick="retirarIngeniero()">Retirar</button>
                 </div>
             </div>
@@ -191,7 +190,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="modalEditarEntradaLabel">Editar Entrada</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-3">
                     <input type="hidden" id="editarEntradaId" value="">
@@ -257,7 +256,6 @@
                     </div>
                 </div>
                 <div class="modal-footer border-top-0 pt-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
                     <button type="button" class="btn btn-outline-primary" onclick="guardarEdicionEntrada()">Guardar</button>
                 </div>
             </div>
@@ -269,7 +267,7 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow">
                 <div class="modal-header modal-header bg-primary text-white py-3">
-                    <h5 class="modal-title fw-bold" id="modalReprogramarEntradaLabel">Reprogramar Entrada</h5>
+                    <h5 class="modal-title fw-bold" id="modalReprogramarEntradaLabel">Reprogramar Fecha</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-3">
@@ -693,15 +691,6 @@
                     const modalEl = document.getElementById('modalAsignarIngeniero');
                     modalAsignarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
                     modalAsignarInstance.show();
-                    
-                    // Permitir cerrar el modal con botones y X
-                    document.querySelectorAll('#modalAsignarIngeniero [data-bs-dismiss="modal"]').forEach(btn => {
-                        btn.onclick = function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            modal.hide();
-                        };
-                    });
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -745,7 +734,6 @@
                             selectElement.append($('<option></option>').attr('value', '').text('No hay ingenieros asignados'));
                         }
 
-                        
                         // Permitir cerrar el modal con botones y X
                         document.querySelectorAll('#modalModificarIngenieros [data-bs-dismiss="modal"]').forEach(btn => {
                             btn.onclick = function(e) {

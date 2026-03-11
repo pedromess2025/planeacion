@@ -60,12 +60,21 @@
                                     <div class="mb-3">
                                         <label class="small text-muted text-uppercase fw-bold d-block">Ingeniero(s):</label>
                                         <div id="ingeniero" name="ingeniero"></div>
+                                        <div id="horas" name="horas"></div>
                                     </div>
                                     <hr>
-                                    <div class="mb-0">
-                                        <label id="equipo" name="equipo" class="small text-muted d-block mb-0"></label>
-                                        <label id="cliente" name="cliente" class="small text-muted d-block mb-0"></label>
-                                        <label id="contacto" name="contacto" class="small text-muted d-block mb-0"></label>
+                                    <div class="row g-2 mb-0 align-items-start">
+                                        <div class="col-md-7">
+                                            <label class="small text-muted text-uppercase fw-bold d-block">Equipo:</label>
+                                            <label id="equipo" name="equipo" class="small text-muted d-block mb-0"></label>
+                                            <label id="cliente" name="cliente" class="small text-muted d-block mb-0"></label>
+                                            <label id="contacto" name="contacto" class="small text-muted d-block mb-0"></label>
+                                        </div>
+                                    </div>
+                                    <hr>
+                                    <div class="col-md-5">
+                                        <div id="refaccion_resumen" name="refaccion_resumen"></div>
+                                        <div id="precio_refaccion_resumen" name="precio_refaccion_resumen"></div>
                                     </div>
                                     <hr>
                                     <div class="mb-3">
@@ -99,7 +108,7 @@
                                         <input type="hidden" name="accion" value="guardarSeguimiento">
                                         <div class="status-update-box mb-4">
                                             <div class="row g-3">
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <label class="form-label fw-bold small text-muted">ESTATUS ACTUAL:</label>
                                                     <select name="nuevo_estatus" class="form-select border-primary fw-bold">
                                                         <option value="ENTRADA" selected>📥 Entrada</option>
@@ -113,9 +122,31 @@
                                                         <option value="SINENVIAR">🔚 Terminado Sin Enviar</option>
                                                     </select>
                                                 </div>
-                                                <div class="col-md-6">
+                                                <div class="col-md-4">
                                                     <label class="form-label fw-bold small text-muted">FECHA ACTUALIZACION:</label>
                                                     <input type="date" name="fecha_termino" class="form-control" required>
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold small text-muted">HORAS TRABAJADAS:</label>
+                                                    <input type="number" name="hrs_trabajadas" class="form-control" min="0.25" max="24" step="0.25" placeholder="Ej. 2.5" required>
+                                                </div>
+                                            </div>
+                                            <div id="camposRefacciones" class="row g-3 mt-1" style="display:none;">
+                                                <div class="col-md-8">
+                                                    <label class="form-label fw-bold small text-muted">REFACCIÓN:</label>
+                                                    <input type="text" name="refaccion" class="form-control" maxlength="500" placeholder="Describe la refacción utilizada">
+                                                </div>
+                                                <div class="col-md-4">
+                                                    <label class="form-label fw-bold small text-muted">PRECIO DE REFACCIÓN:</label>
+                                                    <input type="number" name="precio_refaccion" class="form-control" min="0" step="1" placeholder="Ej. 1500">
+                                                </div>
+                                            </div>
+
+                                            <div id="campoPdfTerminado" class="row g-3 mt-1" style="display:none;">
+                                                <div class="col-md-12">
+                                                    <label class="form-label fw-bold small text-muted">SUBIR REPORTE PDF (TERMINADO):</label>
+                                                    <input type="file" name="reporte_pdf" class="form-control" accept="application/pdf" data-max-files="1">
+                                                    <small class="text-muted">Solo se permite 1 archivo PDF.</small>
                                                 </div>
                                             </div>
                                         </div>
@@ -236,6 +267,8 @@
                 width: '100%'
             });
 
+            inicializaCamposRefacciones();
+
             // Obtener ID del equipo desde URL
             const params = new URLSearchParams(window.location.search);
             const id_registro = params.get('id');
@@ -264,9 +297,52 @@
                         const nombresStr = equipo.ingeniero_nombre || equipo.nombres_ingenieros || 'Sin asignar';
                         // Dividir los nombres por comas y crear elementos separados
                         const nombresList = nombresStr.split(',').map(n => n.trim()).filter(n => n);
+                        const horasPorIngeniero = Array.isArray(equipo.horas_por_ingeniero) ? equipo.horas_por_ingeniero : [];
+
+                        // Normalizar nombre para evitar fallas por acentos/espacios/mayúsculas
+                        const normalizaNombre = (valor) => String(valor || '')
+                            .normalize('NFD')
+                            .replace(/[\u0300-\u036f]/g, '')
+                            .replace(/\s+/g, ' ')
+                            .trim()
+                            .toLowerCase();
+
+                        const horasPorNombre = {};
+                        horasPorIngeniero.forEach(item => {
+                            const clave = normalizaNombre(item.nombre);
+                            const horasActuales = parseFloat(item.horas || 0);
+                            if (!clave) {
+                                return;
+                            }
+                            horasPorNombre[clave] = (horasPorNombre[clave] || 0) + horasActuales;
+                        });
+
                         // Actualizar el contenedor con los nombres
-                        $('#ingeniero').html(nombresList.map(nombre => `<small class="d-block text-dark">-${nombre}</small>`).join(''));
-                        //$('#noEmpleado').text('No. Empleado(s): ' + (equipo.ids_ingenieros || 'N/A'));
+                        let ingenierosHtml = nombresList.map(nombre => {
+                            const claveNombre = normalizaNombre(nombre);
+                            const horas = (horasPorNombre[claveNombre] || 0).toFixed(2);
+                            return `<small class="d-flex justify-content-between text-dark"><span>-${nombre}</span><span class="ms-3">${horas} hrs</span></small>`;
+                        }).join('');
+                        $('#ingeniero').html(ingenierosHtml || '<small class="d-block text-muted">Sin asignar</small>');
+
+                        // Horas acumuladas
+                        const totalHoras = parseFloat(equipo.total_horas || 0).toFixed(2);
+                        $('#horas').html(`<small class="d-block text-md-end text-dark fw-bold">Total: ${totalHoras} hrs</small>`);
+
+                        // Refacciones utilizadas
+                        const refacciones = Array.isArray(equipo.refacciones) ? equipo.refacciones : [];
+                        if (refacciones.length > 0) {
+                            const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+                            let refHtml = '<small class="d-block text-muted text-uppercase fw-bold mb-1">Refacciones:</small>';
+                            refHtml += refacciones.map(r =>
+                                `<small class="d-block text-dark">• ${r.refaccion}</small>` +
+                                (r.precio_refaccion > 0 ? `<small class="d-block text-success fw-bold">${fmt.format(r.precio_refaccion)}</small>` : '')
+                            ).join('');
+                            $('#refaccion_resumen').html(refHtml);
+                        } else {
+                            $('#refaccion_resumen').empty();
+                        }
+                        $('#precio_refaccion_resumen').empty();
                         
                         // Equipo
                         const equipoTexto = `${equipo.marca || ''} ${equipo.modelo ? '-' + equipo.modelo : '- N/A'} ${equipo.no_serie ? '-' + equipo.no_serie : '- S/N'}`.trim();
@@ -303,6 +379,7 @@
                         // Estatus actual
                         if (equipo.estatus) {
                             $('select[name="nuevo_estatus"]').val(equipo.estatus);
+                            actualizaCamposRefacciones(equipo.estatus);
                         }
                         
                         // Fecha de término
@@ -325,8 +402,74 @@
             });
         }
 
+        function inicializaCamposRefacciones() {
+            const selectEstatus = $('select[name="nuevo_estatus"]');
+            actualizaCamposRefacciones(selectEstatus.val());
+
+            selectEstatus.on('change', function() {
+                actualizaCamposRefacciones($(this).val());
+            });
+        }
+
+        function actualizaCamposRefacciones(estatus) {
+            const estatusNormalizado = String(estatus || '').toUpperCase();
+            const mostrarRefacciones = estatusNormalizado === 'REFACCIONES';
+            const mostrarPdf = estatusNormalizado === 'TERMINADO';
+
+            const contenedor = $('#camposRefacciones');
+            const inputRefaccion = $('input[name="refaccion"]');
+            const inputPrecio = $('input[name="precio_refaccion"]');
+            const contenedorPdf = $('#campoPdfTerminado');
+            const inputPdf = $('input[name="reporte_pdf"]');
+
+            if (mostrarRefacciones) {
+                contenedor.show();
+                inputRefaccion.prop('required', true);
+                inputPrecio.prop('required', true);
+            } else {
+                contenedor.hide();
+                inputRefaccion.prop('required', false).val('');
+                inputPrecio.prop('required', false).val('');
+            }
+
+            if (mostrarPdf) {
+                contenedorPdf.show();
+                inputPdf.prop('required', true);
+            } else {
+                contenedorPdf.hide();
+                inputPdf.prop('required', false).val('');
+            }
+        }
+
         // Funcion para guardar cambios
         function guardarCambios() {
+            const archivoPdf = $('input[name="reporte_pdf"]')[0];
+            const estatusActual = String($('select[name="nuevo_estatus"]').val() || '').toUpperCase();
+
+            if (estatusActual === 'TERMINADO') {
+                if (!archivoPdf || !archivoPdf.files || archivoPdf.files.length !== 1) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Archivo requerido',
+                        text: 'Para estatus TERMINADO debes subir 1 archivo PDF.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return false;
+                }
+
+                const archivo = archivoPdf.files[0];
+                const esPdf = archivo.type === 'application/pdf' || /\.pdf$/i.test(archivo.name || '');
+                if (!esPdf) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Formato inválido',
+                        text: 'El archivo debe ser PDF.',
+                        confirmButtonText: 'Aceptar'
+                    });
+                    return false;
+                }
+            }
+
             // Validar campos required del formulario
             var formElement = document.getElementById('actualizar');
             if (formElement && !formElement.checkValidity()) {

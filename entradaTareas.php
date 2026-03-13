@@ -50,10 +50,10 @@
                                             <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
                                             <h6 id="folio" class="fw-bold text-primary"></h6>
                                         </div>
-                                        <button type="button" class="btn btn-outline-danger" onclick="generarPDF()">
-                                            <i class="fas fa-file-pdf"></i>PDF
+                                        <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="generarPDF()">
+                                            <i class="fas fa-file-pdf"></i>PDF RESUMEN
                                         </button>
-                                        <button type="button" class="btn btn-outline-warning" onclick="history.back()">
+                                        <button type="button" class="btn btn-outline-warning btn-sm mt-3" onclick="history.back()">
                                             <i class="bi bi-arrow-left"></i> Volver
                                         </button>
                                     </div>
@@ -72,7 +72,7 @@
                                         </div>
                                     </div>
                                     <hr>
-                                    <div class="col-md-5">
+                                    <div class="col-12">
                                         <div id="refaccion_resumen" name="refaccion_resumen"></div>
                                         <div id="precio_refaccion_resumen" name="precio_refaccion_resumen"></div>
                                     </div>
@@ -89,10 +89,14 @@
 
                                     <label class="small text-muted text-uppercase fw-bold d-block mb-2">Fotos de Entrada</label>
                                     <div class="img-gallery">
-                                        <!-- Fotos se cargarán aquí dinámicamente -->
+                                    <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
                                     <button type="button" id="btnVerFotos" class="btn btn-outline-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
                                         <i class="fas fa-image"></i> Ver fotos entrada
+                                    </button>
+                                    <!-- MOSTRAR PDF -->
+                                    <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="verPDF()">
+                                        <i class="fas fa-file-pdf"></i>Ver Certificado
                                     </button>
                                 </div>
                             </div>
@@ -333,16 +337,26 @@
                         const refacciones = Array.isArray(equipo.refacciones) ? equipo.refacciones : [];
                         if (refacciones.length > 0) {
                             const fmt = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 });
+                            const totalPrecioRefacciones = refacciones.reduce((acum, r) => {
+                                const precio = parseFloat(r.precio_refaccion || 0);
+                                return acum + (isNaN(precio) ? 0 : precio);
+                            }, 0);
                             let refHtml = '<small class="d-block text-muted text-uppercase fw-bold mb-1">Refacciones:</small>';
-                            refHtml += refacciones.map(r =>
-                                `<small class="d-block text-dark">• ${r.refaccion}</small>` +
-                                (r.precio_refaccion > 0 ? `<small class="d-block text-success fw-bold">${fmt.format(r.precio_refaccion)}</small>` : '')
-                            ).join('');
+                            refHtml += refacciones.map(r => {
+                                const precio = parseFloat(r.precio_refaccion || 0);
+                                return `
+                                    <small class="d-flex justify-content-between align-items-center text-dark">
+                                        <span>• ${r.refaccion}</span>
+                                        <span class="ms-3 text-success fw-bold">${precio > 0 ? fmt.format(precio) : ''}</span>
+                                    </small>
+                                `;
+                            }).join('');
                             $('#refaccion_resumen').html(refHtml);
+                            $('#precio_refaccion_resumen').html(`<small class="d-block text-end text-dark fw-bold">Total: ${fmt.format(totalPrecioRefacciones)}</small>`);
                         } else {
                             $('#refaccion_resumen').empty();
+                            $('#precio_refaccion_resumen').empty();
                         }
-                        $('#precio_refaccion_resumen').empty();
                         
                         // Equipo
                         const equipoTexto = `${equipo.marca || ''} ${equipo.modelo ? '-' + equipo.modelo : '- N/A'} ${equipo.no_serie ? '-' + equipo.no_serie : '- S/N'}`.trim();
@@ -624,6 +638,37 @@
             const params = new URLSearchParams(window.location.search);
             const id_registro = params.get('id');
             window.open('generar_pdf.php?id=' + id_registro, '_blank');
+        }
+
+        // Función para ver PDF
+        function verPDF() {
+            const params = new URLSearchParams(window.location.search);
+            const id_registro = params.get('id');
+
+            if (!id_registro) {
+                Swal.fire('Atención', 'No se encontró el ID del registro.', 'warning');
+                return;
+            }
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'obtenerRutaCertificado',
+                    id_registro: id_registro
+                },
+                success: function(response) {
+                    if (response.success && response.url_pdf) {
+                        window.open(response.url_pdf, '_blank');
+                    } else {
+                        Swal.fire('Sin PDF', response.message || 'No hay certificado disponible.', 'info');
+                    }
+                },
+                error: function() {
+                    Swal.fire('Error', 'No se pudo obtener la ruta del PDF.', 'error');
+                }
+            });
         }
     </script>
 </body>

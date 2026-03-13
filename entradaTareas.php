@@ -137,14 +137,14 @@
                                                     <input type="text" name="refaccion" class="form-control" maxlength="500" placeholder="Describe la refacción utilizada">
                                                 </div>
                                                 <div class="col-md-4">
-                                                    <label class="form-label fw-bold small text-muted">PRECIO DE REFACCIÓN:</label>
+                                                    <label class="form-label fw-bold small text-muted">PRECIO ESTIMADO:</label>
                                                     <input type="number" name="precio_refaccion" class="form-control" min="0" step="1" placeholder="Ej. 1500">
                                                 </div>
                                             </div>
 
                                             <div id="campoPdfTerminado" class="row g-3 mt-1" style="display:none;">
                                                 <div class="col-md-12">
-                                                    <label class="form-label fw-bold small text-muted">SUBIR REPORTE PDF (TERMINADO):</label>
+                                                    <label class="form-label fw-bold small text-muted">SUBIR REPORTE DE SERVICIO:</label>
                                                     <input type="file" name="reporte_pdf" class="form-control" accept="application/pdf" data-max-files="1">
                                                     <small class="text-muted">Solo se permite 1 archivo PDF.</small>
                                                 </div>

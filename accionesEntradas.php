@@ -456,14 +456,12 @@ header('Content-Type: application/json');
                 }
 
                 // Registrar ruta en tabla de entrada_fotos
-                /*
                 $fechaActual = date('Y-m-d H:i:s');
                 $sqlPdf = "INSERT INTO entrada_fotos (id_regEntrada, ruta, fecha) VALUES (?, ?, ?)";
                 $stmtPdf = $conn->prepare($sqlPdf);
                 $stmtPdf->bind_param('iss', $id_registro, $rutaPdf, $fechaActual);
                 $stmtPdf->execute();
                 $stmtPdf->close();
-                */
             }
         }
 
@@ -682,6 +680,24 @@ header('Content-Type: application/json');
         } else {
             echo json_encode(['success' => false, 'message' => 'No se pudo actualizar']);
         }
+        exit;
+    }
+
+    // MOSTRAR PDF
+    if ($accion == 'obtenerRutaCertificado') {
+        header('Content-Type: application/json');
+        $sql = "SELECT ruta FROM entrada_fotos WHERE id_regEntrada = ? AND ruta LIKE 'Certificados/%' ORDER BY id DESC LIMIT 1";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('i', $id_registro);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        if ($result->num_rows > 0) {
+            $row = $result->fetch_assoc();
+            echo json_encode(['success' => true, 'url_pdf' => $row['ruta']]);
+        } else {
+            echo json_encode(['success' => false, 'message' => 'No se encontró el certificado PDF.']);
+        }
+        $stmt->close();
         exit;
     }
 ?>

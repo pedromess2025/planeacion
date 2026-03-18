@@ -1,3 +1,9 @@
 imgEntradas/
 *.log
 *.log
+/logs
+*.pdf
+*.log
+*.log
+/logs
+logs/notificacion_entrada.log

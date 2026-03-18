@@ -344,6 +344,7 @@
                 success: function(data) {
                     if (data.status === 'success') {
                         // Enviar notificación a los ingenieros asignados
+                        // Nota: Desactivado temporalmente para evitar saturar el envio de correos, implementar en notificaciones globales
                         if (data.id_entrada) {
                             $.ajax({
                                 url: 'enviaNotificacionEntrada.php',

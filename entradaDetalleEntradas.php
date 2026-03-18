@@ -829,6 +829,8 @@
                 },
                 success: function(response) {
                     if (response.success) {
+                        // Enviar notificación a los ingenieros asignados 
+                        // Nota: Desactivado temporalmente para evitar saturar el envio de correos, implementar en notificaciones globales)
                         $.ajax({
                             url: 'enviaNotificacionEntrada.php',
                             method: 'POST',

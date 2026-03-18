@@ -51,7 +51,7 @@
                                             <h6 id="folio" class="fw-bold text-primary"></h6>
                                         </div>
                                         <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="generarPDF()">
-                                            <i class="fas fa-file-pdf"></i>PDF RESUMEN
+                                            <i class="fas fa-file-pdf"></i>PDF Resumen
                                         </button>
                                         <button type="button" class="btn btn-outline-warning btn-sm mt-3" onclick="history.back()">
                                             <i class="bi bi-arrow-left"></i> Volver
@@ -92,11 +92,11 @@
                                     <!-- Fotos se cargarán aquí dinámicamente -->
                                     </div>
                                     <button type="button" id="btnVerFotos" class="btn btn-outline-primary btn-sm mt-3" data-bs-toggle="modal" data-bs-target="#modalFotos" style="display:none;">
-                                        <i class="fas fa-image"></i> Ver fotos entrada
+                                        <i class="fas fa-image"></i> Fotos entrada
                                     </button>
                                     <!-- MOSTRAR PDF -->
                                     <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="verPDF()">
-                                        <i class="fas fa-file-pdf"></i>Ver Certificado
+                                        <i class="fas fa-file-pdf"></i>Reporte Servicio
                                     </button>
                                 </div>
                             </div>

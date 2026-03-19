@@ -146,7 +146,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 py-3">
                     <h5 class="modal-title fw-bold" id="modalAsignarLabel">Asignar Ingeniero</h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" onclick="cierraModal('modalAsignarIngeniero')" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-4">
                     <input type="hidden" id="equipoIdModal" value="">
@@ -167,7 +167,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header border-bottom-0 py-3">
                     <h5 class="modal-title fw-bold" id="modalModificarIngLabel">Modificar Ingenieros Asignados</h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" onclick="cierraModal('modalModificarIngLabel')" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="padding-top: 0;">
                     <small class="text-muted d-block mt-2">Selecciona un ingeniero para retirar.</small>
@@ -190,7 +190,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="modalEditarEntradaLabel">Editar Entrada</h5>
-                    <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" onclick="cierraModal('modalEditarEntrada')" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-3">
                     <input type="hidden" id="editarEntradaId" value="">
@@ -268,7 +268,7 @@
             <div class="modal-content border-0 shadow">
                 <div class="modal-header modal-header bg-primary text-white py-3">
                     <h5 class="modal-title fw-bold" id="modalReprogramarEntradaLabel">Reprogramar Fecha</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" onclick="cierraModal('modalReprogramarEntrada')" aria-label="Close"></button>
                 </div>
                 <div class="modal-body py-3">
                     <input type="hidden" id="reprogramarEntradaId" value="">
@@ -314,7 +314,7 @@
     <!-- Bootstrap core JavaScript
     <script src = "vendor/jquery/jquery.min.js"></script>-->
     <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
-    <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 
     <!-- Core plugin JavaScript-->
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
@@ -330,6 +330,8 @@
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script src="funciones_entradas.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function() {
@@ -688,9 +690,7 @@
                             dropdownParent: $('#modalAsignarIngeniero')
                         });
                     }
-                    const modalEl = document.getElementById('modalAsignarIngeniero');
-                    modalAsignarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-                    modalAsignarInstance.show();
+                    modalAsignarInstance = abreModal('modalAsignarIngeniero');
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -710,7 +710,7 @@
         // Función para abrir modal de modificación y cargar ingenieros asignados
         function modificarIngenieros(equipoId) {
             document.getElementById('equipoIdModificar').value = equipoId;
-            $('#modalModificarIngLabel').modal('show');
+            modalModificarInstance = abreModal('modalModificarIngLabel');
             
             $.ajax({
                 url: 'accionesEntradas.php',
@@ -734,16 +734,6 @@
                             selectElement.append($('<option></option>').attr('value', '').text('No hay ingenieros asignados'));
                         }
 
-                        // Permitir cerrar el modal con botones y X
-                        document.querySelectorAll('#modalModificarIngenieros [data-bs-dismiss="modal"]').forEach(btn => {
-                            btn.onclick = function(e) {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                if (modalModificarInstance) {
-                                    modalModificarInstance.hide();
-                                }
-                            };
-                        });
                     } else {
                         Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudieron cargar los ingenieros.' });
                     }
@@ -781,17 +771,8 @@
                                     title: 'Listo', 
                                     text: 'Ingeniero retirado.', 
                                     }).then(() => {
-                            if (modalModificarInstance) {
-                                modalModificarInstance.hide();
-                            } else {
-                                const modalEl = document.getElementById('modalModificarIngenieros');
-                                if (modalEl) {
-                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                                }
-                            }
-                            // Limpieza de respaldo por si queda el backdrop
-                            document.body.classList.remove('modal-open');
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cierraModal(modalModificarInstance || 'modalModificarIngLabel');
+                            modalModificarInstance = null;
                             cargarEquipos();
                         });
                     } else {
@@ -843,18 +824,8 @@
                             text: 'El ingeniero ha sido asignado correctamente.'
                         })
                         .then(() => {
-                            // Cerrar modal usando Bootstrap
-                            if (modalAsignarInstance) {
-                                modalAsignarInstance.hide();
-                            } else {
-                                const modalEl = document.getElementById('modalAsignarIngeniero');
-                                if (modalEl) {
-                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                                }
-                            }
-                            // Limpieza de respaldo por si queda el backdrop
-                            document.body.classList.remove('modal-open');
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cierraModal(modalAsignarInstance || 'modalAsignarIngeniero');
+                            modalAsignarInstance = null;
                             cargarEquipos();
                         });
                     } else {
@@ -908,11 +879,7 @@
                         $('#editarFechaCompromiso').val(data.fecha_promesa_entrega ? data.fecha_promesa_entrega.split(' ')[0] : '');
                         $('#editarOV_OT').val(data.ov_ot || '');
 
-                        $('#modalEditarEntrada').modal('show');
-
-                        const modalEl = document.getElementById('modalEditarEntrada');
-                        modalEditarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-                        modalEditarInstance.show();
+                        modalEditarInstance = abreModal('modalEditarEntrada');
                     } else {
                         Swal.fire({ icon: 'error', title: 'Error', text: 'No se pudo cargar la entrada.' });
                     }
@@ -930,9 +897,7 @@
             $('#reprogramarFechaActual').val(fechaSolo);
             $('#reprogramarFechaNueva').val('');
 
-            const modalEl = document.getElementById('modalReprogramarEntrada');
-            modalReprogramarInstance = new bootstrap.Modal(modalEl, { backdrop: true, keyboard: true });
-            modalReprogramarInstance.show();
+            modalReprogramarInstance = abreModal('modalReprogramarEntrada');
         }
 
         // Funcion para guardar reprogramacion
@@ -967,16 +932,8 @@
                             timer: 1500,
                             timerProgressBar: true
                         }).then(() => {
-                            if (modalReprogramarInstance) {
-                                modalReprogramarInstance.hide();
-                            } else {
-                                const modalEl = document.getElementById('modalReprogramarEntrada');
-                                if (modalEl) {
-                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                                }
-                            }
-                            document.body.classList.remove('modal-open');
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cierraModal(modalReprogramarInstance || 'modalReprogramarEntrada');
+                            modalReprogramarInstance = null;
                             cargarEquipos();
                         });
                     } else {
@@ -1043,16 +1000,8 @@
                             timer: 1500,
                             timerProgressBar: true
                         }).then(() => {
-                            if (modalEditarInstance) {
-                                modalEditarInstance.hide();
-                            } else {
-                                const modalEl = document.getElementById('modalEditarEntrada');
-                                if (modalEl) {
-                                    bootstrap.Modal.getOrCreateInstance(modalEl).hide();
-                                }
-                            }
-                            document.body.classList.remove('modal-open');
-                            document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+                            cierraModal(modalEditarInstance || 'modalEditarEntrada');
+                            modalEditarInstance = null;
                             cargarEquipos();
                         });
                     } else {

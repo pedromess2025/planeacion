@@ -42,24 +42,48 @@ function alertaExito(title, text = 'Operación completada correctamente.') {
 }
 
 // ============ MODAL HELPER ============
+// Obtiene instancia de modal usando Bootstrap 5
+function obtieneInstanciaModal(modalEl) {
+    if (!modalEl || typeof bootstrap === 'undefined' || !bootstrap.Modal) {
+        return null;
+    }
+
+    return bootstrap.Modal.getOrCreateInstance(modalEl);
+}
+
 // Abre modales de Bootstrap y retorna su instancia
 // Facilita el control programático de modales
 function abreModal(modalId) {
     const modalEl = document.getElementById(modalId);
     if (!modalEl) return null;
-    
-    const instance = bootstrap.Modal.getOrCreateInstance(modalEl);
-    instance.show();
+
+    const instance = obtieneInstanciaModal(modalEl);
+    if (instance) instance.show();
+
     return instance;
 }
 
 // Cierra modal y limpia backdrop residual
-// Previene problemas de superposición de fondos oscuros
-function cierraModal(modalInstance) {
-    if (modalInstance) {
-        modalInstance.hide();
+// Acepta instancia o id del modal para reutilizar una sola API
+function cierraModal(modalRef) {
+    let instance = null;
+    let modalEl = null;
+
+    if (typeof modalRef === 'string') {
+        modalEl = document.getElementById(modalRef);
+    } else if (modalRef && typeof modalRef.hide === 'function') {
+        instance = modalRef;
+    } else if (modalRef && modalRef.nodeType === 1) {
+        modalEl = modalRef;
     }
-    // Limpiar backdrop
+
+    if (!instance && modalEl) {
+        instance = obtieneInstanciaModal(modalEl);
+    }
+
+    if (instance) instance.hide();
+
+    // Limpiar respaldo por si queda el bloqueo visual
     document.body.classList.remove('modal-open');
     document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
 }

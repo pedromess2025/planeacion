@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>ENTRADAS EQ - MESS</title>
+    <title>ENTRADAS EQ  REP - MESS</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">    
@@ -65,7 +65,7 @@
                 <div class="container-fluid py-4">
                     <div class="row mb-0">
                         <div class="col">
-                            <h3 class="fw-bold text-dark mb-1">Entrada de Equipos</h3>
+                            <h3 class="fw-bold text-dark mb-1">Entrada de Equipos a Reparación</h3>
                         </div>
                     </div>
                     <div class="row" id="filtrosPrincipales" style="display: none;">

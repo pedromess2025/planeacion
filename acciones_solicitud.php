@@ -160,7 +160,7 @@ if ($opcion == "solicitudesAbiertas") {
     // Consulta base
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
                     IF(ot.capturado_por = ?, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
-                    (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion
+                    (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion, fecha_captura
             FROM servicios_planeados_mess ot
             inner join usuarios u on ot.engineer = u.id_usuario 
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
@@ -245,7 +245,7 @@ if ($opcion == "solicitudesAbiertas") {
             ORDER BY ot.id DESC";
     
     // El 'echo $sql;' es útil para debug, pero debe ser eliminado en producción
-    // echo $sql; 
+    //echo $sql; 
     
     // --- 8. Ejecución de la Consulta Preparada ---
     if ($stmt = $conn->prepare($sql)) {

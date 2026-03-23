@@ -285,6 +285,7 @@ function renderizarTabla(selectorTabla, data) {
             `<i class="fas fa-user"></i>${solicitud.nombre + nombre2 + nombre3}`,
             solicitud.area,
             solicitud.order_code,
+            `<h6 style="color: black; font-size:13px;">${solicitud.fecha_captura}</h6>`,
             fechaActividad + `<h6 style="color: black; font-size:13px;"><i class="fas fa-tools"></i> ${durationhr} hrs` + `<br>` + `<i class="fas fa-car"></i> ${travelhr} hrs</h6>`,
             solicitud.ds_cliente,
             solicitud.city,

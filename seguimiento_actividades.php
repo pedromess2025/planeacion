@@ -116,7 +116,8 @@
                                                         <th>Ingeniero</th>
                                                         <th>Area</th>
                                                         <th>OT</th>
-                                                        <th>Fecha Planeada</th>
+                                                        <th>Fecha de Captura</th>
+                                                        <th>Fecha Planeada</th>                                                        
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>
                                                         <th>Vehiculo</th>

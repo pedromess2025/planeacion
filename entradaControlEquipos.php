@@ -9,7 +9,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>ENTRADAS EQ - MESS</title>
+    <title>ENTRADAS EQ  REP - MESS</title>
 
     <!-- Custom fonts for this template-->
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">    
@@ -41,7 +41,7 @@
                     <div class="row justify-content-center">
                         <div class="col-lg-12">
                             <div class="text-center mb-2">
-                                <h2 class="fw-bold">Ingreso de Equipo</h2>
+                                <h2 class="fw-bold">Ingreso de Equipo a Reparación</h2>
                             </div>
 
                             <div class="card card-minimal shadow-sm p-2">

@@ -335,7 +335,7 @@
     <script src="funciones_entradas.js"></script>
 
     <script type="text/javascript">
-        $(document).ready(function() {
+        $(document).ready(function() {                        
             inicializarTablaEquipos();
             cargarEquipos();
 
@@ -355,21 +355,28 @@
         });
 
         // Funcion para verificar si el usuario es encargado (tiene permisos para asignar/modificar ingenieros) o es ingeniero regular (solo puede ver entradas)
-        async function verificarAccesoSiEsEncargado() {
+        async function verificarAccesoSiEdita(valor) {
             // Funcion para verificar accesos
             async function verificarAcceso() {
             // 1.Mandamos llamar nuestra función principal. Agregamos await para esperar la respuesta
-            const respuesta = await validaOpciones('entradasEq', 'verBotonesDetalleEq');
+            const respuesta = await validaOpciones('entradasEq', 'verBotonesEditar');
             
             // 2. Evaluamos la respuesta y aplicamos las acciones a realizar según el caso
             const cuantos = (respuesta && respuesta.status === 'success') 
                             ? parseInt(respuesta.data[0].cuantos) 
                             : 0;
-
-            if (cuantos <= 0) {            
-                return "Noesencargado"; // No tiene acceso, se puede bloquear la acción o redirigir
-            }else {
-                return "Esencargado"; // Tiene acceso, se permite la acción
+            if(valor === 'filtroAreas') {
+                if (cuantos <= 0) {            
+                    return ''; // No tiene acceso, se puede bloquear la acción o redirigir
+                }else {
+                    return respuesta.data[0].inf_adicional; // Tiene acceso, se permite la acción
+                }
+            }else{
+                if (cuantos <= 0) {            
+                    return "noEdita"; // No tiene acceso, se puede bloquear la acción o redirigir
+                }else {
+                    return "Edita"; // Tiene acceso, se permite la acción
+                }
             }
         }
 
@@ -399,14 +406,17 @@
         }
         // Función para cargar equipos dinámicamente 
         async function cargarEquipos() {
-            const esEncargado = await verificarAccesoSiEsEncargado(); // Verificar acceso 
+            const edita = await verificarAccesoSiEdita('edita');
+            const areas = await verificarAccesoSiEdita('filtroAreas');
+
             $.ajax({
                 url: 'accionesEntradas.php',
                 method: 'POST',
                 dataType: 'json',
                 data: {
                     accion: 'obtenerEquipos',
-                    esEncargado
+                    edita,
+                    areas
                 },
                 success: function(response) {
                     if (response.success && response.data.length > 0) {
@@ -465,7 +475,7 @@
 
                 // Construir HTML de fila
                 let fila = [
-                    `<span class="fw-bold text-primary small">${equipo.folio}</span>`,
+                    `<span class="fw-bold text-primary small">${equipo.folio}</span><span class="text-muted text-xs"> Capturado por: ${equipo.capturado_por}</span>`,
                     `
                     <div>
                         <small class="d-block">${equipo.cliente}</small>
@@ -546,7 +556,7 @@
                         const cantidadIngenieros = idsIngenieros.length > 0 ? idsIngenieros.split(',').length : 0;
                         
                         // Solo mostrar botones si usuario puede asignar (es encargado)
-                        const puedeAsignar = equipo.puede_asignar === 'Esencargado';
+                        const puedeAsignar = equipo.puede_asignar === 'Edita';
                         
                             
                             // Mostrar botón de asignar solo si tiene menos de 3 ingenieros Y puede asignar

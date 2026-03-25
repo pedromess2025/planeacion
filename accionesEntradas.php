@@ -146,10 +146,22 @@ header('Content-Type: application/json');
 
     // CARGAS DE REGISTROS DE ENTRADAS
     if ($accion == 'obtenerEquipos') {
-        $esEncargado = isset($_POST['esEncargado']) ? $_POST['esEncargado'] : '';
+        $edita = $_POST['edita'] ?? '';
+
+        $areas = $_POST['areas'];
+        $areasUsuario = '';
         
-        if ($esEncargado === 'Esencargado') {
-            // Mostrar TODOS los registros
+        if ($areas=='TODAS') {
+            $areasUsuario = 'TODAS';
+        }else{
+            //Convertimos el string en un array
+            $arrayAreas = explode(',', $areas);        
+            //Unimos con comillas para SQL
+            $areasUsuario = "'" . implode("','", $arrayAreas) . "'";
+        }
+
+        if ($edita == 'Edita' && !empty($areasUsuario)) {
+
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
                         ent.fecha_promesa_entrega AS fecha_compromiso, 
                         ent.fecha_real_entrada,
@@ -171,14 +183,27 @@ header('Content-Type: application/json');
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
                         CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio,
-                        CASE WHEN ent.fecha_real_entrada IS NULL THEN NULL
-                            ELSE 
-                            IF (ent.estatus = 'TERMINADO', DATEDIFF(ent.fechaTermino, ent.fecha_real_entrada), 
-                                DATEDIFF(CURDATE(), ent.fecha_real_entrada))
-                        END AS dias_transcurridos
-                    FROM entrada_registros ent                    
-                    ORDER BY ent.fecha_registro DESC";
-            
+                        CASE 
+                            WHEN ent.fecha_real_entrada IS NULL THEN NULL
+                            ELSE IF (ent.estatus = 'TERMINADO', 
+                                DATEDIFF(ent.fechaTermino, ent.fecha_real_entrada), 
+                                DATEDIFF(CURDATE(), ent.fecha_real_entrada)
+                            )
+                        END AS dias_transcurridos,
+                        u.nombre AS capturado_por
+                    FROM entrada_registros ent
+                    LEFT JOIN usuarios u ON ent.capturado_por = u.noEmpleado";
+
+            if ($areasUsuario == 'TODAS') {
+                $sql .= " WHERE 1=1"; // Mostrar todas las áreas
+            }else if (!empty($areasUsuario)) {
+                $sql .= " WHERE ent.area IN ($areasUsuario) OR ent.capturado_por = $noEmpleado"; // Filtrar por áreas asignadas al encargado
+            } else {
+                $sql .= " WHERE 1=0"; // Si no tiene áreas, no mostrar nada
+            }
+
+            $sql .= " ORDER BY ent.fecha_registro DESC";
+
             $result = $conn->query($sql);
         } else {
             // Mostrar solo registros donde el ingeniero está asignado
@@ -202,9 +227,11 @@ header('Content-Type: application/json');
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio,
+                        u.nombre AS capturado_por
                     FROM entrada_registros ent
                     INNER JOIN entrada_log_ingenieros eli_filtro ON ent.id_registro = eli_filtro.id_registro
+                    LEFT JOIN usuarios u ON ent.capturado_por = u.noEmpleado
                     WHERE eli_filtro.id_ing = ?
                     AND eli_filtro.estatus = 'ASIGNADO'
                     ORDER BY ent.fecha_promesa_entrega DESC";
@@ -219,11 +246,11 @@ header('Content-Type: application/json');
         
         while ($row = $result->fetch_assoc()) {
             $row['id'] = $row['id_registro']; // Compatibilidad con frontend
-            $row['puede_asignar'] = $esEncargado; // Flag: solo encargados pueden asignar
+            $row['puede_asignar'] = $edita; // Flag: solo encargados pueden editar
             $equipos[] = $row;
         }
         
-        if (!$esEncargado) {
+        if (!$edita) {
             $stmt->close();
         }
         header('Content-Type: application/json');

@@ -132,137 +132,137 @@
         </div>
     </div>
     
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        cargarNotificaciones(false);
-        setInterval(function() {
+    <script>        
+        document.addEventListener('DOMContentLoaded', function() {
             cargarNotificaciones(false);
-        }, 30000);
-    });
+            setInterval(function() {
+                cargarNotificaciones(false);
+            }, 30000);
+        });
 
-    //Funcion para leer cookies
-    function getCookie(name) {
-        let value = "; " + document.cookie;
-        let parts = value.split("; " + name + "=");
-        if (parts.length === 2) return parts.pop().split(";").shift();
-        return null; // Si no encuentra la cookie, retorna null
-    }
+        //Funcion para leer cookies
+        function getCookie(name) {
+            let value = "; " + document.cookie;
+            let parts = value.split("; " + name + "=");
+            if (parts.length === 2) return parts.pop().split(";").shift();
+            return null; // Si no encuentra la cookie, retorna null
+        }
 
-    function escapeHtml(texto) {
-        return String(texto || '')
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            .replace(/"/g, '&quot;')
-            .replace(/'/g, '&#039;');
-    }
+        function escapeHtml(texto) {
+            return String(texto || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
 
-    function limpiarStackNotificaciones() {
-        $('#notificationStack').empty();
-    }
+        function limpiarStackNotificaciones() {
+            $('#notificationStack').empty();
+        }
 
-    // Función para renderizar una notificación flotante
-    function renderNotificacionFlotante(notificacion) {
-        var stack = $('#notificationStack');
-        var iniciales = escapeHtml(notificacion.iniciales || 'NA');
-        var nota = escapeHtml(notificacion.nota || notificacion.mensaje || 'Sin nota');
-        var accion = escapeHtml(notificacion.accion || '');
-        var fecha = escapeHtml(notificacion.fecha_actualizacion || notificacion.fecha || '');
-        var id = parseInt(notificacion.id, 10) || 0;
-        var idRegistro = parseInt(notificacion.id_registro_referencia, 10) || 0;
+        // Función para renderizar una notificación flotante
+        function renderNotificacionFlotante(notificacion) {
+            var stack = $('#notificationStack');
+            var iniciales = escapeHtml(notificacion.iniciales || 'NA');
+            var nota = escapeHtml(notificacion.nota || notificacion.mensaje || 'Sin nota');
+            var accion = escapeHtml(notificacion.accion || '');
+            var fecha = escapeHtml(notificacion.fecha_actualizacion || notificacion.fecha || '');
+            var id = parseInt(notificacion.id, 10) || 0;
+            var idRegistro = parseInt(notificacion.id_registro_referencia, 10) || 0;
 
-        var html = '';
-        html += '<div class="toast show border-0 shadow-sm mb-2" data-notificacion-id="' + id + '" role="alert" aria-live="assertive" aria-atomic="true">';
-        html += '  <div class="toast-body p-2">';
-        html += '      <div class="d-flex justify-content-between align-items-start gap-4">';
-        html += '          <div class="d-flex align-items-start gap-4">';
-        html += '              <span class="badge rounded-pill bg-primary mt-1">' + iniciales + ' - ' + notificacion.accion + '</span>';
-        html += '              <div>';
-        html += '                  <div class="small text-dark fw-semibold">' + nota + '</div>';
-        html += '                  <div class="small text-muted">' + fecha + '</div>';
-        html += '              </div>';
-        html += '          </div>';
-        html += '          <button class="btn btn-sm btn-outline-success" title="Marcar como leída" aria-label="Marcar como leída" onclick="marcarNotificacionLeida(' + id + ', ' + idRegistro + ')">';
-        html += '              <i class="fas fa-check"></i>';
-        html += '          </button>';
-        html += '      </div>';
-        html += '  </div>';
-        html += '</div>';
+            var html = '';
+            html += '<div class="toast show border-0 shadow-sm mb-2" data-notificacion-id="' + id + '" role="alert" aria-live="assertive" aria-atomic="true">';
+            html += '  <div class="toast-body p-2">';
+            html += '      <div class="d-flex justify-content-between align-items-start gap-4">';
+            html += '          <div class="d-flex align-items-start gap-4">';
+            html += '              <span class="badge rounded-pill bg-primary mt-1">' + iniciales + ' - ' + notificacion.accion + '</span>';
+            html += '              <div>';
+            html += '                  <div class="small text-dark fw-semibold">' + nota + '</div>';
+            html += '                  <div class="small text-muted">' + fecha + '</div>';
+            html += '              </div>';
+            html += '          </div>';
+            html += '          <button class="btn btn-sm btn-outline-success" title="Marcar como leída" aria-label="Marcar como leída" onclick="marcarNotificacionLeida(' + id + ', ' + idRegistro + ')">';
+            html += '              <i class="fas fa-check"></i>';
+            html += '          </button>';
+            html += '      </div>';
+            html += '  </div>';
+            html += '</div>';
 
-        var toast = $(html);
-        stack.append(toast);
+            var toast = $(html);
+            stack.append(toast);
 
-        setTimeout(function() {
-            toast.fadeOut(10000, function() {
-                $(this).remove();
-            });
-        }, 5000);
-    }
+            setTimeout(function() {
+                toast.fadeOut(10000, function() {
+                    $(this).remove();
+                });
+            }, 5000);
+        }
 
-    function mostrarNotificacionesFlotantes() {
-        cargarNotificaciones(true);
-    }
+        function mostrarNotificacionesFlotantes() {
+            cargarNotificaciones(true);
+        }
 
-    function cargarNotificaciones(mostrarFlotantes) {
-        var badge = $('#badgeNotificaciones');
-        $.ajax({
-            url: 'acciones_notificaciones.php',
-            method: 'POST',
-            data: { accion: 'cargarNotificaciones' },
-            dataType: 'json',
-            success: function(response) {
-                if (response.success) {
-                    var notificaciones = response.notificaciones;
-                    var total = parseInt(response.total || 0, 10);
+        function cargarNotificaciones(mostrarFlotantes) {
+            var badge = $('#badgeNotificaciones');
+            $.ajax({
+                url: 'acciones_notificaciones.php',
+                method: 'POST',
+                data: { accion: 'cargarNotificaciones' },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.success) {
+                        var notificaciones = response.notificaciones;
+                        var total = parseInt(response.total || 0, 10);
 
-                    if (total > 0) {
-                        badge.removeClass('d-none').text(total > 99 ? '99+' : total);
-                    } else {
-                        badge.addClass('d-none').text('0');
-                    }
-
-                    if (mostrarFlotantes === true) {
-                        limpiarStackNotificaciones();
-                        if (notificaciones.length > 0) {
-                            notificaciones.forEach(function(notificacion) {
-                                renderNotificacionFlotante(notificacion);
-                            });
+                        if (total > 0) {
+                            badge.removeClass('d-none').text(total > 99 ? '99+' : total);
                         } else {
-                            renderNotificacionFlotante({
-                                id: 0,
-                                iniciales: 'OK',
-                                nota: 'No tienes nuevas notificaciones.',
-                                fecha_actualizacion: ''
-                            });
+                            badge.addClass('d-none').text('0');
+                        }
+
+                        if (mostrarFlotantes === true) {
+                            limpiarStackNotificaciones();
+                            if (notificaciones.length > 0) {
+                                notificaciones.forEach(function(notificacion) {
+                                    renderNotificacionFlotante(notificacion);
+                                });
+                            } else {
+                                renderNotificacionFlotante({
+                                    id: 0,
+                                    iniciales: 'OK',
+                                    nota: 'No tienes nuevas notificaciones.',
+                                    fecha_actualizacion: ''
+                                });
+                            }
                         }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function marcarNotificacionLeida(idNotificacion, idRegistro) {
-        $.ajax({
-            url: 'acciones_notificaciones.php',
-            method: 'POST',
-            dataType: 'json',
-            data: {
-                accion: 'marcarLeida',
-                idNotificacion: idNotificacion
-            },
-            success: function(response) {
-                if (response.success) {
-                    $('[data-notificacion-id="' + idNotificacion + '"]').fadeOut(200, function() {
-                        $(this).remove();
-                    });
-                    cargarNotificaciones(false);
-                    if (parseInt(idRegistro, 10) > 0) {
-                        window.location.href = 'entradaTareas.php?id=' + parseInt(idRegistro, 10);
+        function marcarNotificacionLeida(idNotificacion, idRegistro) {
+            $.ajax({
+                url: 'acciones_notificaciones.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'marcarLeida',
+                    idNotificacion: idNotificacion
+                },
+                success: function(response) {
+                    if (response.success) {
+                        $('[data-notificacion-id="' + idNotificacion + '"]').fadeOut(200, function() {
+                            $(this).remove();
+                        });
+                        cargarNotificaciones(false);
+                        if (parseInt(idRegistro, 10) > 0) {
+                            window.location.href = 'entradaTareas.php?id=' + parseInt(idRegistro, 10);
+                        }
                     }
                 }
-            }
-        });
-    }
+            });
+        }
     </script>
 </nav>
 <!-- End of Topbar -->

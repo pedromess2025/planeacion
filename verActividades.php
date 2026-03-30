@@ -97,11 +97,11 @@
                                 <option value="FIX">FIX Fixtures</option>
                                 <option value="AM">AM Dimensional Sitio</option>
                                 <option value="DU">DU Servicios Dureza</option>
-                                <option value="EL">EL Servicios Electrica</option>
+                                <option value="EL">EL Servicios Eléctrica</option>
                                 <option value="TE">TE Servicios Temperatura</option>
-                                <option value="PR">PR Servicios Presion</option>
+                                <option value="PR">PR Servicios Presión</option>
                                 <option value="QU">QU Medidor de PH</option>
-                                <option value="ELC">ELC Electrica</option>
+                                <option value="ELC">ELC Eléctrica</option>
                                 <option value="TI">TI Temperatura</option>
                                 <option value="TEM">TEM Temperatura</option>
                                 <option value="CRF">CRF Servicios Ingenieria Inversa</option>
@@ -116,7 +116,7 @@
                                 <option value="D">D D</option>
                                 <option value="DINL">DINL Dimensional SLP</option>
                                 <option value="DMTY">DMTY Dimensional MTY</option>
-                                <option value="ELSL">ELSL Electrica SLP</option>
+                                <option value="ELSL">ELSL Eléctrica SLP</option>
                                 <option value="HU">HU Humedad</option>
                                 <option value="II">II Ingenieria Inversa</option>
                                 <option value="LDISL">LDISL Dimensional SLP</option>

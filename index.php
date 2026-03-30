@@ -96,10 +96,10 @@
                                                     <option value="MITUTOYO">Servicios Mitutoyo</option>
                                                     <option value="DUREZA">Servicios Dureza</option>
                                                     <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                                    <option value="ELECTRICA">Servicios Electrica</option>
+                                                    <option value="ELECTRICA">Servicios Eléctrica</option>
                                                     <option value="TEMPERATURA">Servicios Temperatura</option>
-                                                    <option value="PRESION">Servicios Presion</option>
-                                                    <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                    <option value="PRESION">Servicios Presión</option>
+                                                    <option value="APLICACIONES">Servicios APP Aplicaciones</option>
                                                     <option value="MT">Servicios MT</option>
                                                     <option value="MTS">Servicios MTS</option>
                                                     <option value="ZEISS">Servicios Zeiss</option>
@@ -144,7 +144,7 @@
                                                 <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
                                             </div>
                                             <div class="col-sm-4">
-                                                <label for="slcAutomovil">Automovil</label>
+                                                <label for="slcAutomovil">Automóvil</label>
                                                 <div id="DivAutomovil" name="DivAutomovil">
                                                     <select id="slcAutomovil" name="slcAutomovil" class="form-select">
                                                         <option value="">Selecciona...</option>
@@ -236,7 +236,7 @@
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">¿Estas seguro?</div>
+                <div class="modal-body">¿Estás seguro?</div>
                 <div class="modal-footer">
                     <button class="btn btn-info" type="button" data-dismiss="modal">Cancelar</button>
                     <a class="btn btn-danger" href="logout">Salir</a>

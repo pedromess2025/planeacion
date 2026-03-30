@@ -56,7 +56,7 @@ if ($accion === 'registrarNotificacionEntrada') {
     $archivo = 'entradaTareas';
 
     if ($noEmpleado === '' || !ctype_digit($noEmpleado)) {
-        echo json_encode(['success' => false, 'message' => 'Tu sesion expiro, por favor inicia sesion nuevamente']);
+        echo json_encode(['success' => false, 'message' => 'Tu sesión expiró, por favor inicia sesión nuevamente']);
         exit;
     }
     if ($idRegistroReferencia <= 0) {

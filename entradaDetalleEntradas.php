@@ -302,7 +302,7 @@
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">¿Estas seguro?</div>
+                <div class="modal-body">¿Estás seguro?</div>
                 <div class="modal-footer">
                     <button class="btn btn-info" type="button" data-dismiss="modal">Cancelar</button>
                     <a class="btn btn-danger" href="logout">Salir</a>
@@ -389,6 +389,28 @@
         let modalModificarInstance = null;
         let modalEditarInstance = null;
         let modalReprogramarInstance = null;
+        let accesoEspecialInfoEqReparacion = null;
+
+        async function obtenerAccesoInfoEqReparacion() {
+            if (accesoEspecialInfoEqReparacion !== null) {
+                return accesoEspecialInfoEqReparacion;
+            }
+
+            const respuesta = await validaOpciones('entradasEq', 'verInfoEqReparacion');
+            const data = (respuesta && respuesta.status === 'success' && Array.isArray(respuesta.data) && respuesta.data[0])
+                ? respuesta.data[0]
+                : null;
+
+            const cuantos = data ? parseInt(data.cuantos) : 0;
+            const areaPermitida = data && data.inf_adicional ? String(data.inf_adicional).trim() : '';
+
+            accesoEspecialInfoEqReparacion = {
+                tieneAcceso: cuantos > 0,
+                areaPermitida: areaPermitida
+            };
+
+            return accesoEspecialInfoEqReparacion;
+        }
 
         // Función para inicializar DataTable
         function inicializarTablaEquipos() {
@@ -1026,8 +1048,10 @@
         }
         
         // Función para ver ficha del equipo
-        function verFicha(equipoId) {
-            window.location.href = 'entradaTareas.php?id=' + equipoId;
+        async function verFicha(equipoId) {
+            const accesoInfoEqReparacion = await obtenerAccesoInfoEqReparacion();
+            const vista = accesoInfoEqReparacion.tieneAcceso ? '&vista=solo_log' : '';
+            window.location.href = 'entradaTareas.php?id=' + equipoId + vista;
         }
 
         // Función para obtener el valor de una cookie

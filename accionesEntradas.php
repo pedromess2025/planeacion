@@ -15,6 +15,7 @@ header('Content-Type: application/json');
     $fecha_estimada  = isset($_POST['fecha_estimada']) ? $_POST['fecha_estimada'] : '';
     $observaciones = isset($_POST['observaciones']) ? $_POST['observaciones'] : '';
     $demo = isset($_POST['demo']) ? 1 : 0; // Demo: 1 si está marcado, 0 si no
+    $id_activo = isset($_POST['activo_demo']) ? intval($_POST['activo_demo']) : null; // ID del activo demo seleccionado
     $contacto_nombre = isset($_POST['nombre_cliente']) ? $_POST['nombre_cliente'] : '';
     $telefono = isset($_POST['contacto']) ? $_POST['contacto'] : '';
     $correo_cliente = isset($_POST['correo_cliente']) ? $_POST['correo_cliente'] : '';
@@ -56,11 +57,11 @@ header('Content-Type: application/json');
 
     // REGISTRO EQUIPOS
     if ($accion == 'nuevaEntrada') {
-        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae, fecha_real_entrada, ov_ot, capturado_por)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?, ?)";
+        $sqlInsert = "INSERT INTO entrada_registros (cliente, area, marca, modelo, no_serie, notas_recepcion, fecha_promesa_entrega, estatus, fecha_registro, fechaTermino, demo, contacto_nombre, contacto, id_ing_trae, fecha_real_entrada, ov_ot, capturado_por, id_activo)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), NULL, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sqlInsert);
-        $stmt->bind_param("ssssssssississi", 
-            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae, $fecha_real_entrada, $ov_ot, $noEmpleado
+        $stmt->bind_param("ssssssssississii",
+            $cliente, $area, $marca, $modelo, $no_serie, $diagnostico_inicial, $fecha_estimada, $estatus, $demo, $contacto_nombre, $contacto, $id_ing_trae, $fecha_real_entrada, $ov_ot, $noEmpleado, $id_activo
         );
         
         if ($stmt->execute()) {
@@ -68,7 +69,15 @@ header('Content-Type: application/json');
             $errorFotos = false;
             $errorIngenieros = false;
 
-            // 1. REGISTRAR INGENIEROS EN TABLA entrada_log_ingenieros
+            // 1. MARCAR ACTIVO EN REPARACIÓN si es una entrada demo con activo seleccionado
+            if ($demo === 1 && $id_activo > 0) {
+                $stmtActivo = $conn->prepare("UPDATE mess_activos_fijos.activos SET estatus = 2 WHERE id = ?");
+                $stmtActivo->bind_param('i', $id_activo);
+                $stmtActivo->execute();
+                $stmtActivo->close();
+            }
+
+            // 2. REGISTRAR INGENIEROS EN TABLA entrada_log_ingenieros
             if (!empty($ingenieros)) {
                 $sqlIngeniero = "INSERT INTO entrada_log_ingenieros (id_registro, id_ing, fecha, estatus, id_asigno) VALUES (?, ?, NOW(), 'ASIGNADO', ?)";
                 $stmtIng = $conn->prepare($sqlIngeniero);
@@ -205,6 +214,37 @@ header('Content-Type: application/json');
             $sql .= " ORDER BY ent.fecha_registro DESC";
 
             $result = $conn->query($sql);
+        } else if ($accesoInfoEqReparacion > 0 && $areaPermitidaInfoEqReparacion !== '') {
+            // Mostrar registros de la area permitida por acceso especial
+            $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie,
+                        ent.fecha_promesa_entrega AS fecha_compromiso,
+                        ent.fecha_real_entrada,
+                        ent.notas_recepcion AS diagnostico_inicial,
+                        ent.estatus,
+                        ent.num_reprogramaciones,
+                        ent.fecha_reprogramacion,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT eli.id_ing SEPARATOR ',')
+                            FROM entrada_log_ingenieros eli
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS ids_ingenieros,
+                        (
+                            SELECT GROUP_CONCAT(DISTINCT us.nombre SEPARATOR ', ')
+                            FROM entrada_log_ingenieros eli
+                            INNER JOIN usuarios us ON (us.id = eli.id_ing OR us.id_usuario = eli.id_ing)
+                            WHERE eli.id_registro = ent.id_registro
+                            AND eli.estatus = 'ASIGNADO'
+                        ) AS nombres_ingenieros,
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                    FROM entrada_registros ent
+                    WHERE ent.area = ?
+                    ORDER BY ent.fecha_promesa_entrega DESC";
+
+            $stmt = $conn->prepare($sql);
+            $stmt->bind_param('s', $areaPermitidaInfoEqReparacion);
+            $stmt->execute();
+            $result = $stmt->get_result();
         } else {
             // Mostrar solo registros donde el ingeniero está asignado
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 
@@ -374,6 +414,70 @@ header('Content-Type: application/json');
         
         header('Content-Type: application/json');
         echo json_encode(['success' => true, 'data' => $areas]);
+        exit;
+    }
+
+    // CARGAR ACTIVOS PARA MODO DEMO
+    if ($accion == 'obtenerActivosDemo') {
+        $sql = "SELECT id, folio, descripcion, IFNULL(marca, 'Sin marca') AS marca, IFNULL(modelo, 'Sin modelo') AS modelo, IFNULL(no_serie, 'Sin serie') AS no_serie
+                FROM mess_activos_fijos.activos
+                WHERE IFNULL(descripcion, '') <> ''
+                AND estatus = 1 AND prestamo = 1
+                ORDER BY descripcion ASC";
+        $result = $conn->query($sql);
+
+        if (!$result) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No se pudo consultar el catálogo de activos.']);
+            exit;
+        }
+
+        $activos = [];
+        while ($row = $result->fetch_assoc()) {
+            $activos[] = $row;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $activos]);
+        exit;
+    }
+
+    // CARGAR DETALLE DE ACTIVO PARA AUTOLLENADO EN MODO DEMO
+    if ($accion == 'obtenerActivoDemoDetalle') {
+        $id_activo = isset($_POST['id_activo']) ? intval($_POST['id_activo']) : 0;
+
+        if ($id_activo <= 0) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'ID de activo inválido.']);
+            exit;
+        }
+
+        $sql = "SELECT *
+                FROM mess_activos_fijos.activos
+                WHERE id = ?
+                LIMIT 1";
+        $stmtActivo = $conn->prepare($sql);
+
+        if (!$stmtActivo) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'No se pudo preparar la consulta del activo.']);
+            exit;
+        }
+
+        $stmtActivo->bind_param('i', $id_activo);
+        $stmtActivo->execute();
+        $resultActivo = $stmtActivo->get_result();
+        $activo = $resultActivo ? $resultActivo->fetch_assoc() : null;
+        $stmtActivo->close();
+
+        if (!$activo) {
+            header('Content-Type: application/json');
+            echo json_encode(['success' => false, 'message' => 'Activo no encontrado.']);
+            exit;
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'data' => $activo]);
         exit;
     }
 
@@ -722,7 +826,7 @@ header('Content-Type: application/json');
             $row = $result->fetch_assoc();
             echo json_encode(['success' => true, 'url_pdf' => $row['ruta']]);
         } else {
-            echo json_encode(['success' => false, 'message' => 'No se encontró el certificado PDF.']);
+            echo json_encode(['success' => false, 'message' => 'No se encontró el certificado.']);
         }
         $stmt->close();
         exit;

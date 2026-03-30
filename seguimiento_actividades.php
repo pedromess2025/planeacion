@@ -44,7 +44,7 @@
                                             
                                         </div>
                                         <div class="col-sm-8">                                            
-                                                <p class="fs-4"><b>SEGUIMIENTO ACTIVIDADES</b></p>                                            
+                                                <p class="fs-4"><b>SEGUIMIENTO DE ACTIVIDADES</b></p>                                            
                                         </div>
                                     </div>
                                     <hr>
@@ -60,10 +60,10 @@
                                                 <option value="MITUTOYO">Servicios Mitutoyo</option>
                                                 <option value="DUREZA">Servicios Dureza</option>
                                                 <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                                <option value="ELECTRICA">Servicios Electrica</option>
+                                                <option value="ELECTRICA">Servicios Eléctrica</option>
                                                 <option value="TEMPERATURA">Servicios Temperatura</option>
-                                                <option value="PRESION">Servicios Presion</option>
-                                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                <option value="PRESION">Servicios Presión</option>
+                                                <option value="APLICACIONES">Servicios APP Aplicaciones</option>
                                                 <option value="MT">Servicios MT</option>
                                                 <option value="MTS">Servicios MTS</option>
                                                 <option value="ZEISS">Servicios Zeiss</option>
@@ -92,14 +92,14 @@
                                                 <option value="">Selecciona...</option>
                                                 <option value="Pendientedeinformacion">Pendiente de información</option>
                                                 <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                                <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                                 <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                 <option value="Cancelada">Cancelar</option>
                                                 <option value="Cerrada">Cerrar</option>
                                             </select>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="filtro-region">Region</label>                                            
+                                            <label for="filtro-region">Región</label>                                            
                                             <select id="filtro-region" name="region[]" class="form-select  mr-1" multiple="multiple">
                                                 <option value="">Selecciona...</option>
                                             </select>                                                                                                
@@ -114,13 +114,13 @@
                                                 <thead class="table-primary">
                                                     <tr>                                                        
                                                         <th>Ingeniero</th>
-                                                        <th>Area</th>
+                                                        <th>Área</th>
                                                         <th>OT</th>
                                                         <th>Fecha de Captura</th>
                                                         <th>Fecha Planeada</th>                                                        
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>
-                                                        <th>Vehiculo</th>
+                                                        <th>Vehículo</th>
                                                         <th>Estatus</th>
                                                         <th>Acciones</th>
                                                     </tr>
@@ -212,7 +212,7 @@
                     </div>
                     <div class="row card-header border-left-primary">                                           
                         <div class="col-sm-6">
-                            <label for="slcAutomovil">Automovil</label>
+                            <label for="slcAutomovil">Automóvil</label>
                             <div id="DivAutomovil" name="DivAutomovil">
                                 <select id="slcAutomovil" name="slcAutomovil" class="form-select">
                                     <option value="">Selecciona...</option>
@@ -226,7 +226,7 @@
                                     <option value="">Selecciona...</option>
                                     <option value="Pendientedeinformacion">Pendiente de información</option>
                                     <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                    <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                    <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                     <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                     <option value="Cancelada">Cancelar</option>
                                     <option value="Cerrada">Cerrar</option>

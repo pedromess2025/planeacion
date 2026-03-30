@@ -42,7 +42,7 @@
                 <div class="container py-4">
                     <div class="row">
                         <!-- DETALLE DEL EQUIPO -->
-                        <div class="col-lg-5">
+                        <div id="colDetalleEquipo" class="col-lg-5">
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-start mb-4">
@@ -50,7 +50,7 @@
                                             <small class="text-muted text-uppercase fw-bold">Folio de Servicio</small>
                                             <h6 id="folio" class="fw-bold text-primary"></h6>
                                         </div>
-                                        <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="generarPDF()">
+                                        <button type="button" id="btnPdfResumen" class="btn btn-outline-danger btn-sm mt-3" onclick="generarPDF()">
                                             <i class="fas fa-file-pdf"></i>PDF Resumen
                                         </button>
                                         <button type="button" class="btn btn-outline-warning btn-sm mt-3" onclick="history.back()">
@@ -95,7 +95,7 @@
                                         <i class="fas fa-image"></i> Fotos entrada
                                     </button>
                                     <!-- MOSTRAR PDF -->
-                                    <button type="button" class="btn btn-outline-danger btn-sm mt-3" onclick="verPDF()">
+                                    <button type="button" id="btnReporteServicio" class="btn btn-outline-danger btn-sm mt-3" onclick="verPDF()">
                                         <i class="fas fa-file-pdf"></i>Reporte Servicio
                                     </button>
                                 </div>
@@ -103,7 +103,7 @@
                         </div>
 
                         <!-- FORMULARIO DE ACTUALIZACION DE TRABAJO -->
-                        <div class="col-lg-7">
+                        <div id="colActualizacionTrabajo" class="col-lg-7">
                             <div class="card card-order shadow-sm h-100">
                                 <div class="card-body">
                                     <h5 class="fw-bold mb-4">Actualización de Trabajo</h5>
@@ -265,20 +265,65 @@
 
     <script>
         let notasSeguimiento = []; // Variable global para guardar las notas
+        const paramsPagina = new URLSearchParams(window.location.search);
+        const esVistaSoloLog = paramsPagina.get('vista') === 'solo_log';
         
-        $(document).ready(function() {
+        $(document).ready(async function() {
             $('.select2').select2({
                 width: '100%'
             });
 
+            if (esVistaSoloLog) {
+                const accesoPermitido = await tieneAccesoInfoEqReparacion();
+
+                if (!accesoPermitido) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sin acceso',
+                        text: 'No tienes permisos para ver esta vista.',
+                        confirmButtonText: 'Aceptar'
+                    }).then(() => {
+                        window.location.href = 'entradaDetalleEntradas.php';
+                    });
+                    return;
+                }
+
+                activarVistaSoloLog();
+            }
+
             inicializaCamposRefacciones();
 
             // Obtener ID del equipo desde URL
-            const params = new URLSearchParams(window.location.search);
-            const id_registro = params.get('id');
+            const id_registro = paramsPagina.get('id');
+            if (!id_registro) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Atención',
+                    text: 'No se encontró el registro solicitado.',
+                    confirmButtonText: 'Aceptar'
+                }).then(() => {
+                    window.location.href = 'entradaDetalleEntradas.php';
+                });
+                return;
+            }
+
             cargarDetalleEquipo(id_registro);
             
         });
+
+        async function tieneAccesoInfoEqReparacion() {
+            const respuesta = await validaOpciones('entradasEq', 'verInfoEqReparacion');
+            const cuantos = (respuesta && respuesta.status === 'success')
+                ? parseInt(respuesta.data[0].cuantos)
+                : 0;
+
+            return cuantos > 0;
+        }
+
+        function activarVistaSoloLog() {
+            $('#colActualizacionTrabajo').hide();
+            $('#btnPdfResumen').hide();
+        }
 
         // Función para cargar los detalles del equipo
         function cargarDetalleEquipo(id_registro) {
@@ -457,6 +502,16 @@
 
         // Funcion para guardar cambios
         function guardarCambios() {
+            if (esVistaSoloLog) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Solo lectura',
+                    text: 'Esta vista solo permite consultar la información del equipo.',
+                    confirmButtonText: 'Aceptar'
+                });
+                return false;
+            }
+
             const archivoPdf = $('input[name="reporte_pdf"]')[0];
             const estatusActual = String($('select[name="nuevo_estatus"]').val() || '').toUpperCase();
 

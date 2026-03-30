@@ -123,7 +123,7 @@
                         <span aria-hidden = "true">X</span>
                     </button>
                 </div>
-                <div class = "modal-body"><h5><b>¿Estas seguro?</b></h5></div>
+                <div class = "modal-body"><h5><b>¿Estás seguro?</b></h5></div>
                 <div class = "modal-footer">
                     <button class = "btn btn-warning" type = "button" data-dismiss = "modal">Cancelar</button>
                     <a class = "btn btn-danger" href = "logout">Salir</a>

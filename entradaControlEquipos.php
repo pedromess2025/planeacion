@@ -46,30 +46,48 @@
 
                             <div class="card card-minimal shadow-sm p-2">
                                 <form id="entradaForm" method="POST" enctype="multipart/form-data">
-                                    <div class="row mb-4">
-                                        <div class="col-md-0">
-                                            <div class="form-check form-switch">                                                
-                                                <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">                                                
-                                                <label for="switchCheckDefault" class="form-label small text-uppercase fw-bold text-muted">Demo</label>
+                                    <div class="row mb-3">
+                                        <div class="col-md-auto">
+                                            <div class="border rounded bg-light px-3 py-2 h-100 d-flex align-items-center">
+                                                <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
+                                                    <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">
+                                                    <label for="switchCheckDefault" class="form-check-label small text-uppercase fw-bold text-muted mb-0">Demo</label>
+                                                </div>
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div class="row mb-4">
                                         <div class="col-md-3" id="grupoCliente">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Cliente</label>
-                                            <input type="text" id="cliente" name="cliente" class="form-control" placeholder="Nombre de la empresa" required>
+                                            <input type="text" id="cliente" name="cliente" class="form-control form-control-sm" placeholder="Nombre de la empresa" required>
+                                        </div>
+                                        <div class="col-md-4" id="grupoActivoDemo" style="display: none;">
+                                            <label for="slcActivoDemo" class="form-label small text-uppercase fw-bold text-muted">Activo</label>
+                                            <select id="slcActivoDemo" name="activo_demo" class="form-select" disabled>
+                                                <option value="0">Selecciona...</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5" id="grupoMensajeActivoDemo" style="display: none;">
+                                            <label class="form-label small d-block">&nbsp;</label>
+                                            <div class="alert alert-primary mb-0 py-2" role="alert" style="font-size: 14px;">
+                                                Si no localiza el equipo que busca, puede registrarlo en Activos.
+                                            </div>
                                         </div>
                                         <div class="col-md-3 campo-contacto" id="grupoNombreContacto">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Nombre del Contacto</label>
-                                            <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-control" placeholder="Nombre del contacto" required>
+                                            <input type="text" id="nombre_cliente" name="nombre_cliente" class="form-control form-control-sm" placeholder="Nombre del contacto" required>
                                         </div>
                                         <div class="col-md-3 campo-contacto" id="grupoTelefonoContacto">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Teléfono de Contacto</label>
-                                            <input type="text" id="contacto" name="contacto" class="form-control" placeholder="Teléfono" required>
+                                            <input type="text" id="contacto" name="contacto" class="form-control form-control-sm" placeholder="Teléfono" required>
                                         </div>
                                         <div class="col-md-3 campo-contacto" id="grupoCorreoContacto">
                                             <label class="form-label    small text-uppercase fw-bold text-muted">Correo de Contacto</label> 
-                                            <input type="email" id="correo_cliente" name="correo_cliente" class="form-control" placeholder="Correo electrónico" required>
+                                            <input type="email" id="correo_cliente" name="correo_cliente" class="form-control form-control-sm" placeholder="Correo electrónico" required>
                                         </div>                                        
                                     </div>
+
                                     <div class="row mb-4">
                                         <div class="col-sm-4 mb-0">
                                             <label for="slcRespoonsable" class="form-label small text-uppercase fw-bold text-muted">Ingeniero</label>
@@ -110,15 +128,15 @@
                                     <div class="row mb-4">
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Marca</label>
-                                            <input type="text" name="marca" class="form-control" placeholder="Marca" required>
+                                            <input type="text" id="marca" name="marca" class="form-control form-control-sm" placeholder="Marca" required>
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Modelo</label>
-                                            <input type="text" name="modelo" class="form-control" placeholder="Modelo">
+                                            <input type="text" id="modelo" name="modelo" class="form-control form-control-sm" placeholder="Modelo">
                                         </div>
                                         <div class="col-md-4">
                                             <label class="form-label small text-uppercase fw-bold text-muted">No. Serie</label>
-                                            <input type="text" name="no_serie" class="form-control" placeholder="N/S">
+                                            <input type="text" id="no_serie" name="no_serie" class="form-control form-control-sm" placeholder="N/S">
                                         </div>
                                     </div>
 
@@ -130,20 +148,20 @@
                                     <div class="row mb-4">
                                         <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Fecha de Entrada</label>
-                                            <input type="date" name="fecha_real_entrada" class="form-control" required>
+                                            <input type="date" name="fecha_real_entrada" class="form-control form-control-sm" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">Promesa de Entrega (Estimado)</label>
-                                            <input type="date" name="fecha_estimada" class="form-control" required>
+                                            <input type="date" name="fecha_estimada" class="form-control form-control-sm" required>
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label small text-uppercase fw-bold text-muted">OV / OT</label>
-                                            <input type="text" name="ov_ot" class="form-control" placeholder="S/R">
+                                            <input type="text" name="ov_ot" class="form-control form-control-sm" placeholder="S/R">
                                         </div>
                                         <div class="col-md-3">
                                             <label class="form-label fw-bold small text-muted">Fotos del Equipo</label>
                                             <input type="file" id="fotos" name="fotos[]" class="form-control" multiple accept="image/*" data-max-files="3" required>
-                                            <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado. Máximo 3 fotos. </small>
+                                            <small class="text-muted">Puedes seleccionar varias fotos del equipo reparado. Máximo 3 fotos.</small>
                                         </div>
                                     </div>
                                     <div class="row mb-4">
@@ -197,7 +215,7 @@
                         <span aria-hidden="true">×</span>
                     </button>
                 </div>
-                <div class="modal-body">¿Estas seguro?</div>
+                <div class="modal-body">¿Estás seguro?</div>
                 <div class="modal-footer">
                     <button class="btn btn-info" type="button" data-dismiss="modal">Cancelar</button>
                     <a class="btn btn-danger" href="logout">Salir</a>
@@ -233,11 +251,81 @@
             correo_cliente: ''
         };
 
+        function cargarActivosDemo() {
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { accion: 'obtenerActivosDemo' },
+                success: function(response) {
+                    const select = $('#slcActivoDemo');
+                    select.empty();
+                    select.append($('<option></option>').attr('value', '0').text('Selecciona activo...'));
+
+                    if (!response || !response.success || !Array.isArray(response.data)) {
+                        return;
+                    }
+
+                    response.data.forEach(function(activo) {
+                        const texto =(activo.descripcion + ' - ' + activo.marca || ('Activo #' + activo.id));
+
+                        select.append(
+                            $('<option></option>')
+                                .attr('value', activo.id)
+                                .text(texto)
+                        );
+                    });
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo cargar el listado de activos demo.',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+
+        function cargarDetalleActivoDemo(idActivo) {
+            if (!idActivo || parseInt(idActivo, 10) <= 0) {
+                return;
+            }
+
+            $.ajax({
+                url: 'accionesEntradas.php',
+                method: 'POST',
+                dataType: 'json',
+                data: {
+                    accion: 'obtenerActivoDemoDetalle',
+                    id_activo: idActivo
+                },
+                success: function(response) {
+                    if (!response || !response.success || !response.data) {
+                        return;
+                    }
+
+                    $('#marca').val(response.data.marca || '');
+                    $('#modelo').val(response.data.modelo || '');
+                    $('#no_serie').val(response.data.no_serie || '');
+                },
+                error: function() {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'No se pudo cargar el detalle del activo seleccionado.',
+                        icon: 'error'
+                    });
+                }
+            });
+        }
+
         function actualizaCamposDemo() {
             const demoActivo = $('#switchCheckDefault').is(':checked');
             const inputCliente = $('#cliente');
             const camposContacto = $('.campo-contacto');
             const inputsContacto = $('#nombre_cliente, #contacto, #correo_cliente');
+            const grupoActivoDemo = $('#grupoActivoDemo');
+            const grupoMensajeActivoDemo = $('#grupoMensajeActivoDemo');
+            const selectActivoDemo = $('#slcActivoDemo');
 
             if (demoActivo) {
                 valoresNoDemo.cliente = inputCliente.val();
@@ -250,6 +338,11 @@
                 inputsContacto.each(function() {
                     $(this).prop('required', false).prop('disabled', true).val('');
                 });
+
+                grupoActivoDemo.show();
+                grupoMensajeActivoDemo.show();
+                selectActivoDemo.prop('disabled', false);
+                cargarActivosDemo();
             } else {
                 inputCliente.prop('readonly', false);
                 if (inputCliente.val() === 'MESS' && valoresNoDemo.cliente) {
@@ -259,6 +352,11 @@
                 $('#nombre_cliente').prop('disabled', false).prop('required', true).val(valoresNoDemo.nombre_cliente || '');
                 $('#contacto').prop('disabled', false).prop('required', true).val(valoresNoDemo.contacto || '');
                 $('#correo_cliente').prop('disabled', false).prop('required', true).val(valoresNoDemo.correo_cliente || '');
+
+                selectActivoDemo.val('0').trigger('change');
+                selectActivoDemo.prop('disabled', true);
+                grupoActivoDemo.hide();
+                grupoMensajeActivoDemo.hide();
             }
         }
         
@@ -275,6 +373,13 @@
 
             $('#switchCheckDefault').on('change', function() {
                 actualizaCamposDemo();
+            });
+
+            $('#slcActivoDemo').on('change', function() {
+                const idActivo = $(this).val();
+                if (parseInt(idActivo, 10) > 0) {
+                    cargarDetalleActivoDemo(idActivo);
+                }
             });
             
             // Validar límite de fotos
@@ -306,6 +411,11 @@
                 });
                 $('#slcIngTrae').select2({
                     placeholder: 'Buscar ingeniero...',
+                    allowClear: true,
+                    width: '100%'
+                });
+                $('#slcActivoDemo').select2({
+                    placeholder: 'Buscar activo demo...',
                     allowClear: true,
                     width: '100%'
                 });

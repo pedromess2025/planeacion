@@ -49,7 +49,7 @@
     <li class="nav-item">
         <a class="nav-link" href="seguimiento_actividades">
             <i class="fas fa-fw fa-list text-gray-400"></i>
-            <span>Seguimiento actividades</span>
+            <span>Seguimiento de actividades</span>
         </a>
     </li>
 
@@ -63,7 +63,7 @@
     <li class="nav-item">
         <a class="nav-link" href="sol_logistica">
             <i class="fas fa-fw fa-car text-gray-400"></i>
-            <span>Solicitudes Logistica</span>
+            <span>Solicitudes Logística</span>
         </a>
     </li>
     <hr class="sidebar-divider my-0 alert-light">

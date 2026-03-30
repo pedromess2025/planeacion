@@ -73,10 +73,10 @@
                                                 <option value="MITUTOYO">Servicios Mitutoyo</option>
                                                 <option value="DUREZA">Servicios Dureza</option>
                                                 <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                                <option value="ELECTRICA">Servicios Electrica</option>
+                                                <option value="ELECTRICA">Servicios Eléctrica</option>
                                                 <option value="TEMPERATURA">Servicios Temperatura</option>
-                                                <option value="PRESION">Servicios Presion</option>
-                                                <option value="APLICACIONES">Servicios APP Aplicaciónes</option>
+                                                <option value="PRESION">Servicios Presión</option>
+                                                <option value="APLICACIONES">Servicios APP Aplicaciones</option>
                                                 <option value="MT">Servicios MT</option>
                                                 <option value="MTS">Servicios MTS</option>
                                                 <option value="ZEISS">Servicios Zeiss</option>
@@ -105,14 +105,14 @@
                                                 <option value="">Selecciona...</option>
                                                 <option value="Pendientedeinformacion">Pendiente de información</option>
                                                 <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                                <option value="Servicioconfirmadoparasuejecucion">Sevicio confirmado para su ejecución</option>
+                                                <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                                 <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                 <option value="Cancelada">Cancelar</option>
                                                 <option value="Cerrada">Cerrar</option>
                                             </select>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="filtro-region">Region</label>                                            
+                                            <label for="filtro-region">Región</label>                                            
                                             <select id="filtro-region" name="region[]" class="form-select  mr-1" multiple="multiple">
                                                 <option value="">Selecciona...</option>
                                             </select>                                                                                                

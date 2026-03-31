@@ -4,6 +4,7 @@ header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
 header('Pragma: no-cache');
 header('Expires: 0');
 header('X-Debug-File: ' . __FILE__);
+
 include 'conn.php';
 
 $noEmpleado = $_POST['noEmpleado'] ?? '';
@@ -11,16 +12,28 @@ $sistema = $_POST['sistema'] ?? '';
 $archivo = $_POST['archivo'] ?? '';
 $idRegistro = $_POST['idRegistro'] ?? '';
 
-if ($noEmpleado === '') {
+// Fuente unica de URL destino por sistema (EDITAR EN CADA MODULO)
+$urlDestinoPorSistema = [
+    'entradasEq' => '/planeacion/entradaTareas',
+];
+
+// Si el sistema no esta mapeado, regresar error explicito
+$urlDestino = $urlDestinoPorSistema[$sistema] ?? '';
+if ($urlDestino === '') {
     echo json_encode([
         'success' => false,
         'status' => 'error',
-        'mensaje' => 'Falta noEmpleado.'
+        'mensaje' => 'Sistema no mapeado para redireccion.',
+        'sistema' => $sistema
     ]);
     exit;
 }
 
-$sql = "SELECT id_usuario, nombre, noEmpleado, rol, correo, departamento, diasdisponibles, TIMESTAMPDIFF(YEAR, fechaIngreso, CURDATE()) AS antiguedad FROM usuarios WHERE noEmpleado = ? AND estatus = 1 LIMIT 1";
+$sql = "SELECT id_usuario, nombre, noEmpleado, rol, correo, departamento, diasdisponibles,
+               TIMESTAMPDIFF(YEAR, fechaIngreso, CURDATE()) AS antiguedad
+        FROM usuarios
+        WHERE noEmpleado = ? AND estatus = 1
+        LIMIT 1";
 $stmt = mysqli_prepare($conn, $sql);
 
 if (!$stmt) {
@@ -76,7 +89,8 @@ if ($resultado && mysqli_num_rows($resultado) === 1) {
         'mensaje' => 'Validacion correcta.',
         'sistema' => $sistema,
         'archivo' => $archivo,
-        'idRegistro' => $idRegistro
+        'idRegistro' => $idRegistro,
+        'urlDestino' => $urlDestino
     ]);
     exit;
 }
@@ -87,4 +101,3 @@ echo json_encode([
     'mensaje' => 'Usuario no valido o inactivo.'
 ]);
 exit;
-?>

@@ -2,6 +2,14 @@
 include("conn.php");
 header('Content-Type: application/json; charset=utf-8');
 
+$accion = isset($_POST['accion']) ? $_POST['accion'] : '';
+$noEmpleado = isset($_COOKIE['noEmpleado']) ? trim($_COOKIE['noEmpleado']) : '';
+$idNotificacion = isset($_POST['idNotificacion']) ? intval($_POST['idNotificacion']) : 0;
+$idRegistroReferencia = isset($_POST['id_registro_referencia']) ? intval($_POST['id_registro_referencia']) : 0;
+$solicita = isset($_POST['solicita']) ? trim((string)$_POST['solicita']) : '';
+$id_usuario_Destino = intval($noEmpleado);
+
+// Función para obtener iniciales de un nombre completo
 function obtenerIniciales($nombreCompleto) {
     $nombreCompleto = trim((string)$nombreCompleto);
     if ($nombreCompleto === '') {
@@ -29,6 +37,7 @@ function obtenerIniciales($nombreCompleto) {
     return $iniciales !== '' ? $iniciales : 'NA';
 }
 
+// Función para formatear fechas en formato corto
 function formatearFechaCorta($fecha) {
     $fecha = trim((string)$fecha);
     if ($fecha === '') {
@@ -43,10 +52,7 @@ function formatearFechaCorta($fecha) {
     return date('d/m/Y H:i', $timestamp);
 }
 
-$accion = isset($_POST['accion']) ? $_POST['accion'] : '';
-$noEmpleado = isset($_COOKIE['noEmpleado']) ? trim($_COOKIE['noEmpleado']) : '';
-$idNotificacion = isset($_POST['idNotificacion']) ? intval($_POST['idNotificacion']) : 0;
-
+// Registrar Notificación para Entrada de Equipo
 if ($accion === 'registrarNotificacionEntrada') {
     $id_seguimiento = isset($_POST['id_seguimiento']) ? intval($_POST['id_seguimiento']) : 0;
     $idRegistroReferencia = isset($_POST['id_registro_referencia']) ? intval($_POST['id_registro_referencia']) : 0;
@@ -112,13 +118,13 @@ if ($accion === 'registrarNotificacionEntrada') {
     exit;
 }
 
+// Validar que noEmpleado es un número entero positivo antes de continuar
 if ($noEmpleado === '' || !ctype_digit($noEmpleado)) {
     echo json_encode(['success' => false, 'message' => 'Cookie noEmpleado inválida']);
     exit;
 }
 
-$id_usuario_Destino = intval($noEmpleado);
-
+// Contar Notificaciones No Leídas
 if ($accion === 'contarNotificaciones') {
     $sqlCuentaNoti = "SELECT COUNT(*) AS total
             FROM notificacion_historial
@@ -203,6 +209,7 @@ if ($accion === 'cargarNotificaciones') {
     exit;
 }
 
+// Marcar Notificación como Leída
 if ($accion === 'marcarLeida') {
     if ($idNotificacion <= 0) {
         echo json_encode(['success' => false, 'message' => 'ID de notificación no válido']);

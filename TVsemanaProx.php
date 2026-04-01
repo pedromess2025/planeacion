@@ -40,13 +40,13 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-xl-12">                                            
-                                            <table id="TSolAbiertas" class="table table-light table-hover" style="width:100%">
-                                                <thead>
-                                                    <tr>                                                        
+                                            <table id="TSolAbiertas" class="tabletable-hover" style="width:100%">
+                                                <thead class="table-success">
+                                                    <tr>
+                                                        <th>Fecha Planeada</th>
                                                         <th>Ingeniero</th>
                                                         <th>Área</th>
-                                                        <th>OT</th>                                                        
-                                                        <th>Fecha Planeada</th>                                                        
+                                                        <th>OT</th>                                                                                                                                                                        
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>                                                        
                                                         <th>Estatus</th>
@@ -143,12 +143,12 @@
 
                     data.forEach(function(item) {
                         table.row.add([
-                            item.ingeniero,
+                            item.nombre + " " + item.nombre2 + " " + item.nombre3,
                             item.area,
-                            item.ot,                            
-                            item.fecha_planeada,
-                            item.cliente,
-                            item.ciudad,
+                            item.order_code,                            
+                            item.FechaPlaneadaInicioDate,
+                            item.ds_cliente,
+                            item.city,
                             item.estatus                            
                         ]).draw(false);
                     });

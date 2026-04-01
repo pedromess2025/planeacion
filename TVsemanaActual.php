@@ -40,8 +40,8 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-xl-12">                                            
-                                            <table id="TSolAbiertas" class="table table-dark table-hover" style="width:100%">
-                                                <thead>
+                                            <table id="TSolAbiertas" class="table table-hover" style="width:100%">
+                                                <thead class="table-primary">
                                                     <tr>                                                        
                                                         <th>Ingeniero</th>
                                                         <th>Área</th>
@@ -100,7 +100,7 @@
                 "responsive": true,                
                 "ordering": false,
                 "lengthMenu": [ 5, 10, 25, 50, -1],
-                "pageLength": 10,                
+                "pageLength": 20,                
                 "searching": false,
                 "language": {                    
                     "sProcessing":     "Procesando...",
@@ -143,12 +143,12 @@
 
                     data.forEach(function(item) {
                         table.row.add([
-                            item.ingeniero,
+                            item.nombre + " " + item.nombre2 + " " + item.nombre3,
                             item.area,
-                            item.ot,                            
-                            item.fecha_planeada,
-                            item.cliente,
-                            item.ciudad,
+                            item.order_code,                            
+                            item.FechaPlaneadaInicioDate,
+                            item.ds_cliente,
+                            item.city,
                             item.estatus                            
                         ]).draw(false);
                     });

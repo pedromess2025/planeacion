@@ -43,13 +43,12 @@
                                             <table id="TSolAbiertas" class="table table-hover">
                                                 <thead class="table-primary">
                                                     <tr>
-                                                        <th>Fecha Planeada</th>
+                                                        <th width="10%">Fecha Planeada</th>
                                                         <th>Ingeniero</th>
-                                                        <th>Área</th>
-                                                        <th>OT</th>                                                                                                                
+                                                        <th>Área</th>                                                        
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>                                                        
-                                                        <th>Estatus</th>
+                                                        <th width="15%">Estatus</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -145,8 +144,7 @@
                         table.row.add([
                             item.FechaPlaneadaInicioDate,
                             item.nombre + " " + item.nombre2 + " " + item.nombre3,
-                            item.area,
-                            item.order_code,                                                        
+                            item.area,                            
                             item.ds_cliente,
                             item.city,
                             item.estatus                            

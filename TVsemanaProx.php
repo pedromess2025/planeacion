@@ -40,7 +40,7 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-xl-12">                                            
-                                            <table id="TSolAbiertas" class="tabletable-hover" style="width:100%">
+                                            <table id="TSolAbiertas" class="tabletable-hover">
                                                 <thead class="table-success">
                                                     <tr>
                                                         <th>Fecha Planeada</th>
@@ -143,10 +143,10 @@
 
                     data.forEach(function(item) {
                         table.row.add([
+                            item.FechaPlaneadaInicioDate,
                             item.nombre + " " + item.nombre2 + " " + item.nombre3,
                             item.area,
-                            item.order_code,                            
-                            item.FechaPlaneadaInicioDate,
+                            item.order_code,                                                        
                             item.ds_cliente,
                             item.city,
                             item.estatus                            

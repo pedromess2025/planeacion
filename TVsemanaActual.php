@@ -40,13 +40,13 @@
                                     </div>
                                     <div class="row">
                                         <div class="col-xl-12">                                            
-                                            <table id="TSolAbiertas" class="table table-hover" style="width:100%">
+                                            <table id="TSolAbiertas" class="table table-hover">
                                                 <thead class="table-primary">
-                                                    <tr>                                                        
+                                                    <tr>
+                                                        <th>Fecha Planeada</th>
                                                         <th>Ingeniero</th>
                                                         <th>Área</th>
-                                                        <th>OT</th>                                                        
-                                                        <th>Fecha Planeada</th>                                                        
+                                                        <th>OT</th>                                                                                                                
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>                                                        
                                                         <th>Estatus</th>
@@ -143,10 +143,10 @@
 
                     data.forEach(function(item) {
                         table.row.add([
+                            item.FechaPlaneadaInicioDate,
                             item.nombre + " " + item.nombre2 + " " + item.nombre3,
                             item.area,
-                            item.order_code,                            
-                            item.FechaPlaneadaInicioDate,
+                            item.order_code,                                                        
                             item.ds_cliente,
                             item.city,
                             item.estatus                            

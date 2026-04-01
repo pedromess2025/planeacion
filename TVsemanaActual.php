@@ -142,8 +142,8 @@
 
                     data.forEach(function(item) {
                         table.row.add([
-                            item.FechaPlaneadaInicioDate,
-                            item.nombre + " " + item.nombre2 + " " + item.nombre3,
+                            '<b> ' + item.FechaPlaneadaInicioDate + ' </b>',
+                            item.nombre + "/" + item.nombre2 + "/" + item.nombre3,
                             item.area,                            
                             item.ds_cliente,
                             item.city,

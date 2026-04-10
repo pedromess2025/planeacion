@@ -122,18 +122,13 @@ if ($accion === 'contarNotificaciones') {
 
 // Cargar Registros de Notificaciones
 if ($accion === 'cargarNotificaciones') {
-    $sqlCargarNoti = "SELECT nh.id, nh.accion, nh.sistema, nh.archivo, nh.id_registro_referencia,
-                            nh.fecha_creacion, nh.fecha_atencion, nh.recordar, nh.estatus,
-                            es.id_usuario_nota, es.nota, es.fecha_actualizacion,
-                            us.nombre AS nombre_usuario_nota
-            FROM notificacion_historial nh
-            LEFT JOIN entrada_seguimiento es
-                ON es.id_seguimiento = nh.id_registro_referencia
-                AND nh.sistema = 'entradasEq'
-            LEFT JOIN usuarios us ON us.id_usuario = es.id_usuario_nota
-            WHERE nh.id_usuario_destino = ?
-            AND nh.estatus = 'NoLeida'
-            ORDER BY nh.fecha_creacion DESC";
+    $sqlCargarNoti = "  SELECT nh.*, us.nombre AS nombre_actualiza
+                        FROM notificacion_historial nh
+                        LEFT JOIN usuarios us ON us.noEmpleado = nh.id_usuario_actualiza
+                        WHERE nh.id_usuario_destino = ?
+                            AND nh.estatus = 'NoLeida'
+                            AND nh.sistema = 'entradasEq'
+                        ORDER BY nh.fecha_creacion DESC";
 
     $stmt = $conn->prepare($sqlCargarNoti);
     if (!$stmt) {
@@ -149,7 +144,6 @@ if ($accion === 'cargarNotificaciones') {
     while ($row = $result->fetch_assoc()) {
         $estatus = isset($row['estatus']) ? $row['estatus'] : 'NoLeida';
         $nota = trim((string)($row['nota'] ?? ''));
-        $nombreUsuarioNota = (string)($row['nombre_usuario_nota'] ?? '');
         $fechaActualizacion = isset($row['fecha_actualizacion']) ? formatearFechaCorta($row['fecha_actualizacion']) : '';
         $fechaCreacion = isset($row['fecha_creacion']) ? formatearFechaCorta($row['fecha_creacion']) : '';
         
@@ -160,6 +154,8 @@ if ($accion === 'cargarNotificaciones') {
             'sistema' => $row['sistema'],
             'archivo' => $row['archivo'],
             'id_registro_referencia' => $row['id_registro_referencia'],
+            'id_usuario_actualiza' => isset($row['id_usuario_actualiza']) ? intval($row['id_usuario_actualiza']) : 0,
+            'usuario_actualiza_nombre' => isset($row['nombre_actualiza']) ? trim((string)$row['nombre_actualiza']) : '',
             'fecha' => $fechaCreacion,
             'fecha_actualizacion' => $fechaActualizacion,
             'fecha_atencion' => $row['fecha_atencion'],

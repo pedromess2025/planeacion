@@ -9,34 +9,6 @@ $idRegistroReferencia = isset($_POST['id_registro_referencia']) ? intval($_POST[
 $solicita = isset($_POST['solicita']) ? trim((string)$_POST['solicita']) : '';
 $id_usuario_Destino = intval($noEmpleado);
 
-// Función para obtener iniciales de un nombre completo
-function obtenerIniciales($nombreCompleto) {
-    $nombreCompleto = trim((string)$nombreCompleto);
-    if ($nombreCompleto === '') {
-        return 'NA';
-    }
-
-    $partes = preg_split('/\s+/', $nombreCompleto);
-    $partes = array_values(array_filter($partes, function ($parte) {
-        return trim($parte) !== '';
-    }));
-
-    $totalPartes = count($partes);
-    if ($totalPartes >= 3) {
-        $primeraInicial = strtoupper(substr($partes[0], 0, 1));
-        $apellidoPaternoInicial = strtoupper(substr($partes[$totalPartes - 2], 0, 1));
-        $apellidoMaternoInicial = strtoupper(substr($partes[$totalPartes - 1], 0, 1));
-        return $primeraInicial . $apellidoPaternoInicial . $apellidoMaternoInicial;
-    }
-
-    $iniciales = '';
-    foreach ($partes as $parte) {
-        $iniciales .= strtoupper(substr($parte, 0, 1));
-    }
-
-    return $iniciales !== '' ? $iniciales : 'NA';
-}
-
 // Función para formatear fechas en formato corto
 function formatearFechaCorta($fecha) {
     $fecha = trim((string)$fecha);
@@ -99,7 +71,7 @@ if ($accion === 'registrarNotificacionEntrada') {
 
     $sqlInsert = "INSERT INTO notificacion_historial
         (id_usuario_actualiza, id_usuario_destino, accion, sistema, archivo, id_registro_referencia, fecha_creacion, fecha_atencion, recordar, estatus)
-        VALUES (?, ?, ?, ?, ?, ?, NOW(), NULL, NULL, 'NoLeida')";
+        VALUES (?, ?, ?, ?, ?, ?, NOW(), NULL, 'Actualizacion de estatus', 'NoLeida')";
 
     $stmtInsert = $conn->prepare($sqlInsert);
     if (!$stmtInsert) {
@@ -150,18 +122,13 @@ if ($accion === 'contarNotificaciones') {
 
 // Cargar Registros de Notificaciones
 if ($accion === 'cargarNotificaciones') {
-    $sqlCargarNoti = "SELECT nh.id, nh.accion, nh.sistema, nh.archivo, nh.id_registro_referencia,
-                            nh.fecha_creacion, nh.fecha_atencion, nh.recordar, nh.estatus,
-                            es.id_usuario_nota, es.nota, es.fecha_actualizacion,
-                            us.nombre AS nombre_usuario_nota
-            FROM notificacion_historial nh
-            LEFT JOIN entrada_seguimiento es
-                ON es.id_seguimiento = nh.id_registro_referencia
-                AND nh.sistema = 'entradasEq'
-            LEFT JOIN usuarios us ON us.id_usuario = es.id_usuario_nota
-            WHERE nh.id_usuario_destino = ?
-            AND nh.estatus = 'NoLeida'
-            ORDER BY nh.fecha_creacion DESC";
+    $sqlCargarNoti = "  SELECT nh.*, us.nombre AS nombre_actualiza
+                        FROM notificacion_historial nh
+                        LEFT JOIN usuarios us ON us.noEmpleado = nh.id_usuario_actualiza
+                        WHERE nh.id_usuario_destino = ?
+                            AND nh.estatus = 'NoLeida'
+                            AND nh.sistema = 'entradasEq'
+                        ORDER BY nh.fecha_creacion DESC";
 
     $stmt = $conn->prepare($sqlCargarNoti);
     if (!$stmt) {
@@ -177,7 +144,6 @@ if ($accion === 'cargarNotificaciones') {
     while ($row = $result->fetch_assoc()) {
         $estatus = isset($row['estatus']) ? $row['estatus'] : 'NoLeida';
         $nota = trim((string)($row['nota'] ?? ''));
-        $nombreUsuarioNota = (string)($row['nombre_usuario_nota'] ?? '');
         $fechaActualizacion = isset($row['fecha_actualizacion']) ? formatearFechaCorta($row['fecha_actualizacion']) : '';
         $fechaCreacion = isset($row['fecha_creacion']) ? formatearFechaCorta($row['fecha_creacion']) : '';
         
@@ -188,12 +154,13 @@ if ($accion === 'cargarNotificaciones') {
             'sistema' => $row['sistema'],
             'archivo' => $row['archivo'],
             'id_registro_referencia' => $row['id_registro_referencia'],
+            'id_usuario_actualiza' => isset($row['id_usuario_actualiza']) ? intval($row['id_usuario_actualiza']) : 0,
+            'usuario_actualiza_nombre' => isset($row['nombre_actualiza']) ? trim((string)$row['nombre_actualiza']) : '',
             'fecha' => $fechaCreacion,
             'fecha_actualizacion' => $fechaActualizacion,
             'fecha_atencion' => $row['fecha_atencion'],
             'recordar' => $row['recordar'],
             'id_usuario_nota' => isset($row['id_usuario_nota']) ? intval($row['id_usuario_nota']) : 0,
-            'iniciales' => obtenerIniciales($nombreUsuarioNota),
             'nota' => $nota,
             'estatus' => $estatus,
             'leida' => strcasecmp($estatus, 'Leida') === 0 ? 1 : 0

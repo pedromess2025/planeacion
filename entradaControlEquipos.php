@@ -453,14 +453,25 @@
                 dataType: 'json',
                 success: function(data) {
                     if (data.status === 'success') {
-                        // Enviar notificación a los ingenieros asignados
-                        // Nota: Desactivado temporalmente para evitar saturar el envio de correos, implementar en notificaciones globales
                         if (data.id_entrada) {
+                            // Notificación por correo (se mantiene)
                             $.ajax({
                                 url: 'enviaNotificacionEntrada.php',
                                 method: 'POST',
                                 data: { id_entrada: data.id_entrada },
-                                async: true // Enviar en background
+                                async: true
+                            });
+                            // Notificación interna para todos los involucrados
+                            $.ajax({
+                                url: 'acciones_notificaciones.php',
+                                method: 'POST',
+                                dataType: 'json',
+                                data: {
+                                    accion: 'registrarNotificacionEntrada',
+                                    id_registro_referencia: data.id_entrada,
+                                    accion_notificacion: 'NuevaEntrada'
+                                },
+                                async: true
                             });
                         }
                         Swal.fire({

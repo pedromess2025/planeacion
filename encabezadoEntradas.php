@@ -247,7 +247,7 @@
             });
         }
 
-        function marcarNotificacionLeida(idNotificacion, idRegistro) {
+        function marcarNotificacionLeida(idNotificacion, idRegistro, sistema, archivo) {
             $.ajax({
                 url: 'acciones_notificaciones.php',
                 method: 'POST',
@@ -262,7 +262,9 @@
                             $(this).remove();
                         });
                         cargarNotificaciones(false);
-                        if (parseInt(idRegistro, 10) > 0) {
+                        if (archivo === 'entradaDetalleEntradas') {
+                            window.location.href = 'entradaDetalleEntradas.php';
+                        } else if (parseInt(idRegistro, 10) > 0) {
                             window.location.href = 'entradaTareas.php?id=' + parseInt(idRegistro, 10);
                         }
                     }

@@ -335,13 +335,29 @@
     <script src="funciones_entradas.js"></script>
 
     <script type="text/javascript">
-        $(document).ready(function() {                        
+        $(document).ready(function() {
+            registrarNotificacionesEntradas();
+
             inicializarTablaEquipos();
             cargarEquipos();
 
             cargarIngenierosTrae();
-            cargarAreas();            
+            cargarAreas();
         });
+
+        function registrarNotificacionesEntradas() {
+            $.ajax({
+                url: 'acciones_notificaciones.php',
+                type: 'POST',
+                dataType: 'json',
+                data: { accion: 'registrarNotificacionesEntradas' },
+                success: function(response) {
+                    if (response.success) {
+                        cargarNotificaciones(false);
+                    }
+                }
+            });
+        }
 
         // Escucha el cierre de CUALQUIER modal
         document.addEventListener('hidden.bs.modal', function () {            

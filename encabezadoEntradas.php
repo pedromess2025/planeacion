@@ -214,7 +214,7 @@
             $.ajax({
                 url: 'acciones_notificaciones.php',
                 method: 'POST',
-                data: { accion: 'cargarNotificaciones' },
+                data: { accion: 'cargarNotificaciones', sistema: 'entradasEq' },
                 dataType: 'json',
                 success: function(response) {
                     if (response.success) {

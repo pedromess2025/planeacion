@@ -15,6 +15,7 @@ $idRegistro = $_POST['idRegistro'] ?? '';
 // Fuente unica de URL destino por sistema (EDITAR EN CADA MODULO)
 $urlDestinoPorSistema = [
     'entradasEq' => '/planeacion/entradaTareas',
+    'planeacion' => '/planeacion/seguimiento_actividades'
 ];
 
 // Si el sistema no esta mapeado, regresar error explicito

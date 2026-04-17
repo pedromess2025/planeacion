@@ -7,6 +7,7 @@ $noEmpleado = isset($_COOKIE['noEmpleado']) ? trim($_COOKIE['noEmpleado']) : '';
 $idNotificacion = isset($_POST['idNotificacion']) ? intval($_POST['idNotificacion']) : 0;
 $idRegistroReferencia = isset($_POST['id_registro_referencia']) ? intval($_POST['id_registro_referencia']) : 0;
 $solicita = isset($_POST['solicita']) ? trim((string)$_POST['solicita']) : '';
+$sistema = isset($_POST['sistema']) ? trim($_POST['sistema']) : '';
 $id_usuario_Destino = intval($noEmpleado);
 
 // Función para formatear fechas en formato corto
@@ -120,6 +121,106 @@ if ($accion === 'contarNotificaciones') {
     exit;
 }
 
+// Generar Notificaciones Internas de Planeación
+if ($accion === 'registrarNotificacionPlaneacion') {
+
+    // Buscar servicios por vencer en los próximos 2 días del usuario en sesión
+    $sqlServicios = "SELECT s.id, s.capturado_por, s.start_date, s.ds_cliente, s.estatus
+                     FROM servicios_planeados_mess s
+                     WHERE s.estatus IN ('Fechareservadasininformación', 'Pendientedeinformacion')
+                       AND s.start_date BETWEEN NOW() AND DATE_ADD(NOW(), INTERVAL 2 DAY)
+                       AND s.capturado_por = ?";
+
+    $stmtServicios = $conn->prepare($sqlServicios);
+    if (!$stmtServicios) {
+        echo json_encode(['success' => false, 'message' => 'Error al preparar consulta de servicios']);
+        exit;
+    }
+    $stmtServicios->bind_param("i", $id_usuario_Destino);
+    $stmtServicios->execute();
+    $resultServicios = $stmtServicios->get_result();
+    $stmtServicios->close();
+
+    if ($resultServicios->num_rows === 0) {
+        echo json_encode(['success' => true, 'insertados' => 0, 'message' => '0 notificaciones generadas'], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+
+    // Validar duplicidad: id_usuario_destino + sistema + id_registro_referencia
+    $sqlExiste = "SELECT COUNT(*) AS existe
+                  FROM notificacion_historial
+                  WHERE id_usuario_destino     = ?
+                    AND sistema                = 'planeacion'
+                    AND id_registro_referencia = ?";
+
+    $stmtExiste = $conn->prepare($sqlExiste);
+    if (!$stmtExiste) {
+        echo json_encode(['success' => false, 'message' => 'Error al preparar validación de duplicidad']);
+        exit;
+    }
+
+    // Preparar INSERT de notificación (id_usuario_actualiza = 523 representa al sistema)
+    $sqlInsert = "INSERT INTO notificacion_historial
+                    (id_usuario_actualiza, id_usuario_destino, accion, sistema,
+                     archivo, id_registro_referencia, fecha_creacion, recordar, estatus)
+                  VALUES
+                    (0, ?, 'ServicioPorVencer', 'planeacion',
+                     'seguimiento_actividades', ?, NOW(), 'Servicio por vencer', 'NoLeida')";
+
+    $stmtInsert = $conn->prepare($sqlInsert);
+    if (!$stmtInsert) {
+        $stmtExiste->close();
+        echo json_encode(['success' => false, 'message' => 'Error al preparar inserción de notificación']);
+        exit;
+    }
+
+    $conn->begin_transaction();
+    $insertados = 0;
+    $errorTransaccion = false;
+
+    while ($servicio = $resultServicios->fetch_assoc()) {
+        $idServicio = intval($servicio['id']);
+
+        // Verificar si ya existe notificación para este servicio
+        $stmtExiste->bind_param("ii", $id_usuario_Destino, $idServicio);
+        $stmtExiste->execute();
+        $resExiste = $stmtExiste->get_result();
+        $rowExiste = $resExiste->fetch_assoc();
+
+        if (intval($rowExiste['existe']) > 0) {
+            continue; // Ya notificado, saltar
+        }
+
+        // Insertar nueva notificación
+        $stmtInsert->bind_param("ii", $id_usuario_Destino, $idServicio);
+        if ($stmtInsert->execute()) {
+            $insertados++;
+        } else {
+            $errorTransaccion = true;
+            break;
+        }
+    }
+
+    if ($errorTransaccion) {
+        $conn->rollback();
+        $stmtExiste->close();
+        $stmtInsert->close();
+        echo json_encode(['success' => false, 'message' => 'Error al insertar notificación, se revirtió la transacción']);
+        exit;
+    }
+
+    $conn->commit();
+    $stmtExiste->close();
+    $stmtInsert->close();
+
+    echo json_encode([
+        'success'   => true,
+        'insertados' => $insertados,
+        'message'   => $insertados . ' notificaciones generadas'
+    ], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
 // Cargar Registros de Notificaciones
 if ($accion === 'cargarNotificaciones') {
     $sqlCargarNoti = "  SELECT nh.*, us.nombre AS nombre_actualiza
@@ -127,7 +228,7 @@ if ($accion === 'cargarNotificaciones') {
                         LEFT JOIN usuarios us ON us.noEmpleado = nh.id_usuario_actualiza
                         WHERE nh.id_usuario_destino = ?
                             AND nh.estatus = 'NoLeida'
-                            AND nh.sistema = 'entradasEq'
+                            AND (? = '' OR nh.sistema = ?)
                         ORDER BY nh.fecha_creacion DESC";
 
     $stmt = $conn->prepare($sqlCargarNoti);
@@ -136,7 +237,7 @@ if ($accion === 'cargarNotificaciones') {
         exit;
     }
 
-    $stmt->bind_param("i", $id_usuario_Destino);
+    $stmt->bind_param("iss", $id_usuario_Destino, $sistema, $sistema);
     $stmt->execute();
     $result = $stmt->get_result();
 

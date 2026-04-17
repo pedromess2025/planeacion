@@ -51,16 +51,15 @@
 
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
-    <!-- Boton de Notificaciones 
+    <!-- Boton de Notificaciones -->
     <li class="nav-item">
-        <button class="btn btn-link nav-link fw-bold text-dark" type="button" data-bs-toggle="modal" data-bs-target="#notificacionesModal">
+        <button class="btn btn-link nav-link fw-bold text-dark" type="button" id="btnNotificaciones" onclick="mostrarNotificacionesFlotantes()">
             <span class="noti-icon-wrap">
                 <i class="fas fa-bell text-dark"></i>
                 <span id="badgeNotificaciones" class="badge rounded-pill bg-danger d-none noti-badge">0</span>
             </span>
         </button>
     </li>
-    -->
     <!-- Nav Item - Search Dropdown (Visible Only XS) -->
     <li class = "nav-item dropdown no-arrow d-sm-none">
         <a class = "nav-link dropdown-toggle" href = "#" id = "searchDropdown" role = "button"
@@ -100,25 +99,9 @@
             </a>
         </div>
     </li>
-    <!-- Modal de Notificaciones -->
-    <div class = "modal fade" id = "notificacionesModal" tabindex = "-1" role = "dialog" aria-labelledby = "notificacionesModalLabel" aria-hidden = "true">
-        <div class = "modal-dialog" role = "document">
-            <div class = "modal-content">
-                <div class = "modal-header">
-                    <h5 class = "modal-title" id = "notificacionesModalLabel">Notificaciones</h5>
-                    <button class = "btn-close" type = "button" data-bs-dismiss = "modal" aria-label = "Close"></button>
-                </div>
-                <div class = "modal-body">
-                    <div id="notificacionesContenido">No tienes nuevas notificaciones.</div>
-                </div>
-                <div class = "modal-footer">
-                    <button class = "btn btn-secondary" type = "button" data-bs-dismiss = "modal">Cerrar</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </ul>
+    <div id="notificationStack" class="position-fixed top-0 end-0 p-3" style="z-index: 1080; max-width: 360px;"></div>
     <!-- Logout Modal-->
     <div class = "modal fade" id = "logoutModalN" tabindex = "-1" role = "dialog" aria-labelledby = "exampleModalLabel"aria-hidden = "true">
         <div class = "modal-dialog" role = "document">
@@ -140,98 +123,128 @@
     
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        cargarTotalNotificaciones();
-
-        var notificacionesModal = document.getElementById('notificacionesModal');
-        if (notificacionesModal) {
-            notificacionesModal.addEventListener('show.bs.modal', function () {
-                cargarNotificaciones();
-            });
-        }
+        cargarNotificaciones(false);
+        // Refrescar el badge cada 30 segundos
+        setInterval(function() {
+            cargarNotificaciones(false);
+        }, 30000);
     });
 
-    //Funcion para leer cookies
     function getCookie(name) {
         let value = "; " + document.cookie;
         let parts = value.split("; " + name + "=");
         if (parts.length === 2) return parts.pop().split(";").shift();
-        return null; // Si no encuentra la cookie, retorna null
+        return null;
     }
 
-    // Funcion para mostrar el modal de notificaciones
-    function mostrarNotificaciones() {
-        var modalElement = document.getElementById('notificacionesModal');
-        if (!modalElement) {
-            return;
-        }
-
-        var modal = bootstrap.Modal.getOrCreateInstance(modalElement);
-        modal.show();
+    function escapeHtml(texto) {
+        return String(texto || '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
     }
 
-    function cargarNotificaciones() {
+    // Devuelve la clase FontAwesome según el sistema que originó la notificación
+    function obtenerIconoNotificacion(sistema) {
+        if (sistema === 'entradasEq') return 'fas fa-tools';
+        if (sistema === 'planeacion') return 'fas fa-calendar-alt';
+        return 'fas fa-bell';
+    }
+
+    function limpiarStackNotificaciones() {
+        $('#notificationStack').empty();
+    }
+
+    function renderNotificacionFlotante(notificacion) {
+        var stack = $('#notificationStack');
+        var sistema   = escapeHtml(notificacion.sistema || 'General');
+        var archivo   = escapeHtml(notificacion.archivo || '');
+        var fecha     = escapeHtml(notificacion.fecha_actualizacion || notificacion.fecha || '');
+        var recordar  = escapeHtml(notificacion.recordar || '');
+        var creadoPor = escapeHtml(notificacion.usuario_actualiza_nombre || '');
+        var iconoSistema = obtenerIconoNotificacion(sistema.toLowerCase());
+        var id        = parseInt(notificacion.id, 10) || 0;
+        var idRegistro = parseInt(notificacion.id_registro_referencia, 10) || 0;
+
+        var html = '';
+        html += '<div class="toast show border-0 shadow-sm mb-3" data-notificacion-id="' + id + '" role="alert" aria-live="assertive" aria-atomic="true">';
+        html += '  <div class="toast-body p-2">';
+        html += '      <div class="d-flex justify-content-between align-items-center">';
+        html += '          <div class="d-flex align-items-center flex-wrap">';
+        html += '              <span class="badge rounded-pill bg-primary text-white px-3 py-2 mr-2 mb-1">';
+        html += '                  <i class="' + iconoSistema + ' mr-2"></i>' + sistema;
+        html += '              </span>';
+        html += '              <div class="mb-1">';
+        html += '                  <span class="text-dark font-weight-bold mr-3" style="font-size: .95rem; line-height:1.1;">' + (creadoPor ? creadoPor + ' - ' : '') + recordar + '</span>';
+        html += '                  <span class="text-muted" style="font-size: .90rem; white-space: nowrap;"><i class="far fa-calendar-alt mr-1"></i>' + fecha + '</span>';
+        html += '              </div>';
+        html += '          </div>';
+        html += '          <button class="btn btn-sm btn-light border border-success text-success px-2 py-1" title="Marcar como leída" onclick="marcarNotificacionLeida(' + id + ', ' + idRegistro + ', \'' + archivo + '\')">';
+        html += '              <i class="fas fa-check fa-sm"></i>';
+        html += '          </button>';
+        html += '      </div>';
+        html += '  </div>';
+        html += '</div>';
+
+        var toast = $(html);
+        stack.append(toast);
+
+        // Auto-ocultar el toast después de 5 segundos
+        setTimeout(function() {
+            toast.fadeOut(1000, function() { $(this).remove(); });
+        }, 5000);
+    }
+
+    function mostrarNotificacionesFlotantes() {
+        cargarNotificaciones(true);
+    }
+
+    // Carga notificaciones del backend.
+    // mostrarFlotantes=true: renderiza toasts. mostrarFlotantes=false: solo actualiza el badge.
+    function cargarNotificaciones(mostrarFlotantes) {
+        var badge = $('#badgeNotificaciones');
         $.ajax({
-            url: 'acciones_notificaciones',
+            url: 'acciones_notificaciones.php',
             method: 'POST',
-            data: { accion: 'cargarNotificaciones' },
+            data: { accion: 'cargarNotificaciones', sistema: 'planeacion' },
             dataType: 'json',
             success: function(response) {
                 if (response.success) {
                     var notificaciones = response.notificaciones;
-                    var contenido = '';
+                    var total = parseInt(response.total || 0, 10);
 
-                    if (notificaciones.length > 0) {
-                        notificaciones.forEach(function(notificacion) {
-                            contenido += '<div class="alert alert-info d-flex justify-content-between align-items-center">';
-                            contenido += '<span>' + notificacion.mensaje + '</span>';
-                            contenido += '<button class="btn btn-sm btn-primary" onclick="marcarNotificacionLeida(' + notificacion.id + ')">Marcar como leída</button>';
-                            contenido += '</div>';
-                        });
+                    if (total > 0) {
+                        badge.removeClass('d-none').text(total > 99 ? '99+' : total);
                     } else {
-                        contenido = 'No tienes nuevas notificaciones.';
+                        badge.addClass('d-none').text('0');
                     }
 
-                    $('#notificacionesContenido').html(contenido);
-                } else {
-                    $('#notificacionesContenido').html('Error al cargar notificaciones.');
+                    if (mostrarFlotantes === true) {
+                        limpiarStackNotificaciones();
+                        if (notificaciones.length > 0) {
+                            notificaciones.forEach(function(notificacion) {
+                                renderNotificacionFlotante(notificacion);
+                            });
+                        } else {
+                            renderNotificacionFlotante({
+                                id: 0,
+                                recordar: 'No tienes nuevas notificaciones.',
+                                fecha_actualizacion: ''
+                            });
+                        }
+                    }
                 }
-            },
-            error: function() {
-                $('#notificacionesContenido').html('Error al cargar notificaciones.');
             }
         });
     }
 
-    function cargarTotalNotificaciones() {
-        var badge = $('#badgeNotificaciones');
-
+    // Marca la notificación como leída. No navega al registro porque las páginas
+    // de planeación no usan URL con id individual por servicio.
+    function marcarNotificacionLeida(idNotificacion, idRegistro, archivo) {
         $.ajax({
-            url: 'acciones_notificaciones',
-            method: 'POST',
-            dataType: 'json',
-            data: { accion: 'contarNotificaciones' },
-            success: function(response) {
-                if (!response.success) {
-                    badge.addClass('d-none').text('0');
-                    return;
-                }
-
-                var total = parseInt(response.total, 10) || 0;
-                if (total > 0) {
-                    badge.removeClass('d-none').text(total > 99 ? '99+' : total);
-                } else {
-                    badge.addClass('d-none').text('0');
-                }
-            },
-            error: function() {
-                badge.addClass('d-none').text('0');
-            }
-        });
-    }
-
-    function marcarNotificacionLeida(idNotificacion) {
-        $.ajax({
-            url: 'acciones_notificaciones',
+            url: 'acciones_notificaciones.php',
             method: 'POST',
             dataType: 'json',
             data: {
@@ -240,8 +253,10 @@
             },
             success: function(response) {
                 if (response.success) {
-                    cargarNotificaciones();
-                    cargarTotalNotificaciones();
+                    $('[data-notificacion-id="' + idNotificacion + '"]').fadeOut(200, function() {
+                        $(this).remove();
+                    });
+                    cargarNotificaciones(false);
                 }
             }
         });

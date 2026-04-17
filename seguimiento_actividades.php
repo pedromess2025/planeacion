@@ -309,7 +309,10 @@
     <script src="funciones_incidencias.js" defer="defer"></script>
     <script type="text/javascript">
         $(document).ready(function() {
-            
+
+            // Generar notificaciones de planeación al entrar y refrescar el badge
+            registrarNotificacionPlaneacion();
+
             $('#divCancelacion').hide();                          
             $('#divReprogramacion').hide();
             // Manejar el estado activo de los botones
@@ -465,6 +468,23 @@
                         text: "Hubo un problema al cargar los datos.",
                         confirmButtonText: "Aceptar"
                     });
+                }
+            });
+        }
+
+        // Llama a acciones_notificaciones.php para generar notificaciones internas
+        // de planeación y refrescar el contador del badge al terminar.
+        function registrarNotificacionPlaneacion() {
+            $.ajax({
+                url: 'acciones_notificaciones.php',
+                type: 'POST',
+                dataType: 'json',
+                data: { accion: 'registrarNotificacionPlaneacion' },
+                success: function(response) {
+                    if (response.success) {
+                        // cargarNotificaciones(false) actualiza el badge sin mostrar toasts
+                        cargarNotificaciones(false);
+                    }
                 }
             });
         }

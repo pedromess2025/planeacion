@@ -30,6 +30,11 @@ if ($urlDestino === '') {
     exit;
 }
 
+// Si el archivo indica una página específica distinta al default del sistema, usar esa
+if ($sistema === 'entradasEq' && $archivo !== '' && $archivo !== 'entradaTareas') {
+    $urlDestino = '/planeacion/' . $archivo;
+}
+
 $sql = "SELECT id_usuario, nombre, noEmpleado, rol, correo, departamento, diasdisponibles,
                TIMESTAMPDIFF(YEAR, fechaIngreso, CURDATE()) AS antiguedad
         FROM usuarios

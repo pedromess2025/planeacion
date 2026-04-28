@@ -161,15 +161,20 @@
             $('#notificationStack').empty();
         }
 
+        function obtenerIconoNotificacion(sistema) {
+            if (sistema === 'entradasEq') return 'fas fa-tools';
+            if (sistema === 'planeacion') return 'fas fa-calendar-alt';
+            return 'fas fa-bell';
+        }
+
         // Función para renderizar una notificación flotante
         function renderNotificacionFlotante(notificacion) {
             var stack = $('#notificationStack');
-            var sistema = escapeHtml(notificacion.sistema || accion || 'General');
+            var sistema = escapeHtml(notificacion.sistema || 'General');
             var fecha = escapeHtml(notificacion.fecha_actualizacion || notificacion.fecha || '');
             var iconoSistema = obtenerIconoNotificacion(sistema.toLowerCase());
             var id = parseInt(notificacion.id, 10) || 0;
             var idRegistro = parseInt(notificacion.id_registro_referencia, 10) || 0;
-            var sistema = escapeHtml(notificacion.sistema || 'General');
             var archivo = escapeHtml(notificacion.archivo || '');
             var recordar = escapeHtml(notificacion.recordar || '');
             var creadoPor = escapeHtml(notificacion.usuario_actualiza_nombre || notificacion.id_usuario_actualiza || '');

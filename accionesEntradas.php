@@ -164,10 +164,23 @@ header('Content-Type: application/json');
             $areasUsuario = 'TODAS';
         }else{
             //Convertimos el string en un array
-            $arrayAreas = explode(',', $areas);        
+            $arrayAreas = explode(',', $areas);
             //Unimos con comillas para SQL
-            $areasUsuario = "'" . implode("','", $arrayAreas) . "'";
+            $areasUsuario = "'" . implode("','", array_map('trim', $arrayAreas)) . "'";
         }
+
+        // Verificar acceso especial verInfoEqReparacion
+        $accesoInfoEqReparacion = 0;
+        $areaPermitidaInfoEqReparacion = '';
+        $stmtAccesoInfo = $conn->prepare("SELECT COUNT(*) AS cuantos, inf_adicional FROM accesos_especiales WHERE noEmpleado = ? AND sistema = 'entradasEq' AND opcion = 'verInfoEqReparacion' AND estatus = 1");
+        $stmtAccesoInfo->bind_param('i', $noEmpleado);
+        $stmtAccesoInfo->execute();
+        $resultAccesoInfo = $stmtAccesoInfo->get_result();
+        if ($rowAccesoInfo = $resultAccesoInfo->fetch_assoc()) {
+            $accesoInfoEqReparacion = intval($rowAccesoInfo['cuantos']);
+            $areaPermitidaInfoEqReparacion = trim($rowAccesoInfo['inf_adicional'] ?? '');
+        }
+        $stmtAccesoInfo->close();
 
         if ($edita == 'Edita' && !empty($areasUsuario)) {
 
@@ -214,9 +227,11 @@ header('Content-Type: application/json');
             $sql .= " ORDER BY ent.fecha_registro DESC";
 
             $result = $conn->query($sql);
-        } else if ($accesoInfoEqReparacion > 0 && $areaPermitidaInfoEqReparacion !== '') {
-            // Mostrar registros de la area permitida por acceso especial
-            $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie,
+        } else if ($accesoInfoEqReparacion > 0) {
+            // Mostrar: entradas donde es ingeniero asignado + entradas del área (si inf_adicional tiene valor válido)
+            $tieneArea = !empty($areaPermitidaInfoEqReparacion) && $areaPermitidaInfoEqReparacion !== '-';
+
+            $sql = "SELECT DISTINCT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie,
                         ent.fecha_promesa_entrega AS fecha_compromiso,
                         ent.fecha_real_entrada,
                         ent.notas_recepcion AS diagnostico_inicial,
@@ -236,13 +251,28 @@ header('Content-Type: application/json');
                             WHERE eli.id_registro = ent.id_registro
                             AND eli.estatus = 'ASIGNADO'
                         ) AS nombres_ingenieros,
-                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio
+                        CONCAT('#ENT-', ent.area, '-', YEAR(ent.fecha_registro), '-', LPAD(ent.id_registro, 2, '0')) AS folio,
+                        u.nombre AS capturado_por
                     FROM entrada_registros ent
-                    WHERE ent.area = ?
-                    ORDER BY ent.fecha_promesa_entrega DESC";
+                    LEFT JOIN usuarios u ON ent.capturado_por = u.noEmpleado
+                    LEFT JOIN entrada_log_ingenieros eli_propio
+                        ON ent.id_registro = eli_propio.id_registro
+                        AND eli_propio.id_ing = ?
+                        AND eli_propio.estatus = 'ASIGNADO'
+                    WHERE eli_propio.id_ing IS NOT NULL";
+
+            if ($tieneArea) {
+                $sql .= " OR ent.area = ?";
+            }
+
+            $sql .= " ORDER BY ent.fecha_promesa_entrega DESC";
 
             $stmt = $conn->prepare($sql);
-            $stmt->bind_param('s', $areaPermitidaInfoEqReparacion);
+            if ($tieneArea) {
+                $stmt->bind_param('is', $usuario, $areaPermitidaInfoEqReparacion);
+            } else {
+                $stmt->bind_param('i', $usuario);
+            }
             $stmt->execute();
             $result = $stmt->get_result();
         } else {

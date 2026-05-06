@@ -432,14 +432,20 @@
         function inicializarTablaEquipos() {
             tablaEquiposDataTable = $('#tablaEquipos').DataTable({
                 language: {
-                    url: '//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json'
+                    url: 'vendor/datatables/es-ES.json'
                 },
                 responsive: true,
-                orderCellsTop: true, // Indica que la primera fila es la que ordena                
+                autoWidth: true,
+                scrollX: true,
+                orderCellsTop: true,
                 order: [],
                 columnDefs: [
                     { targets: 7, orderable: false, searchable: false }
                 ]
+            });
+
+            $(window).on('resize', function() {
+                tablaEquiposDataTable.columns.adjust().responsive.recalc();
             });
         }
         // Función para cargar equipos dinámicamente 

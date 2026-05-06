@@ -231,6 +231,12 @@ header('Content-Type: application/json');
             // Mostrar: entradas donde es ingeniero asignado + entradas del área (si inf_adicional tiene valor válido)
             $tieneArea = !empty($areaPermitidaInfoEqReparacion) && $areaPermitidaInfoEqReparacion !== '-';
 
+            $sqlAreas = '';
+            if ($tieneArea) {
+                $arrayAreasPermitidas = array_map('trim', explode(',', $areaPermitidaInfoEqReparacion));
+                $sqlAreas = "'" . implode("','", array_map([$conn, 'real_escape_string'], $arrayAreasPermitidas)) . "'";
+            }
+
             $sql = "SELECT DISTINCT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie,
                         ent.fecha_promesa_entrega AS fecha_compromiso,
                         ent.fecha_real_entrada,
@@ -257,24 +263,17 @@ header('Content-Type: application/json');
                     LEFT JOIN usuarios u ON ent.capturado_por = u.noEmpleado
                     LEFT JOIN entrada_log_ingenieros eli_propio
                         ON ent.id_registro = eli_propio.id_registro
-                        AND eli_propio.id_ing = ?
+                        AND eli_propio.id_ing = " . intval($usuario) . "
                         AND eli_propio.estatus = 'ASIGNADO'
                     WHERE eli_propio.id_ing IS NOT NULL";
 
             if ($tieneArea) {
-                $sql .= " OR ent.area = ?";
+                $sql .= " OR ent.area IN ($sqlAreas)";
             }
 
             $sql .= " ORDER BY ent.fecha_promesa_entrega DESC";
 
-            $stmt = $conn->prepare($sql);
-            if ($tieneArea) {
-                $stmt->bind_param('is', $usuario, $areaPermitidaInfoEqReparacion);
-            } else {
-                $stmt->bind_param('i', $usuario);
-            }
-            $stmt->execute();
-            $result = $stmt->get_result();
+            $result = $conn->query($sql);
         } else {
             // Mostrar solo registros donde el ingeniero está asignado
             $sql = "SELECT ent.id_registro, ent.cliente, ent.area, ent.marca, ent.modelo, ent.no_serie, 

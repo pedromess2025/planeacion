@@ -50,8 +50,8 @@
                                         <div class="col-md-auto">
                                             <div class="border rounded bg-light px-3 py-2 h-100 d-flex align-items-center">
                                                 <div class="form-check form-switch mb-0 d-flex align-items-center gap-2">
-                                                    <input name="demo" class="form-check-input" type="checkbox" role="switch" id="switchCheckDefault" value="1">
-                                                    <label for="switchCheckDefault" class="form-check-label small text-uppercase fw-bold text-muted mb-0">Demo</label>
+                                                    <input name="demo" class="form-check-input" type="checkbox" role="switch" id="demo" value="1">
+                                                    <label for="demo" class="form-check-label small text-uppercase fw-bold text-muted mb-0">Demo</label>
                                                 </div>
                                             </div>
                                         </div>

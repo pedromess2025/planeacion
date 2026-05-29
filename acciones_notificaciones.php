@@ -94,7 +94,7 @@ if ($accion === 'registrarNotificacionEntrada') {
 
     while ($row = $resultDestinos->fetch_assoc()) {
         $destinatario = intval($row['destinatario']);
-        $stmtInsert->bind_param("iissiis",
+        $stmtInsert->bind_param("iisssis",
             $idUsuarioActualiza, $destinatario, $accionNotificacion,
             $sistemaLocal, $archivoLocal, $idRegistroReferencia, $recordarLocal
         );

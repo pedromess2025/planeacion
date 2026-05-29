@@ -30,8 +30,14 @@ if ($urlDestino === '') {
     exit;
 }
 
-// Si el archivo indica una página específica distinta al default del sistema, usar esa
-if ($sistema === 'entradasEq' && $archivo !== '' && $archivo !== 'entradaTareas') {
+// Si el archivo indica una página específica y VÁLIDA distinta al default, usar esa.
+// Se valida que sea un nombre de página real (existe el .php); de lo contrario se mantiene
+// el default. Esto evita redirecciones rotas como /planeacion/0 cuando una notificación
+// legacy guardó archivo='0' (u otro valor no mapeable).
+if ($sistema === 'entradasEq'
+    && $archivo !== 'entradaTareas'
+    && preg_match('/^[A-Za-z][A-Za-z0-9_]*$/', $archivo)
+    && is_file(__DIR__ . '/' . $archivo . '.php')) {
     $urlDestino = '/planeacion/' . $archivo;
 }
 

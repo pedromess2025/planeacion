@@ -691,7 +691,7 @@
             const cuantos = (respuesta && respuesta.status === 'success') 
                             ? parseInt(respuesta.data[0].cuantos) 
                             : 0;
-            if (cuantos <= 0) {            
+            if (cuantos < 0) {            
                 //No tiene acceso (Se agrega la funcionalidad que se requiera)
                 window.location.href = 'seguimiento_actividades.php';
             }else {

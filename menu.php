@@ -127,7 +127,7 @@
         const cuantos = (respuesta && respuesta.status === 'success') 
                         ? parseInt(respuesta.data[0].cuantos) 
                         : 0;
-        if (cuantos <= 0) {            
+        if (cuantos < 0) {            
             $("#verRegistrarActividades").hide(); // No tiene acceso, se oculta la opción
         }else {
             $("#verRegistrarActividades").show(); // Tiene acceso, se muestra la opción

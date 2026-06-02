@@ -642,15 +642,8 @@
 
         // Función para obtener el valor de una cookie
         function getCookie(name) {
-            const nameEQ = name + "=";
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                let cookie = cookies[i].trim();
-                if (cookie.indexOf(nameEQ) === 0) {
-                    return cookie.substring(nameEQ.length);
-                }
-            }
-            return null;
+            const cookies = new URLSearchParams(document.cookie.replace(/; /g, '&'));
+            return cookies.get(name) || undefined;
         }
 
         // Función para renderizar el carrusel de fotos de entrada

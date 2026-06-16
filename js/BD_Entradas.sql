@@ -6659,6 +6659,7 @@ CREATE TABLE IF NOT EXISTS `servicios_planeados_mess` (
   `reprogramado` int NOT NULL,
   `motivo_reprogramacion` varchar(999) DEFAULT NULL,
   `motivo_cancelacion` varchar(999) DEFAULT NULL,
+  `origen_captura` varchar(10) NOT NULL DEFAULT 'lab',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=439 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

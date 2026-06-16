@@ -99,10 +99,18 @@
                                             </select>
                                         </div>
                                         <div class="col-md-2">
-                                            <label for="filtro-region">Región</label>                                            
+                                            <label for="filtro-region">Región</label>
                                             <select id="filtro-region" name="region[]" class="form-select  mr-1" multiple="multiple">
                                                 <option value="">Selecciona...</option>
-                                            </select>                                                                                                
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="filtro-origen">Capturado por</label>
+                                            <select id="filtro-origen" name="origen" class="form-select mr-1">
+                                                <option value="">Todos</option>
+                                                <option value="ventas">Ventas</option>
+                                                <option value="lab">Laboratorio</option>
+                                            </select>
                                         </div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button class="btn btn-primary btn-sm w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()"><i class="fas fa-fw fa-filter"></i></button>
@@ -208,7 +216,17 @@
                             <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre" onchange="validaFechas()">
                             <input type="hidden" class="form-control form-control-sm" id="datefechaCierreAnt" name="datefechaCierreAnt">
                             <input type="hidden" id="reprogramado" name="reprogramado">
-                        </div>                            
+                        </div>
+                    </div>
+                    <div class="row card-footer border-left-primary">
+                        <div class="col-sm-6 mb-0">
+                            <label for="txtDuracion">Dur. Estimada (hrs)</label>
+                            <input type="number" min="0" step="0.5" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas servicio">
+                        </div>
+                        <div class="col-sm-6 mb-0">
+                            <label for="txtDuracionViaje">Dur. Viaje (hrs)</label>
+                            <input type="number" min="0" step="0.5" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
+                        </div>
                     </div>
                     <div class="row card-header border-left-primary">                                           
                         <div class="col-sm-6">

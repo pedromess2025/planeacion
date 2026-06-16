@@ -3,7 +3,7 @@
 include 'conn.php';
 mysqli_set_charset($conn, "utf8");
 $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : null;
-$opcion = $_GET["opcion"];
+$opcion = isset($_GET["opcion"]) ? $_GET["opcion"] : '';
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
 // Consulta de las solicitudes de vacaciones aprobadas
@@ -147,11 +147,13 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // --- 1. Consulta Base ---    
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, 
+    // LEFT JOIN en el ingeniero para que los pre-registros de Ventas (sin ingeniero asignado) también se muestren
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(u.nombre,'') AS nombre, IFNULL(u2.nombre,'') AS nombre2,
                     IFNULL(u3.nombre,'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
-                    estatus_logistic, comment_logistic, IFNULL(ot.travelhr, '0') AS travelhr, IFNULL(ot.durationhr, '0') AS durationhr
+                    estatus_logistic, comment_logistic, IFNULL(ot.travelhr, '0') AS travelhr, IFNULL(ot.durationhr, '0') AS durationhr,
+                    ot.origen_captura AS origen
             FROM servicios_planeados_mess ot
-            INNER JOIN usuarios u ON ot.engineer = u.id_usuario
+            LEFT JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario
             WHERE ot.estatus NOT IN ('Cancelada', 'Cerrada') AND DATE(ot.start_date) >= ?"; // Usar placeholder '?' en lugar de la fecha hardcodeada

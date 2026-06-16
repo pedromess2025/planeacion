@@ -14,6 +14,10 @@ function ActualizarActividad(pendientes) {
     commentRepro = $('#txtCommentRepro').val();
     commentCancel = $('#txtCommentCanccel').val();
 
+    // Duración (servicio) y duración de viaje (las completa el lab al aprobar un pre-registro)
+    var duracion = $('#txtDuracion').val();
+    var duracionViaje = $('#txtDuracionViaje').val();
+
     reprogramado = $('#reprogramado').val();
 
     // Constante que representa la cantidad de milisegundos en un día (24 horas)
@@ -90,7 +94,9 @@ function ActualizarActividad(pendientes) {
             comment: comment,
             reprogramado: reprogramado,
             commentRepro: commentRepro,
-            commentCancel: commentCancel
+            commentCancel: commentCancel,
+            duracion: duracion,
+            duracionViaje: duracionViaje
         },
         success: function(data) {
             $('#actualizarActividadModal').modal('hide');
@@ -139,13 +145,14 @@ function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
     var area = $('#filtro-area').val();
     var ciudad = $('#filtro-ciudad').val();
     var estatus = $('#filtro-estatus').val();
-    var region = $('#filtro-region').val();    
+    var region = $('#filtro-region').val();
+    var origen = $('#filtro-origen').val() || ''; // '' (todos), 'ventas' o 'lab'
 
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
         dataType: 'json',
-        data: { opcion, ing, area, ciudad, estatus, region },
+        data: { opcion, ing, area, ciudad, estatus, region, origen },
         success: function(data) {
             // Lógica de Renderizado: Procesa los datos y los inserta en la tabla
             renderizarTabla(tablaSeleccionada, data);
@@ -184,6 +191,13 @@ function renderizarTabla(selectorTabla, data) {
         }
         if (solicitud.estatus == 'Cerrada') {
             estatus = '<span class="badge text-bg-dark">Cerrada</span>';
+        }
+        if (solicitud.estatus == 'Solicitadoventas') {
+            estatus = '<span class="badge bg-warning text-dark">Solicitado Ventas</span>';
+        }
+        // Distintivo del origen de captura (Ventas / Lab)
+        if (solicitud.origen_captura == 'ventas') {
+            estatus += ' <span class="badge bg-secondary"><i class="fas fa-store"></i> Ventas</span>';
         }
 
 
@@ -240,8 +254,8 @@ function renderizarTabla(selectorTabla, data) {
                         <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
-                        <button id="btnSolicitar" type="button" class="btn btn-primary" 
-                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}', '${solicitud.motivo_reprogramacion}', '${solicitud.motivo_cancelacion}')">
+                        <button id="btnSolicitar" type="button" class="btn btn-primary"
+                            onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}', '${solicitud.motivo_reprogramacion}', '${solicitud.motivo_cancelacion}', '${solicitud.durationhr}', '${solicitud.travelhr}')">
                             <i class="fas fa-edit"></i>
                         </button>
                         ${estatusLogistica}
@@ -266,6 +280,25 @@ function renderizarTabla(selectorTabla, data) {
                     </button>
                 `;
             }
+        }
+
+        // El Jefe de Laboratorio (rol 3) puede aprobar/completar los pre-registros de Ventas
+        // aunque no los haya capturado ni sea de su departamento.
+        var rol = getCookie('rol');
+        var esPreRegistroVentas = (solicitud.estatus === 'Solicitadoventas' || solicitud.origen_captura === 'ventas');
+        var yaPuedeEditar = (solicitud.capturo === 'SI' || solicitud.depto === departamento);
+        if (esPreRegistroVentas && rol === '3' && !yaPuedeEditar) {
+            accion = `
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                        <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
+                    </button>
+                    <button type="button" class="btn btn-success" title="Aprobar y completar"
+                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}', '${solicitud.motivo_reprogramacion}', '${solicitud.motivo_cancelacion}', '${solicitud.durationhr}', '${solicitud.travelhr}')">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            `;
         }
 
 
@@ -329,7 +362,7 @@ function mostrarMensajeDeError() {
 }
 
 //FUNCION PARA ABRIR EL MODAL PARA RESPONDER LA SOLICITUD
-function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment, reprogramado, commentRepro, commentCancel) {
+function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehiculo, fechaActividad, idActividad, estatus, comment, reprogramado, commentRepro, commentCancel, durationhr, travelhr) {
     $('#Divsolicita2').show();
     $('#Divsolicita3').show();
 
@@ -346,6 +379,10 @@ function modalactualizarActividad(ingeniero, ingeniero2, ingeniero3, ot, vehicul
     $('#txtComment').val(comment);
     $('#txtCommentRepro').val(commentRepro);
     $('#txtCommentCanccel').val(commentCancel);
+
+    // Duración (servicio) y duración de viaje (para completar pre-registros de Ventas)
+    $('#txtDuracion').val((durationhr && durationhr !== 'null') ? durationhr : '');
+    $('#txtDuracionViaje').val((travelhr && travelhr !== 'null') ? travelhr : '');
 
     $('#reprogramado').val(reprogramado);
 

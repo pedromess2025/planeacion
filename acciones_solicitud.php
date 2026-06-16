@@ -65,6 +65,57 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         echo json_encode($response);
     }
 
+//FUNCION PARA EL PRE-REGISTRO DE VENTAS (solo departamento 40)
+    if($opcion == "preRegistroVentas"){
+        header('Content-Type: application/json');
+
+        // Validación server-side: solo el departamento de Ventas (40) puede pre-registrar
+        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
+        if ($departamento_cookie != '40') {
+            echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede pre-registrar.']);
+            exit;
+        }
+
+        $cliente      = isset($_POST['cliente']) ? trim($_POST['cliente']) : '';
+        $ciudad       = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
+        $area         = isset($_POST['area']) ? $_POST['area'] : '';
+        $fecha        = isset($_POST['fecha']) ? $_POST['fecha'] : '';
+        $ot           = isset($_POST['ot']) ? trim($_POST['ot']) : '';
+        $comentarios  = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
+
+        // Validación de requeridos (la OV/OT y el comentario son opcionales)
+        if ($cliente === '' || $ciudad === '' || $area === '' || $fecha === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Faltan campos obligatorios (cliente, ciudad, área y fecha).']);
+            exit;
+        }
+
+        // Normalizar la fecha del input datetime-local (YYYY-MM-DDTHH:MM) a datetime de MySQL
+        $startDate = str_replace('T', ' ', $fecha);
+        if (strlen($startDate) === 16) { $startDate .= ':00'; }
+
+        $estatus      = 'Solicitadoventas'; // Estatus de pre-registro pendiente de aprobación del lab
+        $origen       = 'ventas';
+        $fechaCaptura = date('Y-m-d');
+        $capturadoPor = $noEmpleado_cookie;
+
+        // engineer se deja vacío: lo asigna el Jefe de Laboratorio al aprobar
+        $sqlInsert = "INSERT INTO servicios_planeados_mess
+                        (service_order_id, order_code, engineer, start_date, city, area, ds_cliente, estatus, fecha_captura, capturado_por, comment, reprogramado, origen_captura)
+                      VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
+        if ($stmt = $conn->prepare($sqlInsert)) {
+            $stmt->bind_param("ssssssssiss", $ot, $ot, $startDate, $ciudad, $area, $cliente, $estatus, $fechaCaptura, $capturadoPor, $comentarios, $origen);
+            if ($stmt->execute()) {
+                echo json_encode(['status' => 'success', 'message' => 'Pre-registro creado con éxito.', 'id' => $stmt->insert_id]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Error al insertar el pre-registro: ' . $stmt->error]);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        }
+        exit;
+    }
+
 //FUNCION PARA ACTUALIZAR LA ACTIVIDAD
     if($opcion == "actualizarActividad"){
         $ingeniero = $_POST["ingeniero"];
@@ -79,15 +130,20 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         $reprogramado = $_POST["reprogramado"];
         $cometRepro = $_POST["commentRepro"];
         $cometCancel = $_POST["commentCancel"];
-        
-        $sqlUpdate = "UPDATE servicios_planeados_mess 
+        // Duración (servicio) y duración de viaje: el lab las completa al aprobar un pre-registro
+        $duracion = isset($_POST["duracion"]) ? $_POST["duracion"] : '';
+        $duracionViaje = isset($_POST["duracionViaje"]) ? $_POST["duracionViaje"] : '';
+
+        $sqlUpdate = "UPDATE servicios_planeados_mess
                         SET engineer = '$ingeniero',
                             engineer2 = '$ingeniero2',
                             engineer3 = '$ingeniero3',
-                            service_order_id = '$ot', 
-                            order_code = '$ot', 
-                            start_date = '$fechaActividad', 
+                            service_order_id = '$ot',
+                            order_code = '$ot',
+                            start_date = '$fechaActividad',
                             vehiculo = '$automovil',
+                            durationhr = '$duracion',
+                            travelhr = '$duracionViaje',
                             estatus = '$estatus',
                             comment = '$comment',
                             reprogramado = $reprogramado,
@@ -153,18 +209,21 @@ if ($opcion == "solicitudesAbiertas") {
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
     $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
     $region = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
-    
+    // Filtro por origen de captura: '' (todos), 'ventas' o 'lab'
+    $origen = isset($_POST['origen']) ? $_POST['origen'] : '';
+
     $fechaHoy = date('Y-m-d');
-    $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));    
-    
+    $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
+
     // Consulta base
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, u.nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3, 
+    // LEFT JOIN en el ingeniero para que los pre-registros de Ventas (sin ingeniero asignado) también aparezcan
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(u.nombre,'') AS nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3,
                     IF(ot.capturado_por = ?, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
                     (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion, fecha_captura
             FROM servicios_planeados_mess ot
-            inner join usuarios u on ot.engineer = u.id_usuario 
+            LEFT join usuarios u on ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
-            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario 
+            LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario
             -- Filtramos por el estatus Abierto (asumo Estatus 1 o 2) y la fecha.
             WHERE ot.start_date >= ?"; 
     
@@ -236,7 +295,14 @@ if ($opcion == "solicitudesAbiertas") {
             }
         }
     }
-    
+
+    // --- 6b. Manejo del origen de captura (ventas / lab)
+    if ($origen === 'ventas' || $origen === 'lab') {
+        $whereClauses[] = "ot.origen_captura = ?";
+        $params[] = $origen;
+        $param_types .= "s";
+    }
+
     // --- 7. Construcción Final
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);

@@ -148,6 +148,9 @@
     </div>
     <!-- End of Page Wrapper -->
 
+    <!-- Contenedor donde se carga el modal de pre-registro de Ventas (vía AJAX al hacer click en el calendario) -->
+    <div id="contenedorModalVentas"></div>
+
     <!-- Scroll to Top Button-->
     <a class = "scroll-to-top rounded" href = "#page-top">
         <i class = "fas fa-angle-up"></i>
@@ -175,6 +178,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/5.10.1/locales/es.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script type="text/javascript">
         $(document).ready(function() {            
             filtrar();
@@ -293,6 +298,10 @@
                         right: 'dayGridMonth,dayGridWeek,timeGridDay'
                     },
                     events: eventos,
+                    dateClick: function(info) {
+                        // Solo el departamento de Ventas (40) puede pre-registrar desde un espacio vacío
+                        abrirPreRegistroVentas(info);
+                    },
                     eventContent: function(arg) {
                         // Permitir HTML en el título del evento
                         return { html: arg.event.title };
@@ -440,7 +449,18 @@
                                 case 'PAR TORSIONAL': colorEvento = '#00413c'; break;    // Par Torsional
                                 default: colorEvento = '#958007ff';                        // Azul por defecto oscuro
                             }
-                            
+
+                            // Pre-registro de Ventas: color claro + distintivo hasta que el lab lo apruebe
+                            var badgeVentas = '';
+                            var textoColor = '';
+                            if (actividad.origen === 'ventas') {
+                                badgeVentas = '<span class="badge bg-warning text-dark"><i class="fas fa-store"></i> VENTAS</span> ';
+                            }
+                            if (actividad.estatus === 'Solicitadoventas') {
+                                colorEvento = '#fff3cd'; // amarillo claro (pendiente de aprobación del lab)
+                                textoColor = '#212529';  // texto oscuro legible sobre fondo claro
+                            }
+
                             estatus = '';
                             nombre2 = '';
                             nombre3 = '';
@@ -506,8 +526,9 @@
 
 
                             // Construir la descripción con todos los campos
-                            var descripcionCompleta = 
-                                '<i class="fas fa-user"></i> <b>' + actividad.nombre + '</b>\n' +
+                            var descripcionCompleta =
+                                badgeVentas +
+                                '<i class="fas fa-user"></i> <b>' + (actividad.nombre || 'Pendiente asignar') + '</b>\n' +
                                 nombre2 +
                                 nombre3 +
                                 'Area: ' + areaOT + '\n' +
@@ -523,7 +544,8 @@
                                 description: actividad.comment, // Para el tooltip en HTML
                                 start: actividad.FechaPlaneadaInicioDate,
                                 end: actividad.FechaPlaneadaInicioDate,
-                                color: colorEvento
+                                color: colorEvento,
+                                textColor: textoColor
                             });
                             
                         });
@@ -542,7 +564,7 @@
                     }
                     
                 }, error: function (jqXHR, textStatus, errorThrown) {
-                    console.error('Error al aplicar el filtro'.textStatus   );
+                    console.error('Error al aplicar el filtro: ' + textStatus + ' - ' + errorThrown, jqXHR.responseText);
                 }
             });
 
@@ -556,6 +578,10 @@
                         right: 'dayGridMonth,dayGridWeek,timeGridDay'
                     },
                     events: eventos,
+                    dateClick: function(info) {
+                        // Solo el departamento de Ventas (40) puede pre-registrar desde un espacio vacío
+                        abrirPreRegistroVentas(info);
+                    },
                     eventContent: function(arg) {
                         // Permitir HTML en el título del evento
                         return { html: arg.event.title };
@@ -659,6 +685,97 @@
                     });
                 }
             });
+        }
+
+        // ================= PRE-REGISTRO DE VENTAS =================
+
+        // Abre el modal de pre-registro al hacer click en un espacio vacío del calendario (solo Ventas, depto 40)
+        function abrirPreRegistroVentas(info) {
+            if (String(getCookie('departamento')) !== '40') {
+                return; // Solo el departamento de Ventas puede pre-registrar
+            }
+
+            // Construir el valor para datetime-local a partir del click
+            var fechaVal = '';
+            if (info && info.dateStr) {
+                fechaVal = (info.dateStr.length <= 10) ? (info.dateStr + 'T08:00') : info.dateStr.substring(0, 16);
+            }
+
+            // Cargar el modal desde el archivo PHP nuevo y mostrarlo
+            $('#contenedorModalVentas').load('modalPreRegistroVentas.php', function() {
+                $('#formPreRegistroVentas')[0].reset();
+                $('#regFecha').val(fechaVal);
+                cargarCiudadesPreRegistro();
+                $('#modalPreRegistroVentas').modal('show');
+            });
+        }
+
+        // Carga las ciudades de México en el select del modal de pre-registro
+        function cargarCiudadesPreRegistro() {
+            $.ajax({
+                type: "POST",
+                url: "acciones_solicitud.php",
+                data: { opcion: "consultarCiudades" },
+                dataType: "json",
+                success: function (respuesta) {
+                    var select = $("#regCiudad");
+                    select.find('option:not(:first)').remove();
+                    respuesta.forEach(function (ciudad) {
+                        select.append(`<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`);
+                    });
+                },
+                error: function (xhr, status, error) {
+                    Swal.fire({ icon: "error", title: "Error", text: "No se pudieron cargar las ciudades." });
+                }
+            });
+        }
+
+        // Envía el pre-registro de Ventas
+        function registrarPreRegistroVentas() {
+            var cliente = ($('#regCliente').val() || '').trim();
+            var ciudad = $('#regCiudad').val();
+            var area = $('#regArea').val();
+            var fecha = $('#regFecha').val();
+            var ot = ($('#regOT').val() || '').trim();
+            var comentarios = ($('#regComentarios').val() || '').trim();
+
+            var errores = [];
+            if (cliente === '') errores.push('Ingresa un cliente');
+            if (!ciudad) errores.push('Selecciona una ciudad');
+            if (!area) errores.push('Selecciona un área');
+            if (!fecha) errores.push('Selecciona una fecha planeada');
+
+            if (errores.length > 0) {
+                Swal.fire({ title: "Campos incompletos", html: "• " + errores.join('<br>• '), icon: "warning" });
+                return;
+            }
+
+            $('#btnPreRegistroVentas').prop('disabled', true);
+            $.ajax({
+                url: 'acciones_solicitud.php',
+                method: 'POST',
+                dataType: 'json',
+                data: { opcion: 'preRegistroVentas', cliente, ciudad, area, fecha, ot, comentarios },
+                success: function(data) {
+                    $('#btnPreRegistroVentas').prop('disabled', false);
+                    if (data.status === 'success') {
+                        $('#modalPreRegistroVentas').modal('hide');
+                        Swal.fire({ title: "Pre-registro creado con éxito!", icon: "success", draggable: true });
+                        filtrar();
+                    } else {
+                        Swal.fire({ title: "No se pudo registrar", text: data.message || '', icon: "error" });
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    $('#btnPreRegistroVentas').prop('disabled', false);
+                    Swal.fire({ title: "El pre-registro no se pudo crear!", text: textStatus + ' - ' + errorThrown, icon: "error" });
+                }
+            });
+        }
+
+        // Convierte a mayúsculas y quita acentos (igual que en el registro normal)
+        function convertirTexto(e) {
+            e.value = e.value.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
         }
     </script>
 </body>

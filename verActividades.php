@@ -24,6 +24,7 @@
     <link href="vendor/fontawesome-free/css/all.min.css" rel="stylesheet" type="text/css">
     <!-- Custom styles for this template-->
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
+    <link href="css/planeacion.css" rel="stylesheet">
     <!-- DataTables CSS -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@5.10.2/main.css">
@@ -267,7 +268,7 @@
                                 'Area: ' + areaOT + '\n' +
                                 'OT: ' + actividad.order_code + '\n' +
                                 'Cliente: ' + (actividad.ds_cliente || '') + '\n'+
-                                '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:black; border-style:solid;">';
+                                '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:var(--border-strong); border-style:solid;">';
 
                             eventos.push({
                                 title: descripcionCompleta.replace(/\n/g, '<br>'), // Mostrar toda la descripción en el title
@@ -399,7 +400,7 @@
                                 'Area: ' + areaOT + '\n' +
                                 'OT: ' + actividad.order_code + '\n' +
                                 'Cliente: ' + (actividad.ds_cliente || '') + '\n'+
-                                '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:black; border-style:solid;">';
+                                '<hr style="margin-top:0;margin-bottom:0;border-width:2px; border-color:var(--border-strong); border-style:solid;">';
 
                             eventos.push({
                                 title: descripcionCompleta.replace(/\n/g, '<br>'), // Mostrar toda la descripción en el title

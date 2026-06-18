@@ -51,6 +51,12 @@
 
 <!-- Topbar Navbar -->
 <ul class = "navbar-nav ml-auto">
+    <!-- Boton de Toggle Tema -->
+    <li class="nav-item d-flex align-items-center mr-2">
+        <button class="btn theme-toggle-btn" type="button" id="btnToggleTheme" title="Cambiar tema">
+            <i class="fas fa-moon"></i>
+        </button>
+    </li>
     <!-- Boton de Notificaciones -->
     <li class="nav-item">
         <button class="btn btn-link nav-link fw-bold text-dark" type="button" id="btnNotificaciones" onclick="mostrarNotificacionesFlotantes()">
@@ -259,6 +265,35 @@
             }
         });
     }
+    </script>
+
+    <script>
+    (function() {
+        var saved = localStorage.getItem('planeacion-theme');
+        if (saved === 'dark') {
+            document.body.classList.add('theme-dark');
+            document.documentElement.classList.add('theme-dark');
+        }
+        function updateIcon() {
+            var icon = document.querySelector('#btnToggleTheme i');
+            if (!icon) return;
+            var isDark = document.body.classList.contains('theme-dark');
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            updateIcon();
+            var btn = document.getElementById('btnToggleTheme');
+            if (btn) {
+                btn.addEventListener('click', function() {
+                    document.body.classList.toggle('theme-dark');
+                    document.documentElement.classList.toggle('theme-dark');
+                    var isDark = document.body.classList.contains('theme-dark');
+                    localStorage.setItem('planeacion-theme', isDark ? 'dark' : 'light');
+                    updateIcon();
+                });
+            }
+        });
+    })();
     </script>
 </nav>
 <!-- End of Topbar -->

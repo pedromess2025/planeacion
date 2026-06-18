@@ -133,13 +133,13 @@ function renderizarTabla(selectorTabla, data) {
         if(solicitud.estatus_logistic === 'Solicitado'){
             if (solicitud.capturo === 'SI'){
                 estatusLogistica = `
-                        <button type="button" class="btn btn-warning" onclick="responderSolicitudLogistica('${solicitud.id}')">
+                        <button type="button" class="btn btn-outline-warning" onclick="responderSolicitudLogistica('${solicitud.id}')">
                             <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                         </button>
                 `;
             }else{
                 estatusLogistica = `
-                        <button type="button" class="btn btn-warning">
+                        <button type="button" class="btn btn-outline-warning">
                             <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                         </button>
                 `;
@@ -147,12 +147,12 @@ function renderizarTabla(selectorTabla, data) {
         }else{
             if(solicitud.estatus_logistic === 'aceptada'){
                 var estatusLogistica = `
-                            <button type="button" class="btn btn-success" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
+                            <button type="button" class="btn btn-outline-success" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
                                 <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                             </button>`;
             }else if(solicitud.estatus_logistic === 'rechazada'){
                 var estatusLogistica = `
-                            <button type="button" class="btn btn-danger" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
+                            <button type="button" class="btn btn-outline-danger" onclick="mostrarComentarios('${solicitud.order_code}', '${comentarioLimpioLogistico}')">
                                 <i class="fas fa-hand-paper" style="font-size:12px;"></i>
                             </button>`;
             }
@@ -164,7 +164,7 @@ function renderizarTabla(selectorTabla, data) {
             
                 accion = `
                     <div class="btn-group" role="group">       
-                        <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                        <button type="button" class="btn btn-outline-secondary" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
                         ${estatusLogistica}
@@ -176,7 +176,7 @@ function renderizarTabla(selectorTabla, data) {
             if(['42', '276', '290', '183'].includes(noEmpleado)) {
                 accion = `
                     <div class="btn-group" role="group">       
-                        <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                        <button type="button" class="btn btn-outline-secondary" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                             <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                         </button>
                         ${estatusLogistica}
@@ -184,7 +184,7 @@ function renderizarTabla(selectorTabla, data) {
                     `;
             }else{
                 accion = `
-                    <button type="button" class="btn btn-light" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
+                    <button type="button" class="btn btn-outline-secondary" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
                         <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
                     </button>
                 `;
@@ -199,7 +199,7 @@ function renderizarTabla(selectorTabla, data) {
         if (!isNaN(startDate.getTime()) && startDate.getTime() < Date.now() && (solicitud.estatus != 'Cerrada' && solicitud.estatus != 'Cancelada')) {
             fechaActividad = `<h6 style="color: red; font-size:13px;">${solicitud.start_date}</h6>`;
         } else {
-            fechaActividad = `<h6 style="color: black; font-size:13px;">${solicitud.start_date}</h6>`;
+            fechaActividad = `<h6 style="color: var(--text); font-size:13px;">${solicitud.start_date}</h6>`;
         }
         // Si no hay datos, mostrar 'S/R'
         const durationhr = solicitud.durationhr && solicitud.durationhr.trim() !== '' ? solicitud.durationhr : 'S/R';
@@ -208,7 +208,7 @@ function renderizarTabla(selectorTabla, data) {
             `<i class="fas fa-user"></i>${solicitud.nombre + nombre2 + nombre3}`,
             solicitud.area,
             solicitud.order_code,
-            fechaActividad + `<h6 style="color: black; font-size:13px;"><i class="fas fa-tools"></i> ${durationhr} hrs` + `<br>` + `<i class="fas fa-car"></i> ${travelhr} hrs</h6>`,
+            fechaActividad + `<h6 style="color: var(--text); font-size:13px;"><i class="fas fa-tools"></i> ${durationhr} hrs` + `<br>` + `<i class="fas fa-car"></i> ${travelhr} hrs</h6>`,
             solicitud.ds_cliente,
             solicitud.city,
             solicitud.vehiculo,

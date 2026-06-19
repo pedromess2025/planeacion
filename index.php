@@ -433,17 +433,15 @@
                 mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
             }
 
-            // --- 3. Validar Campos de Duración (Nuevo Requisito: Mayor que Cero) ---
-            const duracion = parseFloat(formData["txtDuracion"]);
-            const duracionViaje = parseFloat(formData["txtDuracionViaje"]);
-
-            // Validar Duración (Estimada)
-            if (isNaN(duracion) || duracion <= 0) {
+            // --- 3. Validar Campos de Duración ---
+            const duracionVal = parseFloat(formData["txtDuracion"]);
+            if (isNaN(duracionVal) || duracionVal <= 0) {
                 mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
             }
 
-            // Validar Duración del Viaje
-            if (isNaN(duracionViaje) || duracionViaje < 0) {
+            // Duración del viaje: vacío o 0 = sin traslado, solo rechazar negativos
+            const viajeVal = formData["txtDuracionViaje"].trim();
+            if (viajeVal !== '' && (isNaN(parseFloat(viajeVal)) || parseFloat(viajeVal) < 0)) {
                 mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
             }
 

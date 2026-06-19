@@ -443,9 +443,7 @@
             }
 
             // Validar Duración del Viaje
-            if (isNaN(duracionViaje) || duracionViaje <= 0) { // Permitimos cero si no hay viaje, pero no negativo
-                // Si el requisito estricto es > 0, usar duracionViaje <= 0.
-                // Aquí usamos < 0 para permitir 0 si no hay viaje. Si debe ser > 0, cambie a <= 0.
+            if (isNaN(duracionViaje) || duracionViaje < 0) {
                 mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
             }
 

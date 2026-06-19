@@ -1,7 +1,13 @@
 <?php
+header('Content-Type: application/json');
 // Conexi贸n a la base de datos
-include 'conn.php';
-mysqli_set_charset($conn, "utf8");
+try {
+    include 'conn.php';
+    mysqli_set_charset($conn, "utf8");
+} catch (Exception $e) {
+    echo json_encode(['status' => 'error', 'message' => 'Error de conexión: ' . $e->getMessage()]);
+    exit;
+}
 $noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? $_COOKIE['noEmpleado'] : null;
 $opcion = isset($_GET["opcion"]) ? $_GET["opcion"] : '';
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
@@ -131,11 +137,12 @@ if ($accion == 'ActividadesCalendarioPlaneadasSCOT') {
 }
 
 if ($accion == 'ActividadesCalendarioPlaneadas') {
-        
-    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];    
-    
+
+    try {
+    $areas = isset($_POST['area']) && is_array($_POST['area']) ? $_POST['area'] : [];
+
     $ingeniero = isset($_POST['ing']) && is_array($_POST['ing']) ? $_POST['ing'] : [];
-        
+
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
 
     $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
@@ -146,7 +153,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     // Consultar las actividades planeadas del usuario actual
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
-    // --- 1. Consulta Base ---    
+    // --- 1. Consulta Base ---
     // LEFT JOIN en el ingeniero para que los pre-registros de Ventas (sin ingeniero asignado) también se muestren
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(u.nombre,'') AS nombre, IFNULL(u2.nombre,'') AS nombre2,
                     IFNULL(u3.nombre,'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
@@ -156,22 +163,22 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
             LEFT JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
             LEFT join usuarios u3 on ot.engineer3 = u3.id_usuario
-            WHERE ot.estatus NOT IN ('Cancelada', 'Cerrada') AND DATE(ot.start_date) >= ?"; // Usar placeholder '?' en lugar de la fecha hardcodeada
+            WHERE ot.estatus NOT IN ('Cancelada', 'Cerrada') AND DATE(ot.start_date) >= ?";
 
     $whereClauses = [];
-    $params = [$fechaInicio]; // Array para los parámetros de la consulta preparada. $fechaInicio es el primer parámetro para el WHERE.
-    $param_types = "s";       // String para los tipos de los parámetros (s = string)
+    $params = [$fechaInicio];
+    $param_types = "s";
 
     // --- 2. Manejo de múltiples áreas seleccionadas
     if (!empty($areas)) {
         $placeholders = implode(',', array_fill(0, count($areas), '?'));
-        $whereClauses[] = "ot.area IN ($placeholders)"; 
+        $whereClauses[] = "ot.area IN ($placeholders)";
 
         foreach ($areas as $area_item) {
             $params[] = $area_item;
             $param_types .= "s";
         }
-    } 
+    }
 
     // --- 3. Manejo de la ciudad
     if (!empty($ciudad)) {
@@ -184,23 +191,21 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         }
     }
 
-    // --- 4. Manejo del ingeniero 
+    // --- 4. Manejo del ingeniero
     if (!empty($ingeniero)) {
         $count = count($ingeniero);
         $placeholders = implode(',', array_fill(0, $count, '?'));
         $whereClauses[] = "(ot.engineer IN ($placeholders) OR ot.engineer2 IN ($placeholders) OR ot.engineer3 IN ($placeholders))";
 
-        // Añadir la lista de ingenieros al array de parámetros TRES VECES 
         for ($i = 0; $i < 3; $i++) {
             foreach ($ingeniero as $ingeniero_item) {
                 $params[] = $ingeniero_item;
-                $param_types .= "s"; 
+                $param_types .= "s";
             }
         }
     }
 
-    // --- 5. Manejo del estatus (No es necesario si ya se filtra en el WHERE base)
-    // Si el filtro inicial no es suficiente, se añade aquí:
+    // --- 5. Manejo del estatus
     if (!empty($estatus)) {
         $placeholders = implode(',', array_fill(0, count($estatus), '?'));
         $whereClauses[] = "ot.estatus IN ($placeholders)";
@@ -211,13 +216,12 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         }
     }
 
-    // --- 6. Manejo de la región 
+    // --- 6. Manejo de la región
     if (!empty($region)) {
         $count = count($region);
         $placeholders = implode(',', array_fill(0, $count, '?'));
         $whereClauses[] = "(u.region IN ($placeholders) OR u2.region IN ($placeholders) OR u3.region IN ($placeholders))";
 
-        // Añadir la lista de regiones al array de parámetros TRES VECES (NECESARIO)
         for ($i = 0; $i < 3; $i++) {
             foreach ($region as $region_item) {
                 $params[] = $region_item;
@@ -230,30 +234,30 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     if (!empty($whereClauses)) {
         $sql .= " AND " . implode(' AND ', $whereClauses);
     }
-            
+
     $sql .= " ORDER BY ot.id DESC";
 
     // --- 8. Ejecución de la Consulta Preparada ---
-    if ($stmt = $conn->prepare($sql)) {
-        // Enlazar los parámetros dinámicamente        
-        $stmt->bind_param($param_types, ...$params);
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param($param_types, ...$params);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result && $result->num_rows > 0) {
-            $actividades = [];
-            while ($row = $result->fetch_assoc()) {
-                $actividades[] = $row;
-            }
-            echo json_encode(['status' => 'success', 'actividades' => $actividades]);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+    if ($result && $result->num_rows > 0) {
+        $actividades = [];
+        while ($row = $result->fetch_assoc()) {
+            $actividades[] = $row;
         }
-
-        $stmt->close();
+        echo json_encode(['status' => 'success', 'actividades' => $actividades]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas.']);
+    }
+
+    $stmt->close();
+
+    } catch (Exception $e) {
+        http_response_code(200);
+        echo json_encode(['status' => 'error', 'message' => 'Error en la consulta: ' . $e->getMessage()]);
     }
 }
 // Cerrar la conexión

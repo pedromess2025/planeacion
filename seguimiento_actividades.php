@@ -342,8 +342,9 @@
             
             // Aplica el estilo a ambas tablas
             $('#TSolAbiertas').DataTable({
-                "responsive": true,                
+                "responsive": true,
                 "ordering": true,
+                "order": [],   // Conserva el orden de la consulta (ot.id DESC = más nuevo primero)
                 "lengthMenu": [ 5, 10, 25, 50, -1],
                 "pageLength": 10,                
                 "searching": false,

@@ -19,6 +19,7 @@
                     <input type="hidden" id="regId" name="regId" value="">
                     <input type="hidden" id="regArea" name="regArea" value="">
                     <input type="hidden" id="regFechaBase" value="">
+                    <input type="hidden" id="regEngineer" name="regEngineer" value="">
                     <div class="row">
                         <div class="col-sm-6 mb-2">
                             <label for="regCliente">Cliente</label>
@@ -36,13 +37,13 @@
                             <label for="regOV">OV</label>
                             <input type="text" class="form-control form-control-sm" id="regOV" name="regOV" placeholder="OV (opcional)">
                         </div>
+                    </div>
+                    <div class="row">
                         <div class="col-sm-6 mb-2">
                             <label for="regFecha">Fecha</label>
                             <input type="text" class="form-control form-control-sm" id="regFecha" name="regFecha" readonly>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-sm-3 mb-2">
+                        <div class="col-sm-6 mb-2">
                             <label for="regHora">Hora</label>
                             <input type="time" class="form-control form-control-sm" id="regHora" name="regHora" value="08:00">
                         </div>
@@ -56,8 +57,9 @@
                 </form>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-danger me-auto" id="btnEliminarPreRegistro" style="display:none;"><i class="fas fa-trash-alt"></i> Cancelar pre-registro</button>
                 <button type="button" class="btn btn-success" id="btnPreRegistroVentas">Registrar</button>
-                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </div>
     </div>

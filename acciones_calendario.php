@@ -15,7 +15,7 @@ $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 // Consulta de las solicitudes de vacaciones aprobadas
 if ($opcion == "rrhh") {
     
-    $sql = "SELECT s.empleado, s.fesolicitud, s.feinicio, s.fefin, CONCAT(u.nombres, ' ', u.apellidos) AS nombre
+    $sql = "SELECT s.empleado, s.fesolicitud, s.feinicio, s.fefin, COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u.nombres, u.apellidos)), ''), u.nombre) AS nombre
             FROM solicitudes s
             INNER JOIN usuarios u ON s.empleado = u.noEmpleado
             WHERE s.estatus = 2 AND s.autorizaRH = 2 AND u.estatus = 1"; // Filtrar solo las aprobadas
@@ -42,7 +42,7 @@ if ($opcion == "jefes") {
     if($noEmpleado_cookie == 177 || $noEmpleado_cookie == 489){
         $noEmpleado_cookie = 45;
     }
-    $sqlJefes = "SELECT s.empleado, s.fesolicitud, s.feinicio, DATE_ADD(s.fefin, INTERVAL 1 DAY) as fefin, CONCAT(u.nombres, ' ', u.apellidos) AS nombre, u.jefe
+    $sqlJefes = "SELECT s.empleado, s.fesolicitud, s.feinicio, DATE_ADD(s.fefin, INTERVAL 1 DAY) as fefin, COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u.nombres, u.apellidos)), ''), u.nombre) AS nombre, u.jefe
                 FROM solicitudes s
                 INNER JOIN usuarios u ON s.empleado = u.noEmpleado
                 WHERE s.estatus = 2 AND s.autorizaRH = 2 AND u.jefe = $noEmpleado_cookie AND u.estatus = 1";
@@ -155,8 +155,8 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
     // --- 1. Consulta Base ---
     // LEFT JOIN en el ingeniero para que los pre-registros de Ventas (sin ingeniero asignado) también se muestren
-    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(CONCAT(u.nombres, ' ', u.apellidos),'') AS nombre, IFNULL(CONCAT(u2.nombres, ' ', u2.apellidos),'') AS nombre2,
-                    IFNULL(CONCAT(u3.nombres, ' ', u3.apellidos),'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
+    $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u.nombres, u.apellidos)), ''), u.nombre),'') AS nombre, IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u2.nombres, u2.apellidos)), ''), u2.nombre),'') AS nombre2,
+                    IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u3.nombres, u3.apellidos)), ''), u3.nombre),'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
                     estatus_logistic, comment_logistic, IFNULL(ot.travelhr, '0') AS travelhr, IFNULL(ot.durationhr, '0') AS durationhr,
                     ot.origen_captura AS origen, ot.capturado_por
             FROM servicios_planeados_mess ot
@@ -272,8 +272,14 @@ if ($accion == 'disponibilidadVentas') {
             exit;
         }
 
-        // 1. Obtener ingenieros activos del departamento
-        $sqlIngs = "SELECT id_usuario, CONCAT(nombres, ' ', apellidos) AS nombre FROM usuarios WHERE departamento = ? AND estatus = 1 ORDER BY nombres, apellidos";
+        // 1. Obtener ingenieros activos del departamento (solo puestos 34, 38)
+        // Respaldo: si nombres/apellidos están vacíos, usar el campo viejo 'nombre' para no mostrar "null".
+        $sqlIngs = "SELECT id_usuario, COALESCE(NULLIF(TRIM(CONCAT_WS(' ', nombres, apellidos)), ''), nombre) AS nombre
+                    FROM usuarios
+                    WHERE departamento = ?
+                        AND estatus = 1
+                        AND puesto IN (34,38)
+                    ORDER BY nombre";
         $stmtIngs = $conn->prepare($sqlIngs);
         $stmtIngs->bind_param("i", $departamentoId);
         $stmtIngs->execute();
@@ -295,7 +301,7 @@ if ($accion == 'disponibilidadVentas') {
         $placeholders = implode(',', array_fill(0, count($idsIngs), '?'));
         $sqlServ = "SELECT sp.id, sp.engineer, sp.engineer2, sp.engineer3, sp.order_code, sp.ds_cliente, sp.city, sp.area,
                            sp.estatus, sp.durationhr, sp.travelhr, sp.comment, sp.origen_captura, sp.capturado_por,
-                           DATE(sp.start_date) as fecha
+                           DATE(sp.start_date) as fecha, DATE_FORMAT(sp.start_date,'%H:%i') AS hora
                     FROM servicios_planeados_mess sp
                     WHERE (sp.engineer IN ($placeholders) OR sp.engineer2 IN ($placeholders) OR sp.engineer3 IN ($placeholders))
                       AND DATE(sp.start_date) BETWEEN ? AND ?
@@ -323,7 +329,7 @@ if ($accion == 'disponibilidadVentas') {
 
 // Endpoint: lista de departamentos que son áreas/labs
 if ($accion == 'departamentosLab') {
-    $ids = [5,6,9,13,14,15,16,17,18,19,20,21,22,23,25,26,27,28,31,36];
+    $ids = [4,14,15,17,18,19,20,22,25,32,38,48,50];
     $placeholders = implode(',', array_fill(0, count($ids), '?'));
     $sql = "SELECT id, departamento FROM departamento WHERE id IN ($placeholders) ORDER BY departamento";
     $stmt = $conn->prepare($sql);

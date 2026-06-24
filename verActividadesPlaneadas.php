@@ -109,6 +109,8 @@
                                                 <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                                 <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                 <option value="Cancelada">Cancelar</option>
+                                                <option value="CanceladaV">Cancelada por Ventas</option>
+                                                <option value="CanceladaLab">Rechazada por Laboratorio</option>
                                                 <option value="Cerrada">Cerrar</option>
                                             </select>
                                         </div>
@@ -148,9 +150,6 @@
 
     </div>
     <!-- End of Page Wrapper -->
-
-    <!-- Contenedor donde se carga el modal de pre-registro de Ventas (vía AJAX al hacer click en el calendario) -->
-    <div id="contenedorModalVentas"></div>
 
     <!-- Scroll to Top Button-->
     <a class = "scroll-to-top rounded" href = "#page-top">
@@ -299,16 +298,10 @@
                         right: 'dayGridMonth,dayGridWeek,timeGridDay'
                     },
                     events: eventos,
-                    dateClick: function(info) {
-                        // Solo el departamento de Ventas (40) puede pre-registrar desde un espacio vacío
-                        abrirPreRegistroVentas(info);
-                    },
                     eventContent: function(arg) {
-                        // Permitir HTML en el título del evento
                         return { html: arg.event.title };
                     },
                     eventDidMount: function(info) {
-                        // Tooltip con la descripción
                         $(info.el).tooltip({
                             title: info.event.extendedProps.description,
                             html: true,
@@ -487,6 +480,14 @@
                             if(actividad.estatus == 'Cancelada'){
                                 estatus = '<span class="badge text-bg-danger">Cancelada</span>';
                             }
+                            if(actividad.estatus == 'CanceladaV'){
+                                colorEvento = '#f8d7da'; textoColor = '#842029';
+                                estatus = '<span class="badge text-bg-danger">Cancelada por Ventas</span>';
+                            }
+                            if(actividad.estatus == 'CanceladaLab'){
+                                colorEvento = '#e2d6f0'; textoColor = '#4a1a6b';
+                                estatus = '<span class="badge" style="background:#6f42c1;color:#fff;">Rechazada por Lab</span>';
+                            }
                             if(actividad.estatus == 'Cerrada'){
                                 estatus = '<span class="badge text-bg-dark">Cerrada</span>';
                             }
@@ -579,10 +580,6 @@
                         right: 'dayGridMonth,dayGridWeek,timeGridDay'
                     },
                     events: eventos,
-                    dateClick: function(info) {
-                        // Solo el departamento de Ventas (40) puede pre-registrar desde un espacio vacío
-                        abrirPreRegistroVentas(info);
-                    },
                     eventContent: function(arg) {
                         // Permitir HTML en el título del evento
                         return { html: arg.event.title };
@@ -688,96 +685,6 @@
             });
         }
 
-        // ================= PRE-REGISTRO DE VENTAS =================
-
-        // Abre el modal de pre-registro al hacer click en un espacio vacío del calendario (solo Ventas, depto 40)
-        function abrirPreRegistroVentas(info) {
-            if (String(getCookie('departamento')) !== '40') {
-                return; // Solo el departamento de Ventas puede pre-registrar
-            }
-
-            // Construir el valor para datetime-local a partir del click
-            var fechaVal = '';
-            if (info && info.dateStr) {
-                fechaVal = (info.dateStr.length <= 10) ? (info.dateStr + 'T08:00') : info.dateStr.substring(0, 16);
-            }
-
-            // Cargar el modal desde el archivo PHP nuevo y mostrarlo
-            $('#contenedorModalVentas').load('modalPreRegistroVentas.php', function() {
-                $('#formPreRegistroVentas')[0].reset();
-                $('#regFecha').val(fechaVal);
-                cargarCiudadesPreRegistro();
-                $('#modalPreRegistroVentas').modal('show');
-            });
-        }
-
-        // Carga las ciudades de México en el select del modal de pre-registro
-        function cargarCiudadesPreRegistro() {
-            $.ajax({
-                type: "POST",
-                url: "acciones_solicitud.php",
-                data: { opcion: "consultarCiudades" },
-                dataType: "json",
-                success: function (respuesta) {
-                    var select = $("#regCiudad");
-                    select.find('option:not(:first)').remove();
-                    respuesta.forEach(function (ciudad) {
-                        select.append(`<option value="${ciudad.ciudad}"><b>${ciudad.estado}</b>  -  ${ciudad.ciudad}</option>`);
-                    });
-                },
-                error: function (xhr, status, error) {
-                    Swal.fire({ icon: "error", title: "Error", text: "No se pudieron cargar las ciudades." });
-                }
-            });
-        }
-
-        // Envía el pre-registro de Ventas
-        function registrarPreRegistroVentas() {
-            var cliente = ($('#regCliente').val() || '').trim();
-            var ciudad = $('#regCiudad').val();
-            var area = $('#regArea').val();
-            var fecha = $('#regFecha').val();
-            var ot = ($('#regOT').val() || '').trim();
-            var comentarios = ($('#regComentarios').val() || '').trim();
-
-            var errores = [];
-            if (cliente === '') errores.push('Ingresa un cliente');
-            if (!ciudad) errores.push('Selecciona una ciudad');
-            if (!area) errores.push('Selecciona un área');
-            if (!fecha) errores.push('Selecciona una fecha planeada');
-
-            if (errores.length > 0) {
-                Swal.fire({ title: "Campos incompletos", html: "• " + errores.join('<br>• '), icon: "warning" });
-                return;
-            }
-
-            $('#btnPreRegistroVentas').prop('disabled', true);
-            $.ajax({
-                url: 'acciones_solicitud.php',
-                method: 'POST',
-                dataType: 'json',
-                data: { opcion: 'preRegistroVentas', cliente, ciudad, area, fecha, ot, comentarios },
-                success: function(data) {
-                    $('#btnPreRegistroVentas').prop('disabled', false);
-                    if (data.status === 'success') {
-                        $('#modalPreRegistroVentas').modal('hide');
-                        Swal.fire({ title: "Pre-registro creado con éxito!", icon: "success", draggable: true });
-                        filtrar();
-                    } else {
-                        Swal.fire({ title: "No se pudo registrar", text: data.message || '', icon: "error" });
-                    }
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    $('#btnPreRegistroVentas').prop('disabled', false);
-                    Swal.fire({ title: "El pre-registro no se pudo crear!", text: textStatus + ' - ' + errorThrown, icon: "error" });
-                }
-            });
-        }
-
-        // Convierte a mayúsculas y quita acentos (igual que en el registro normal)
-        function convertirTexto(e) {
-            e.value = e.value.toUpperCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
-        }
     </script>
 </body>
 </html>

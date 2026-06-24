@@ -12,6 +12,21 @@ $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['est
 $fechaHoy = date('Y-m-d');
 $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
+// Verifica si un empleado tiene un acceso especial activo (tabla accesos_especiales)
+function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
+    $noEmpleado = intval($noEmpleado);
+    if ($noEmpleado <= 0) return false;
+    $stmt = $conn->prepare("SELECT COUNT(*) AS cuantos FROM accesos_especiales
+                            WHERE noEmpleado = ? AND sistema = ? AND opcion = ? AND estatus = 1");
+    if (!$stmt) return false;
+    $stmt->bind_param("iss", $noEmpleado, $sistema, $opcion);
+    $stmt->execute();
+    $res = $stmt->get_result();
+    $row = $res ? $res->fetch_assoc() : null;
+    $stmt->close();
+    return $row && intval($row['cuantos']) > 0;
+}
+
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {        
         $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
@@ -68,6 +83,9 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 //FUNCION PARA EL PRE-REGISTRO DE VENTAS (solo departamento 40)
     if($opcion == "preRegistroVentas"){
         header('Content-Type: application/json');
+        // Las columnas son utf8mb4; igualamos el charset de la conexión para evitar
+        // error de collation al insertar áreas/ciudades con acento (p.ej. "Eléctrica").
+        mysqli_set_charset($conn, "utf8mb4");
 
         // Validación server-side: solo el departamento de Ventas (40) puede pre-registrar
         $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
@@ -82,6 +100,9 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         $fecha        = isset($_POST['fecha']) ? $_POST['fecha'] : '';
         $ot           = isset($_POST['ot']) ? trim($_POST['ot']) : '';
         $comentarios  = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
+        // Ingeniero sugerido: la celda que eligió Ventas. El Jefe de Lab puede cambiarlo al aprobar.
+        $engineer     = isset($_POST['engineer']) ? intval($_POST['engineer']) : 0;
+        $engineer     = $engineer > 0 ? (string)$engineer : '';
 
         // Validación de requeridos (la OV/OT y el comentario son opcionales)
         if ($cliente === '' || $ciudad === '' || $area === '' || $fecha === '') {
@@ -98,12 +119,12 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         $fechaCaptura = date('Y-m-d');
         $capturadoPor = $noEmpleado_cookie;
 
-        // engineer se deja vacío: lo asigna el Jefe de Laboratorio al aprobar
+        // engineer = ingeniero sugerido por Ventas (puede ir vacío). Lo reasigna el Jefe de Lab al aprobar.
         $sqlInsert = "INSERT INTO servicios_planeados_mess
                         (service_order_id, order_code, engineer, start_date, city, area, ds_cliente, estatus, fecha_captura, capturado_por, comment, reprogramado, origen_captura)
-                      VALUES (?, ?, '', ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
         if ($stmt = $conn->prepare($sqlInsert)) {
-            $stmt->bind_param("ssssssssiss", $ot, $ot, $startDate, $ciudad, $area, $cliente, $estatus, $fechaCaptura, $capturadoPor, $comentarios, $origen);
+            $stmt->bind_param("sssssssssiss", $ot, $ot, $engineer, $startDate, $ciudad, $area, $cliente, $estatus, $fechaCaptura, $capturadoPor, $comentarios, $origen);
             if ($stmt->execute()) {
                 echo json_encode(['status' => 'success', 'message' => 'Pre-registro creado con éxito.', 'id' => $stmt->insert_id]);
             } else {
@@ -112,6 +133,133 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
             $stmt->close();
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        }
+        exit;
+    }
+
+//FUNCION PARA EDITAR UN PRE-REGISTRO DE VENTAS (solo el autor, solo si sigue en Solicitadoventas)
+    if($opcion == "editarPreRegistroVentas"){
+        header('Content-Type: application/json');
+        // Igualar charset a utf8mb4 (columnas) para áreas/ciudades con acento.
+        mysqli_set_charset($conn, "utf8mb4");
+
+        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
+        if ($departamento_cookie != '40') {
+            echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede editar pre-registros.']);
+            exit;
+        }
+
+        $id           = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        $cliente      = isset($_POST['cliente']) ? trim($_POST['cliente']) : '';
+        $ciudad       = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
+        $area         = isset($_POST['area']) ? $_POST['area'] : '';
+        $fecha        = isset($_POST['fecha']) ? $_POST['fecha'] : '';
+        $ot           = isset($_POST['ot']) ? trim($_POST['ot']) : '';
+        $comentarios  = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
+
+        if ($id <= 0 || $cliente === '' || $ciudad === '' || $area === '' || $fecha === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Faltan campos obligatorios.']);
+            exit;
+        }
+
+        $startDate = str_replace('T', ' ', $fecha);
+        if (strlen($startDate) === 16) { $startDate .= ':00'; }
+
+        $sqlUpdate = "UPDATE servicios_planeados_mess
+                      SET ds_cliente = ?, city = ?, area = ?, start_date = ?, service_order_id = ?, order_code = ?, comment = ?
+                      WHERE id = ? AND estatus = 'Solicitadoventas' AND capturado_por = ? AND origen_captura = 'ventas'";
+        if ($stmt = $conn->prepare($sqlUpdate)) {
+            $stmt->bind_param("sssssssii", $cliente, $ciudad, $area, $startDate, $ot, $ot, $comentarios, $id, $noEmpleado_cookie);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                echo json_encode(['status' => 'success', 'message' => 'Pre-registro actualizado con éxito.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No se pudo actualizar. Verifique que el pre-registro le pertenece y siga en estatus Solicitadoventas.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+        }
+        exit;
+    }
+
+//FUNCION PARA CANCELAR UN PRE-REGISTRO DE VENTAS (CanceladaV)
+    if($opcion == "cancelarPreRegistroVentas"){
+        header('Content-Type: application/json');
+
+        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
+        if ($departamento_cookie != '40') {
+            echo json_encode(['status' => 'error', 'message' => 'No autorizado.']);
+            exit;
+        }
+
+        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        if ($id <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'ID inválido.']);
+            exit;
+        }
+
+        $sqlCancel = "UPDATE servicios_planeados_mess
+                      SET estatus = 'CanceladaV'
+                      WHERE id = ? AND estatus = 'Solicitadoventas' AND capturado_por = ? AND origen_captura = 'ventas'";
+        if ($stmt = $conn->prepare($sqlCancel)) {
+            $stmt->bind_param("ii", $id, $noEmpleado_cookie);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                echo json_encode(['status' => 'success', 'message' => 'Pre-registro cancelado.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No se pudo cancelar. Verifique que el pre-registro le pertenece y siga en estatus Solicitadoventas.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
+        }
+        exit;
+    }
+
+//FUNCION PARA NEGAR (RECHAZAR) UN PRE-REGISTRO DE VENTAS (solo el Jefe rol 3 del lab destino) -> CanceladaLab
+    if($opcion == "negarPreRegistroVentas"){
+        header('Content-Type: application/json');
+        mysqli_set_charset($conn, "utf8mb4");
+
+        $id     = isset($_POST['id']) ? intval($_POST['id']) : 0;
+        $motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : '';
+
+        // Negar pre-registros requiere el acceso especial 'verPreRegistroVentas'
+        if (!tieneAccesoEspecial($conn, $noEmpleado_cookie, 'planeacion', 'verPreRegistroVentas')) {
+            echo json_encode(['status' => 'error', 'message' => 'No autorizado: no tienes acceso para negar pre-registros de Ventas.']);
+            exit;
+        }
+        if ($id <= 0 || $motivo === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Faltan datos (id o motivo del rechazo).']);
+            exit;
+        }
+
+        // Validar que el pre-registro existe y sigue en Solicitadoventas
+        $chk = $conn->query("SELECT estatus FROM servicios_planeados_mess WHERE id = " . intval($id) . " LIMIT 1");
+        if (!$chk || !($rowChk = $chk->fetch_assoc())) {
+            echo json_encode(['status' => 'error', 'message' => 'Pre-registro no encontrado.']);
+            exit;
+        }
+        if ($rowChk['estatus'] !== 'Solicitadoventas') {
+            echo json_encode(['status' => 'error', 'message' => 'Solo se pueden negar pre-registros pendientes (Solicitadoventas).']);
+            exit;
+        }
+
+        $sqlNegar = "UPDATE servicios_planeados_mess
+                     SET estatus = 'CanceladaLab', motivo_cancelacion = ?
+                     WHERE id = ? AND estatus = 'Solicitadoventas'";
+        if ($stmt = $conn->prepare($sqlNegar)) {
+            $stmt->bind_param("si", $motivo, $id);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                echo json_encode(['status' => 'success', 'message' => 'Pre-registro rechazado.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'No se pudo rechazar el pre-registro.']);
+            }
+            $stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
         }
         exit;
     }
@@ -133,6 +281,19 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         // Duración (servicio) y duración de viaje: el lab las completa al aprobar un pre-registro
         $duracion = isset($_POST["duracion"]) ? $_POST["duracion"] : '';
         $duracionViaje = isset($_POST["duracionViaje"]) ? $_POST["duracionViaje"] : '';
+
+        // Validación: aprobar un pre-registro (Solicitadoventas) requiere el acceso especial
+        // 'verPreRegistroVentas' (tabla accesos_especiales). No afecta ediciones normales.
+        $chkPre = $conn->query("SELECT estatus FROM servicios_planeados_mess WHERE id = " . intval($idActividad) . " LIMIT 1");
+        if ($chkPre && ($rowChk = $chkPre->fetch_assoc())) {
+            if ($rowChk['estatus'] === 'Solicitadoventas') {
+                if (!tieneAccesoEspecial($conn, $noEmpleado_cookie, 'planeacion', 'verPreRegistroVentas')) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status' => 'error', 'message' => 'No autorizado: no tienes acceso para aprobar pre-registros de Ventas.']);
+                    exit;
+                }
+            }
+        }
 
         $sqlUpdate = "UPDATE servicios_planeados_mess
                         SET engineer = '$ingeniero',
@@ -219,7 +380,8 @@ if ($opcion == "solicitudesAbiertas") {
     // LEFT JOIN en el ingeniero para que los pre-registros de Ventas (sin ingeniero asignado) también aparezcan
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(u.nombre,'') AS nombre, IFNULL(u2.nombre,'') AS nombre2, IFNULL(u3.nombre,'') AS nombre3,
                     IF(ot.capturado_por = ?, 'SI', 'NO') AS capturo, comment_logistic, estatus_logistic,
-                    (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto, reprogramado, motivo_reprogramacion, motivo_cancelacion, fecha_captura
+                    (SELECT departamento FROM usuarios WHERE noEmpleado = ot.capturado_por) as depto,
+                    reprogramado, motivo_reprogramacion, motivo_cancelacion, fecha_captura
             FROM servicios_planeados_mess ot
             LEFT join usuarios u on ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario

@@ -15,6 +15,28 @@
         background-color: #bf00ffff !important;
         color: #ffffffff !important;
     }
+    /* Grupo colapsable "Calendarios" */
+    #toggleCalendarios { cursor: pointer; }
+    #toggleCalendarios .caret-calendarios { transition: transform .2s ease; }
+    #toggleCalendarios.abierto .caret-calendarios { transform: rotate(180deg); }
+    /* Panel tipo tarjeta con los tonos de planeacion (se adapta a tema claro/oscuro) */
+    #grupoCalendarios {
+        background-color: var(--card-bg);
+        border-radius: .35rem;
+        margin: .25rem .8rem .5rem;
+        padding: .4rem 0;
+        box-shadow: 0 .15rem .5rem rgba(0, 0, 0, .15);
+        overflow: hidden;
+    }
+    #grupoCalendarios .sub-item {
+        display: block;
+        color: var(--text) !important;
+        padding: .45rem 1rem .45rem 1.25rem;
+        font-size: .85rem;
+        white-space: nowrap;
+    }
+    #grupoCalendarios .sub-item:hover { background-color: var(--card-soft); color: var(--accent) !important; }
+    #grupoCalendarios .sub-item.active { color: var(--accent) !important; font-weight: 700; }
 </style>
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
@@ -68,24 +90,22 @@
     </li>
     <hr class="sidebar-divider my-0 alert-light">
     <li class="nav-item">
-        <a class="nav-link" href="verActividadesPlaneadas">
-            <i class="fas fa-fw fa-calendar text-gray-400"></i>
-            <span>Actividades planeadas</span>
+        <a class="nav-link d-flex align-items-center" href="#" id="toggleCalendarios" role="button" aria-expanded="false">
+            <i class="fas fa-fw fa-calendar-alt text-gray-400"></i>
+            <span>Calendarios</span>
+            <i class="fas fa-angle-down caret-calendarios ms-auto"></i>
         </a>
-    </li>
-
-    <li class="nav-item" id="menuCalendarioVentas" style="display:none;">
-        <a class="nav-link" href="calendarioVentas">
-            <i class="fas fa-fw fa-store text-warning"></i>
-            <span>Calendario Ventas</span>
-        </a>
-    </li>
-
-    <li class="nav-item">
-        <a class="nav-link" href="verActividades">
-            <i class="fas fa-fw fa-calendar text-gray-400"></i>
-            <span>Actividades planeadas SCOT</span>
-        </a>
+        <div id="grupoCalendarios" style="display:none;">
+            <a class="sub-item" href="verActividadesPlaneadas">
+                <i class="fas fa-fw fa-calendar"></i> <span>Actividades planeadas</span>
+            </a>
+            <a class="sub-item" id="menuCalendarioVentas" href="calendarioVentas" style="display:none;">
+                <i class="fas fa-fw fa-store text-warning"></i> <span>Calendario Ventas</span>
+            </a>
+            <a class="sub-item" href="verActividades">
+                <i class="fas fa-fw fa-calendar"></i> <span>Actividades planeadas SCOT</span>
+            </a>
+        </div>
     </li>
     <hr class="sidebar-divider my-0 alert-light">
     <li class="nav-item">
@@ -123,10 +143,28 @@
 <script type="text/javascript">
     $(document).ready(function() {
         verificarVistaMenu();
-        // Mostrar Calendario Ventas solo para departamento 40
+        // Mostrar Calendario Ventas solo para los departamentos de Ventas
+        // (debe coincidir con DEPTOS_VENTAS en conn.php: 34=Ventas, 35=Ventas SLP, 36=Ventas Zona Nte)
         var deptoMenu = (new URLSearchParams(document.cookie.replace(/; /g, '&'))).get('departamento');
-        if (deptoMenu === '40') {
+        if (['34', '35', '36'].includes(deptoMenu)) {
             $('#menuCalendarioVentas').show();
+        }
+
+        // Toggle del grupo "Calendarios" con jQuery puro (evita el conflicto de múltiples
+        // versiones de Bootstrap cargadas en las páginas host, que disparaba el collapse 2 veces).
+        $('#toggleCalendarios').on('click', function(e) {
+            e.preventDefault();
+            var abierto = $(this).toggleClass('abierto').hasClass('abierto');
+            $(this).attr('aria-expanded', abierto ? 'true' : 'false');
+            $('#grupoCalendarios').stop(true, true).slideToggle(150);
+        });
+
+        // Abrir el grupo y marcar el ítem activo si estamos en una de sus páginas
+        var paginaActual = window.location.pathname.split('/').pop().replace('.php', '');
+        if (['verActividadesPlaneadas', 'calendarioVentas', 'verActividades'].includes(paginaActual)) {
+            $('#grupoCalendarios').show();
+            $('#toggleCalendarios').addClass('abierto').attr('aria-expanded', 'true');
+            $('#grupoCalendarios .sub-item[href="' + paginaActual + '"]').addClass('active');
         }
     });
 

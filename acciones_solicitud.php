@@ -80,16 +80,16 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         echo json_encode($response);
     }
 
-//FUNCION PARA EL PRE-REGISTRO DE VENTAS (solo departamento 40)
+//FUNCION PARA EL PRE-REGISTRO DE VENTAS (solo departamentos de Ventas: 34/35/36, ver DEPTOS_VENTAS en conn.php)
     if($opcion == "preRegistroVentas"){
         header('Content-Type: application/json');
         // Las columnas son utf8mb4; igualamos el charset de la conexión para evitar
         // error de collation al insertar áreas/ciudades con acento (p.ej. "Eléctrica").
         mysqli_set_charset($conn, "utf8mb4");
 
-        // Validación server-side: solo el departamento de Ventas (40) puede pre-registrar
+        // Validación server-side: solo los departamentos de Ventas (DEPTOS_VENTAS) pueden pre-registrar
         $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
+        if (!in_array((string)$departamento_cookie, DEPTOS_VENTAS, true)) {
             echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede pre-registrar.']);
             exit;
         }
@@ -144,7 +144,7 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         mysqli_set_charset($conn, "utf8mb4");
 
         $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
+        if (!in_array((string)$departamento_cookie, DEPTOS_VENTAS, true)) {
             echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede editar pre-registros.']);
             exit;
         }
@@ -188,7 +188,7 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         header('Content-Type: application/json');
 
         $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
+        if (!in_array((string)$departamento_cookie, DEPTOS_VENTAS, true)) {
             echo json_encode(['status' => 'error', 'message' => 'No autorizado.']);
             exit;
         }

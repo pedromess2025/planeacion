@@ -4,7 +4,7 @@
     if($_COOKIE['noEmpleado'] == '' || $_COOKIE['noEmpleado'] == null){
         echo '<script>window.location.assign("index")</script>';
     }
-    if(!isset($_COOKIE['departamento']) || $_COOKIE['departamento'] != '40'){
+    if(!isset($_COOKIE['departamento']) || !in_array((string)$_COOKIE['departamento'], DEPTOS_VENTAS, true)){
         echo '<script>window.location.assign("verActividadesPlaneadas")</script>';
     }
 ?>

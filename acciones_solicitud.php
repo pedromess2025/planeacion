@@ -497,12 +497,12 @@ if ($opcion == "solicitudesAbiertas") {
             echo json_encode($actividades);
         } else {
             header('Content-Type: application/json');
-            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas.', 'sql' => $sql, 'params' => $params]);
+            echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas.']);
         }
         $stmt->close();
     } else {
         header('Content-Type: application/json');
-        echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error, 'sql' => $sql]);
+        echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta.']);
     }
 }
 
@@ -551,7 +551,7 @@ if ($opcion == "solicitudesPendientes") {
                 }
                 echo json_encode($actividades);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.']);
             }
             $stmt->close();
         } else {
@@ -653,7 +653,7 @@ if ($opcion == "SolicitudesLogistica") {
                 }
                 echo json_encode($actividades);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.', 'sql' => $sql, 'params' => $params]);
+                echo json_encode(['status' => 'error', 'message' => 'No se encontraron actividades planeadas o error en la consulta.']);
             }
             $stmt->close();
         } else {

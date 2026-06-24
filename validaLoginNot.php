@@ -41,7 +41,7 @@ if ($sistema === 'entradasEq'
     $urlDestino = '/planeacion/' . $archivo;
 }
 
-$sql = "SELECT id_usuario, nombre, noEmpleado, rol, correo, departamento, diasdisponibles,
+$sql = "SELECT id_usuario, nombre, nombres, apellidos, noEmpleado, rol, correo, departamento, diasdisponibles,
                TIMESTAMPDIFF(YEAR, fechaIngreso, CURDATE()) AS antiguedad
         FROM usuarios
         WHERE noEmpleado = ? AND estatus = 1
@@ -68,7 +68,14 @@ if ($resultado && mysqli_num_rows($resultado) === 1) {
         session_start();
     }
 
-    $_SESSION['nombredelusuario'] = $usuario['nombre'];
+    // El nombre a mostrar se compone de las columnas nuevas nombres + apellidos
+    // (orden consistente "Nombre Apellidos"); si vienen vacias se usa el 'nombre' legacy.
+    $nombreCompleto = trim(preg_replace('/\s+/u', ' ', ($usuario['nombres'] ?? '') . ' ' . ($usuario['apellidos'] ?? '')));
+    if ($nombreCompleto === '') {
+        $nombreCompleto = trim((string)($usuario['nombre'] ?? ''));
+    }
+
+    $_SESSION['nombredelusuario'] = $nombreCompleto;
     $_SESSION['noEmpleado'] = $usuario['noEmpleado'];
     $_SESSION['rol'] = $usuario['rol'];
     $_SESSION['correo'] = $usuario['correo'];
@@ -82,7 +89,7 @@ if ($resultado && mysqli_num_rows($resultado) === 1) {
 
     setcookie('id_usuario', (string)$usuario['id_usuario'], $cookieOpts);
     setcookie('antiguedad', (string)$usuario['antiguedad'], $cookieOpts);
-    setcookie('nombredelusuario', (string)$usuario['nombre'], $cookieOpts);
+    setcookie('nombredelusuario', $nombreCompleto, $cookieOpts);
     setcookie('noEmpleado', (string)$usuario['noEmpleado'], $cookieOpts);
     setcookie('diasD', (string)$usuario['diasdisponibles'], $cookieOpts);
     setcookie('departamento', (string)$usuario['departamento'], $cookieOpts);

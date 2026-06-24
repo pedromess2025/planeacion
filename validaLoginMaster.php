@@ -19,7 +19,12 @@ if (empty($id_usuario) || empty($noEmpleado)) {
     $nr = mysqli_num_rows($res2);
 
     while ($row2 = mysqli_fetch_array($res2)){
-        $nombreEmpleado = $row2["nombre"];
+        // Nombre a mostrar: columnas nuevas nombres + apellidos (orden "Nombre Apellidos");
+        // si vienen vacias se usa el 'nombre' legacy.
+        $nombreEmpleado = trim(preg_replace('/\s+/u', ' ', ($row2["nombres"] ?? '') . ' ' . ($row2["apellidos"] ?? '')));
+        if ($nombreEmpleado === '') {
+            $nombreEmpleado = trim((string)($row2["nombre"] ?? ''));
+        }
         $noEmpleado = $row2["noEmpleado"];
         $antiguedad = $row2["antiguedad"];
         $diasD = $row2["diasdisponibles"];
@@ -31,7 +36,7 @@ if (empty($id_usuario) || empty($noEmpleado)) {
         // Establecer cookies con SameSite=Lax
         echo '<script>document.cookie = "id_usuario='.$id_usuario.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "antiguedad='.$antiguedad.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
-        echo '<script>document.cookie = "nombredelusuario='.$nombreEmpleado.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
+        echo '<script>document.cookie = "nombredelusuario='.rawurlencode($nombreEmpleado).';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "noEmpleado='.$noEmpleado.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "diasD='.$diasD.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';
         echo '<script>document.cookie = "departamento='.$departamento.';expires=" + new Date(Date.now() + 86400000).toUTCString() + ";SameSite=Lax;";</script>';

@@ -28,9 +28,15 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
 }
 
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
-    if ($opcion == "empleados") {        
-        $sql = "SELECT * from usuarios WHERE estatus = 1 ORDER BY nombre";            
-        $result = $conn->query($sql);        
+    if ($opcion == "empleados") {
+        // Filtro opcional: solo ingenieros de servicio (puesto = 38)
+        $soloServicio = isset($_POST['soloServicio']) && $_POST['soloServicio'] == '1';
+        $sql = "SELECT * from usuarios WHERE estatus = 1";
+        if ($soloServicio) {
+            $sql .= " AND puesto = 38";
+        }
+        $sql .= " ORDER BY nombre";
+        $result = $conn->query($sql);
         $usuarios = array();
         
         while ($row = $result->fetch_assoc()) {

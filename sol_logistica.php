@@ -371,7 +371,7 @@
                 url: 'acciones_solicitud.php',
                 method: 'POST',
                 dataType: 'json',
-                data: {opcion},
+                data: {opcion, soloServicio: 1},
                 success: function(data) {
                     var select = $(selectIng);
                     i = 0;

@@ -354,7 +354,7 @@
             $.ajax({
                 type: "POST",
                 url: "acciones_solicitud.php",
-                data: { opcion: "empleados" },
+                data: { opcion: "empleados", soloServicio: 1 },
                 dataType: "json",
                 success: function (respuesta) {
                     var select = $("#filtro-ingeniero");

@@ -488,13 +488,14 @@
         }        
 
         // Función para cargar empleados en los select de responsables
+        // soloServicio = 1 -> solo ingenieros de servicio (puesto = 38)
         function empleadoSolicita(seleccionado) {
             opcion = "empleados";
             $.ajax({
                 url: 'acciones_solicitud.php',
                 method: 'POST',
                 dataType: 'json',
-                data: {opcion},
+                data: {opcion, soloServicio: 1},
                 success: function(data) {
                     var select = $(seleccionado);
                     i = 0;

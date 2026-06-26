@@ -10100,3 +10100,37 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+-- --------------------------------------------------------
+-- Tabla `enlaces_logistica` (sistema de enlaces / entregas de Logistica)
+-- Agregada 2026-06-24 (rama SGR_ENLACES_LOGISTICA_20260624)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `enlaces_logistica` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `folio` VARCHAR(40) NULL,
+  `origen` VARCHAR(150) NOT NULL,
+  `destino` VARCHAR(150) NOT NULL,
+  `contenido` TEXT NOT NULL,
+  `responsable` VARCHAR(150) NULL,
+  `fecha_envio` DATETIME NULL,
+  `fecha_entrega_estimada` DATETIME NULL,
+  `estatus` VARCHAR(40) NOT NULL DEFAULT 'Pendiente',
+  `comentario` TEXT NULL,
+  `fecha_reprogramacion` DATETIME NULL,
+  `capturado_por` VARCHAR(20) NULL,
+  `fecha_captura` TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+-- Tabla `enlaces_estatus_historial` (bitacora de cambios de estatus de cada enlace)
+-- Agregada 2026-06-24 (rama SGR_ENLACES_LOGISTICA_20260624)
+-- --------------------------------------------------------
+CREATE TABLE IF NOT EXISTS `enlaces_estatus_historial` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `enlace_id` INT NOT NULL,
+  `estatus` VARCHAR(40) NOT NULL,
+  `comentario` TEXT NULL,
+  `capturado_por` VARCHAR(20) NULL,
+  `fecha` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  INDEX `idx_enlace` (`enlace_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

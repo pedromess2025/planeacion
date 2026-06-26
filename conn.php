@@ -12,4 +12,9 @@ if ($conn->connect_error) {
 if (!defined('DEPTOS_VENTAS')) {
     define('DEPTOS_VENTAS', ['34', '35', '36']);
 }
+
+// Departamento de Logística (catálogo: 20 = Logística). Gating de la vista de Entregas/Enlaces.
+if (!defined('DEPTO_LOGISTICA')) {
+    define('DEPTO_LOGISTICA', '20');
+}
 ?>

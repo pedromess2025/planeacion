@@ -52,27 +52,35 @@
                 <?php include 'encabezado.php'; ?>
 
                 <div class="container-fluid">
-                    <h1><i class="fas fa-store"></i> Calendario de Ventas</h1>
+                    <div class="row">
+                        <div class="col-xl-12">
+                            <div class="card shadow">
+                                <div class="card-body">
+                                    <p class="fs-4"><b><i class="fas fa-store"></i> CALENDARIO DE VENTAS</b></p>
+                                    <hr>
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <label for="slcDepartamento"><b>Selecciona el &Aacute;rea:</b></label>
+                                            <select id="slcDepartamento" class="form-select">
+                                                <option value="">-- Selecciona un &aacute;rea --</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5 d-flex align-items-end">
+                                            <div class="nav-semana">
+                                                <button class="btn btn-outline-primary btn-sm" onclick="cambiarSemana(-1)"><i class="fas fa-chevron-left"></i></button>
+                                                <button class="btn btn-outline-secondary btn-sm" onclick="irAHoy()">Hoy</button>
+                                                <h5 id="tituloSemana"></h5>
+                                                <button class="btn btn-outline-primary btn-sm" onclick="cambiarSemana(1)"><i class="fas fa-chevron-right"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label for="slcDepartamento"><b>Selecciona el &Aacute;rea:</b></label>
-                            <select id="slcDepartamento" class="form-select">
-                                <option value="">-- Selecciona un &aacute;rea --</option>
-                            </select>
-                        </div>
-                        <div class="col-md-5 d-flex align-items-end">
-                            <div class="nav-semana">
-                                <button class="btn btn-outline-primary btn-sm" onclick="cambiarSemana(-1)"><i class="fas fa-chevron-left"></i></button>
-                                <button class="btn btn-outline-secondary btn-sm" onclick="irAHoy()">Hoy</button>
-                                <h5 id="tituloSemana"></h5>
-                                <button class="btn btn-outline-primary btn-sm" onclick="cambiarSemana(1)"><i class="fas fa-chevron-right"></i></button>
+                                    <div id="contenedorGrid" style="overflow-x:auto;">
+                                        <p class="text-muted"><i class="fas fa-info-circle"></i> Selecciona un &aacute;rea para ver la disponibilidad.</p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-
-                    <div id="contenedorGrid" style="overflow-x:auto;">
-                        <p class="text-muted"><i class="fas fa-info-circle"></i> Selecciona un &aacute;rea para ver la disponibilidad.</p>
                     </div>
                 </div>
             </div>

@@ -6659,9 +6659,26 @@ CREATE TABLE IF NOT EXISTS `servicios_planeados_mess` (
   `reprogramado` int NOT NULL,
   `motivo_reprogramacion` varchar(999) DEFAULT NULL,
   `motivo_cancelacion` varchar(999) DEFAULT NULL,
-  `origen_captura` varchar(10) NOT NULL DEFAULT 'lab',
   PRIMARY KEY (`id`)
 ) ENGINE=MyISAM AUTO_INCREMENT=439 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+--
+-- Estructura de tabla para la tabla `planeacion_disponibilidad_ingenieros`
+--
+
+DROP TABLE IF EXISTS `planeacion_disponibilidad_ingenieros`;
+CREATE TABLE IF NOT EXISTS `planeacion_disponibilidad_ingenieros` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `id_usuario` int NOT NULL,
+  `area` varchar(50) DEFAULT NULL,
+  `fecha` date NOT NULL,
+  `estatus` varchar(30) NOT NULL,
+  `comentario` varchar(500) DEFAULT NULL,
+  `capturado_por` int NOT NULL,
+  `fecha_registro` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uq_ing_fecha` (`id_usuario`,`fecha`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 --
 -- Volcado de datos para la tabla `servicios_planeados_mess`

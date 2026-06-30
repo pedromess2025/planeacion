@@ -105,14 +105,6 @@
                                                 <option value="">Selecciona...</option>
                                             </select>
                                         </div>
-                                        <div class="col-md-2">
-                                            <label for="filtro-origen">Capturado por</label>
-                                            <select id="filtro-origen" name="origen" class="form-select mr-1">
-                                                <option value="">Todos</option>
-                                                <option value="ventas">Ventas</option>
-                                                <option value="lab">Laboratorio</option>
-                                            </select>
-                                        </div>
                                         <div class="col-md-1 d-flex align-items-end">
                                             <button class="btn btn-primary btn-sm w-100" style="margin-top: 24px;" onclick="SolicitudesAbiertas()"><i class="fas fa-fw fa-filter"></i></button>
                                         </div>

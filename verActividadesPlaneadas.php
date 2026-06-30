@@ -109,7 +109,6 @@
                                                 <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
                                                 <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                 <option value="Cancelada">Cancelar</option>
-                                                <option value="CanceladaV">Cancelada por Ventas</option>
                                                 <option value="CanceladaLab">Rechazada por Laboratorio</option>
                                                 <option value="Cerrada">Cerrar</option>
                                             </select>
@@ -444,16 +443,8 @@
                                 default: colorEvento = '#958007ff';                        // Azul por defecto oscuro
                             }
 
-                            // Pre-registro de Ventas: color claro + distintivo hasta que el lab lo apruebe
                             var badgeVentas = '';
                             var textoColor = '';
-                            if (actividad.origen === 'ventas') {
-                                badgeVentas = '<span class="badge bg-warning text-dark"><i class="fas fa-store"></i> VENTAS</span> ';
-                            }
-                            if (actividad.estatus === 'Solicitadoventas') {
-                                colorEvento = '#fff3cd'; // amarillo claro (pendiente de aprobación del lab)
-                                textoColor = '#212529';  // texto oscuro legible sobre fondo claro
-                            }
 
                             estatus = '';
                             nombre2 = '';

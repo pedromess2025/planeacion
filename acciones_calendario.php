@@ -158,7 +158,7 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
     $sql = "SELECT ot.*, DATE(ot.start_date) as FechaPlaneadaInicioDate, IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u.nombres, u.apellidos)), ''), u.nombre),'') AS nombre, IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u2.nombres, u2.apellidos)), ''), u2.nombre),'') AS nombre2,
                     IFNULL(COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u3.nombres, u3.apellidos)), ''), u3.nombre),'') AS nombre3, IFNULL(ot.comment,'Sin comentarios') AS comment,
                     estatus_logistic, comment_logistic, IFNULL(ot.travelhr, '0') AS travelhr, IFNULL(ot.durationhr, '0') AS durationhr,
-                    ot.origen_captura AS origen, ot.capturado_por
+                    ot.capturado_por
             FROM servicios_planeados_mess ot
             LEFT JOIN usuarios u ON ot.engineer = u.id_usuario
             LEFT join usuarios u2 on ot.engineer2 = u2.id_usuario
@@ -260,67 +260,136 @@ if ($accion == 'ActividadesCalendarioPlaneadas') {
         echo json_encode(['status' => 'error', 'message' => 'Error en la consulta: ' . $e->getMessage()]);
     }
 }
-// Endpoint: disponibilidad de ingenieros por departamento (cuadrícula Ventas)
-if ($accion == 'disponibilidadVentas') {
+// Endpoint: disponibilidad de ingenieros (cuadrícula de consulta)
+// Resuelve por ingeniero/día un estatus derivado de 3 fuentes + default 'disponible'.
+// Prioridad: vacaciones (3) > capacitacion/enlaboratorio (2) > servicio (1) > disponible (0).
+if ($accion == 'disponibilidadIngenieros') {
     try {
-        $departamentoId = isset($_POST['departamento']) ? intval($_POST['departamento']) : 0;
         $fechaInicio    = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
         $fechaFin       = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
+        $departamentoId = isset($_POST['departamento']) ? intval($_POST['departamento']) : 0;
+        $ingenieroF     = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
+        $regionF        = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
 
-        if ($departamentoId <= 0) {
-            echo json_encode(['status' => 'error', 'message' => 'Departamento inválido.']);
-            exit;
-        }
+        // Marca una celda solo si la nueva prioridad es mayor o igual a la existente.
+        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p) {
+            if (!isset($celdas[$idu])) $celdas[$idu] = [];
+            if (!isset($celdas[$idu][$fecha]) || $celdas[$idu][$fecha]['p'] < $p) {
+                $celdas[$idu][$fecha] = ['estatus' => $estatus, 'detalle' => $detalle, 'p' => $p];
+            }
+        };
 
-        // 1. Obtener ingenieros activos del departamento (solo puestos 34, 38)
-        // Respaldo: si nombres/apellidos están vacíos, usar el campo viejo 'nombre' para no mostrar "null".
-        $sqlIngs = "SELECT id_usuario, COALESCE(NULLIF(TRIM(CONCAT_WS(' ', nombres, apellidos)), ''), nombre) AS nombre
+        // 1. Ingenieros activos (puestos 34/38) con filtros opcionales (área/lab, ingeniero, región)
+        $sqlIngs = "SELECT id_usuario, noEmpleado, region,
+                           COALESCE(NULLIF(TRIM(CONCAT_WS(' ', nombres, apellidos)), ''), nombre) AS nombre
                     FROM usuarios
-                    WHERE departamento = ?
-                        AND estatus = 1
-                        AND puesto IN (34,38)
-                    ORDER BY nombre";
-        $stmtIngs = $conn->prepare($sqlIngs);
-        $stmtIngs->bind_param("i", $departamentoId);
-        $stmtIngs->execute();
-        $resultIngs = $stmtIngs->get_result();
+                    WHERE estatus = 1 AND puesto IN (34,38)";
+        $params = []; $types = '';
+        if ($departamentoId > 0) { $sqlIngs .= " AND departamento = ?"; $params[] = $departamentoId; $types .= 'i'; }
+        if (!empty($ingenieroF)) {
+            $ph = implode(',', array_fill(0, count($ingenieroF), '?'));
+            $sqlIngs .= " AND id_usuario IN ($ph)";
+            foreach ($ingenieroF as $v) { $params[] = intval($v); $types .= 'i'; }
+        }
+        if (!empty($regionF)) {
+            $ph = implode(',', array_fill(0, count($regionF), '?'));
+            $sqlIngs .= " AND region IN ($ph)";
+            foreach ($regionF as $v) { $params[] = intval($v); $types .= 'i'; }
+        }
+        $sqlIngs .= " ORDER BY nombre";
+        $stmt = $conn->prepare($sqlIngs);
+        if ($types !== '') $stmt->bind_param($types, ...$params);
+        $stmt->execute();
+        $res = $stmt->get_result();
         $ingenieros = [];
         $idsIngs = [];
-        while ($row = $resultIngs->fetch_assoc()) {
-            $ingenieros[] = $row;
+        $noEmpToId = [];
+        while ($row = $res->fetch_assoc()) {
+            $ingenieros[] = ['id_usuario' => $row['id_usuario'], 'nombre' => $row['nombre']];
             $idsIngs[] = $row['id_usuario'];
+            if ($row['noEmpleado'] !== null && $row['noEmpleado'] !== '') {
+                $noEmpToId[$row['noEmpleado']] = $row['id_usuario'];
+            }
         }
-        $stmtIngs->close();
+        $stmt->close();
 
         if (empty($idsIngs)) {
-            echo json_encode(['status' => 'success', 'ingenieros' => [], 'servicios' => []]);
+            echo json_encode(['status' => 'success', 'ingenieros' => [], 'celdas' => (object)[]]);
             exit;
         }
 
-        // 2. Obtener servicios planeados de esos ingenieros en el rango de fechas
-        $placeholders = implode(',', array_fill(0, count($idsIngs), '?'));
-        $sqlServ = "SELECT sp.id, sp.engineer, sp.engineer2, sp.engineer3, sp.order_code, sp.ds_cliente, sp.city, sp.area,
-                           sp.estatus, sp.durationhr, sp.travelhr, sp.comment, sp.origen_captura, sp.capturado_por,
-                           DATE(sp.start_date) as fecha, DATE_FORMAT(sp.start_date,'%H:%i') AS hora
-                    FROM servicios_planeados_mess sp
-                    WHERE (sp.engineer IN ($placeholders) OR sp.engineer2 IN ($placeholders) OR sp.engineer3 IN ($placeholders))
-                      AND DATE(sp.start_date) BETWEEN ? AND ?
-                      AND sp.estatus NOT IN ('Cancelada','CanceladaV','CanceladaLab','Cerrada')
-                    ORDER BY sp.start_date";
+        $celdas = [];
+        $ph = implode(',', array_fill(0, count($idsIngs), '?'));
 
-        $stmtServ = $conn->prepare($sqlServ);
-        $types = str_repeat('i', count($idsIngs) * 3) . 'ss';
-        $params = array_merge($idsIngs, $idsIngs, $idsIngs, [$fechaInicio, $fechaFin]);
-        $stmtServ->bind_param($types, ...$params);
-        $stmtServ->execute();
-        $resultServ = $stmtServ->get_result();
-        $servicios = [];
-        while ($row = $resultServ->fetch_assoc()) {
-            $servicios[] = $row;
+        // 2. Servicios planeados -> 'servicio' (prioridad 1)
+        $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, DATE(start_date) AS fecha
+                    FROM servicios_planeados_mess
+                    WHERE (engineer IN ($ph) OR engineer2 IN ($ph) OR engineer3 IN ($ph))
+                      AND DATE(start_date) BETWEEN ? AND ?
+                      AND estatus NOT IN ('Cancelada','CanceladaV','CanceladaLab','Cerrada','Solicitadoventas')";
+        $stmt = $conn->prepare($sqlServ);
+        $typesS = str_repeat('i', count($idsIngs) * 3) . 'ss';
+        $paramsS = array_merge($idsIngs, $idsIngs, $idsIngs, [$fechaInicio, $fechaFin]);
+        $stmt->bind_param($typesS, ...$paramsS);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $detalle = trim(($row['ds_cliente'] ?: 'S/C') . ($row['city'] ? ' · ' . $row['city'] : ''));
+            foreach (['engineer', 'engineer2', 'engineer3'] as $c) {
+                $idu = $row[$c];
+                if ($idu && in_array($idu, $idsIngs)) {
+                    $setCelda($celdas, $idu, $row['fecha'], 'servicio', $detalle, 1);
+                }
+            }
         }
-        $stmtServ->close();
+        $stmt->close();
 
-        echo json_encode(['status' => 'success', 'ingenieros' => $ingenieros, 'servicios' => $servicios]);
+        // 3. Lab / capacitación (tabla nueva) -> prioridad 2
+        $sqlMan = "SELECT id_usuario, fecha, estatus, area, comentario
+                   FROM planeacion_disponibilidad_ingenieros
+                   WHERE id_usuario IN ($ph) AND fecha BETWEEN ? AND ?";
+        $stmt = $conn->prepare($sqlMan);
+        $typesM = str_repeat('i', count($idsIngs)) . 'ss';
+        $paramsM = array_merge($idsIngs, [$fechaInicio, $fechaFin]);
+        $stmt->bind_param($typesM, ...$paramsM);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $est = (stripos($row['estatus'], 'capac') !== false) ? 'capacitacion' : 'enlaboratorio';
+            $detalle = trim(($row['area'] ?: '') . ($row['comentario'] ? ' · ' . $row['comentario'] : ''));
+            $setCelda($celdas, $row['id_usuario'], $row['fecha'], $est, $detalle, 2);
+        }
+        $stmt->close();
+
+        // 4. Vacaciones / ausencias autorizadas por el jefe (solicitudes.estatus = 2) -> prioridad 3
+        $noEmps = array_keys($noEmpToId);
+        if (!empty($noEmps)) {
+            $phN = implode(',', array_fill(0, count($noEmps), '?'));
+            // Solape con el rango: feinicio <= fechaFin AND fefin >= fechaInicio
+            $sqlVac = "SELECT empleado, feinicio, fefin
+                       FROM solicitudes
+                       WHERE empleado IN ($phN) AND estatus = 2
+                         AND feinicio <= ? AND fefin >= ?";
+            $stmt = $conn->prepare($sqlVac);
+            $typesV = str_repeat('i', count($noEmps)) . 'ss';
+            $paramsV = array_merge(array_map('intval', $noEmps), [$fechaFin, $fechaInicio]);
+            $stmt->bind_param($typesV, ...$paramsV);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $idu = isset($noEmpToId[$row['empleado']]) ? $noEmpToId[$row['empleado']] : null;
+                if (!$idu) continue;
+                $f   = ($row['feinicio'] > $fechaInicio) ? $row['feinicio'] : $fechaInicio;
+                $end = ($row['fefin'] < $fechaFin) ? $row['fefin'] : $fechaFin;
+                while ($f <= $end) {
+                    $setCelda($celdas, $idu, $f, 'vacaciones', 'Ausencia autorizada', 3);
+                    $f = date('Y-m-d', strtotime($f . ' +1 day'));
+                }
+            }
+            $stmt->close();
+        }
+
+        echo json_encode(['status' => 'success', 'ingenieros' => $ingenieros, 'celdas' => empty($celdas) ? (object)[] : $celdas]);
 
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);

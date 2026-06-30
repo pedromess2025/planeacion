@@ -68,6 +68,47 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         $fecha = date('Y-m-d H:i:s');
         $noEmpleado = $noEmpleado_cookie;
 
+        // Estatus de disponibilidad (no es un servicio de campo): alta reducida en tabla aparte.
+        // Solo se usan ingeniero(s) + área + fecha + estatus; una fila por ingeniero (upsert por ing+fecha).
+        if ($estatus === 'Enlaboratorio' || $estatus === 'Capacitacion') {
+            header('Content-Type: application/json');
+            $fechaSolo = date('Y-m-d', strtotime($fechaPlaneada));
+            if (!$fechaSolo || $fechaSolo === '1970-01-01') {
+                echo json_encode(['status' => 'error', 'message' => 'Fecha planeada inválida.']);
+                exit;
+            }
+            $responsables = array_filter([$responsable, $responsable2, $responsable3], function ($r) {
+                return $r !== '' && $r !== '0' && $r !== null;
+            });
+            if (empty($responsables)) {
+                echo json_encode(['status' => 'error', 'message' => 'Selecciona al menos un ingeniero.']);
+                exit;
+            }
+            $sqlDisp = "INSERT INTO planeacion_disponibilidad_ingenieros (id_usuario, area, fecha, estatus, comentario, capturado_por)
+                        VALUES (?, ?, ?, ?, ?, ?)
+                        ON DUPLICATE KEY UPDATE area = VALUES(area), estatus = VALUES(estatus),
+                            comentario = VALUES(comentario), capturado_por = VALUES(capturado_por), fecha_registro = NOW()";
+            $stmtDisp = $conn->prepare($sqlDisp);
+            if (!$stmtDisp) {
+                echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
+                exit;
+            }
+            $okAll = true; $errMsg = '';
+            $cap = intval($noEmpleado);
+            foreach ($responsables as $r) {
+                $idu = intval($r);
+                $stmtDisp->bind_param("issssi", $idu, $area, $fechaSolo, $estatus, $comentarios, $cap);
+                if (!$stmtDisp->execute()) { $okAll = false; $errMsg = $stmtDisp->error; break; }
+            }
+            $stmtDisp->close();
+            if ($okAll) {
+                echo json_encode(['status' => 'success', 'message' => 'Disponibilidad registrada con éxito.', 'id_actividad' => 0]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Error al registrar la disponibilidad: ' . $errMsg]);
+            }
+            exit;
+        }
+
         $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment, reprogramado)
                         VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
         //echo $sqlInsert;
@@ -86,190 +127,6 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         echo json_encode($response);
     }
 
-//FUNCION PARA EL PRE-REGISTRO DE VENTAS (solo departamento 40)
-    if($opcion == "preRegistroVentas"){
-        header('Content-Type: application/json');
-        // Las columnas son utf8mb4; igualamos el charset de la conexión para evitar
-        // error de collation al insertar áreas/ciudades con acento (p.ej. "Eléctrica").
-        mysqli_set_charset($conn, "utf8mb4");
-
-        // Validación server-side: solo el departamento de Ventas (40) puede pre-registrar
-        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
-            echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede pre-registrar.']);
-            exit;
-        }
-
-        $cliente      = isset($_POST['cliente']) ? trim($_POST['cliente']) : '';
-        $ciudad       = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
-        $area         = isset($_POST['area']) ? $_POST['area'] : '';
-        $fecha        = isset($_POST['fecha']) ? $_POST['fecha'] : '';
-        $ot           = isset($_POST['ot']) ? trim($_POST['ot']) : '';
-        $comentarios  = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
-        // Ingeniero sugerido: la celda que eligió Ventas. El Jefe de Lab puede cambiarlo al aprobar.
-        $engineer     = isset($_POST['engineer']) ? intval($_POST['engineer']) : 0;
-        $engineer     = $engineer > 0 ? (string)$engineer : '';
-
-        // Validación de requeridos (la OV/OT y el comentario son opcionales)
-        if ($cliente === '' || $ciudad === '' || $area === '' || $fecha === '') {
-            echo json_encode(['status' => 'error', 'message' => 'Faltan campos obligatorios (cliente, ciudad, área y fecha).']);
-            exit;
-        }
-
-        // Normalizar la fecha del input datetime-local (YYYY-MM-DDTHH:MM) a datetime de MySQL
-        $startDate = str_replace('T', ' ', $fecha);
-        if (strlen($startDate) === 16) { $startDate .= ':00'; }
-
-        $estatus      = 'Solicitadoventas'; // Estatus de pre-registro pendiente de aprobación del lab
-        $origen       = 'ventas';
-        $fechaCaptura = date('Y-m-d');
-        $capturadoPor = $noEmpleado_cookie;
-
-        // engineer = ingeniero sugerido por Ventas (puede ir vacío). Lo reasigna el Jefe de Lab al aprobar.
-        $sqlInsert = "INSERT INTO servicios_planeados_mess
-                        (service_order_id, order_code, engineer, start_date, city, area, ds_cliente, estatus, fecha_captura, capturado_por, comment, reprogramado, origen_captura)
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)";
-        if ($stmt = $conn->prepare($sqlInsert)) {
-            $stmt->bind_param("sssssssssiss", $ot, $ot, $engineer, $startDate, $ciudad, $area, $cliente, $estatus, $fechaCaptura, $capturadoPor, $comentarios, $origen);
-            if ($stmt->execute()) {
-                echo json_encode(['status' => 'success', 'message' => 'Pre-registro creado con éxito.', 'id' => $stmt->insert_id]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Error al insertar el pre-registro: ' . $stmt->error]);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
-        }
-        exit;
-    }
-
-//FUNCION PARA EDITAR UN PRE-REGISTRO DE VENTAS (solo el autor, solo si sigue en Solicitadoventas)
-    if($opcion == "editarPreRegistroVentas"){
-        header('Content-Type: application/json');
-        // Igualar charset a utf8mb4 (columnas) para áreas/ciudades con acento.
-        mysqli_set_charset($conn, "utf8mb4");
-
-        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
-            echo json_encode(['status' => 'error', 'message' => 'No autorizado: solo el departamento de Ventas puede editar pre-registros.']);
-            exit;
-        }
-
-        $id           = isset($_POST['id']) ? intval($_POST['id']) : 0;
-        $cliente      = isset($_POST['cliente']) ? trim($_POST['cliente']) : '';
-        $ciudad       = isset($_POST['ciudad']) ? $_POST['ciudad'] : '';
-        $area         = isset($_POST['area']) ? $_POST['area'] : '';
-        $fecha        = isset($_POST['fecha']) ? $_POST['fecha'] : '';
-        $ot           = isset($_POST['ot']) ? trim($_POST['ot']) : '';
-        $comentarios  = isset($_POST['comentarios']) ? trim($_POST['comentarios']) : '';
-
-        if ($id <= 0 || $cliente === '' || $ciudad === '' || $area === '' || $fecha === '') {
-            echo json_encode(['status' => 'error', 'message' => 'Faltan campos obligatorios.']);
-            exit;
-        }
-
-        $startDate = str_replace('T', ' ', $fecha);
-        if (strlen($startDate) === 16) { $startDate .= ':00'; }
-
-        $sqlUpdate = "UPDATE servicios_planeados_mess
-                      SET ds_cliente = ?, city = ?, area = ?, start_date = ?, service_order_id = ?, order_code = ?, comment = ?
-                      WHERE id = ? AND estatus = 'Solicitadoventas' AND capturado_por = ? AND origen_captura = 'ventas'";
-        if ($stmt = $conn->prepare($sqlUpdate)) {
-            $stmt->bind_param("sssssssii", $cliente, $ciudad, $area, $startDate, $ot, $ot, $comentarios, $id, $noEmpleado_cookie);
-            $stmt->execute();
-            if ($stmt->affected_rows > 0) {
-                echo json_encode(['status' => 'success', 'message' => 'Pre-registro actualizado con éxito.']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se pudo actualizar. Verifique que el pre-registro le pertenece y siga en estatus Solicitadoventas.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error al preparar la consulta: ' . $conn->error]);
-        }
-        exit;
-    }
-
-//FUNCION PARA CANCELAR UN PRE-REGISTRO DE VENTAS (CanceladaV)
-    if($opcion == "cancelarPreRegistroVentas"){
-        header('Content-Type: application/json');
-
-        $departamento_cookie = isset($_COOKIE['departamento']) ? $_COOKIE['departamento'] : null;
-        if ($departamento_cookie != '40') {
-            echo json_encode(['status' => 'error', 'message' => 'No autorizado.']);
-            exit;
-        }
-
-        $id = isset($_POST['id']) ? intval($_POST['id']) : 0;
-        if ($id <= 0) {
-            echo json_encode(['status' => 'error', 'message' => 'ID inválido.']);
-            exit;
-        }
-
-        $sqlCancel = "UPDATE servicios_planeados_mess
-                      SET estatus = 'CanceladaV'
-                      WHERE id = ? AND estatus = 'Solicitadoventas' AND capturado_por = ? AND origen_captura = 'ventas'";
-        if ($stmt = $conn->prepare($sqlCancel)) {
-            $stmt->bind_param("ii", $id, $noEmpleado_cookie);
-            $stmt->execute();
-            if ($stmt->affected_rows > 0) {
-                echo json_encode(['status' => 'success', 'message' => 'Pre-registro cancelado.']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se pudo cancelar. Verifique que el pre-registro le pertenece y siga en estatus Solicitadoventas.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
-        }
-        exit;
-    }
-
-//FUNCION PARA NEGAR (RECHAZAR) UN PRE-REGISTRO DE VENTAS (solo el Jefe rol 3 del lab destino) -> CanceladaLab
-    if($opcion == "negarPreRegistroVentas"){
-        header('Content-Type: application/json');
-        mysqli_set_charset($conn, "utf8mb4");
-
-        $id     = isset($_POST['id']) ? intval($_POST['id']) : 0;
-        $motivo = isset($_POST['motivo']) ? trim($_POST['motivo']) : '';
-
-        // Negar pre-registros requiere el acceso especial 'verPreRegistroVentas'
-        if (!tieneAccesoEspecial($conn, $noEmpleado_cookie, 'planeacion', 'verPreRegistroVentas')) {
-            echo json_encode(['status' => 'error', 'message' => 'No autorizado: no tienes acceso para negar pre-registros de Ventas.']);
-            exit;
-        }
-        if ($id <= 0 || $motivo === '') {
-            echo json_encode(['status' => 'error', 'message' => 'Faltan datos (id o motivo del rechazo).']);
-            exit;
-        }
-
-        // Validar que el pre-registro existe y sigue en Solicitadoventas
-        $chk = $conn->query("SELECT estatus FROM servicios_planeados_mess WHERE id = " . intval($id) . " LIMIT 1");
-        if (!$chk || !($rowChk = $chk->fetch_assoc())) {
-            echo json_encode(['status' => 'error', 'message' => 'Pre-registro no encontrado.']);
-            exit;
-        }
-        if ($rowChk['estatus'] !== 'Solicitadoventas') {
-            echo json_encode(['status' => 'error', 'message' => 'Solo se pueden negar pre-registros pendientes (Solicitadoventas).']);
-            exit;
-        }
-
-        $sqlNegar = "UPDATE servicios_planeados_mess
-                     SET estatus = 'CanceladaLab', motivo_cancelacion = ?
-                     WHERE id = ? AND estatus = 'Solicitadoventas'";
-        if ($stmt = $conn->prepare($sqlNegar)) {
-            $stmt->bind_param("si", $motivo, $id);
-            $stmt->execute();
-            if ($stmt->affected_rows > 0) {
-                echo json_encode(['status' => 'success', 'message' => 'Pre-registro rechazado.']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'No se pudo rechazar el pre-registro.']);
-            }
-            $stmt->close();
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Error: ' . $conn->error]);
-        }
-        exit;
-    }
-
 //FUNCION PARA ACTUALIZAR LA ACTIVIDAD
     if($opcion == "actualizarActividad"){
         $ingeniero = $_POST["ingeniero"];
@@ -284,22 +141,8 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
         $reprogramado = $_POST["reprogramado"];
         $cometRepro = $_POST["commentRepro"];
         $cometCancel = $_POST["commentCancel"];
-        // Duración (servicio) y duración de viaje: el lab las completa al aprobar un pre-registro
         $duracion = isset($_POST["duracion"]) ? $_POST["duracion"] : '';
         $duracionViaje = isset($_POST["duracionViaje"]) ? $_POST["duracionViaje"] : '';
-
-        // Validación: aprobar un pre-registro (Solicitadoventas) requiere el acceso especial
-        // 'verPreRegistroVentas' (tabla accesos_especiales). No afecta ediciones normales.
-        $chkPre = $conn->query("SELECT estatus FROM servicios_planeados_mess WHERE id = " . intval($idActividad) . " LIMIT 1");
-        if ($chkPre && ($rowChk = $chkPre->fetch_assoc())) {
-            if ($rowChk['estatus'] === 'Solicitadoventas') {
-                if (!tieneAccesoEspecial($conn, $noEmpleado_cookie, 'planeacion', 'verPreRegistroVentas')) {
-                    header('Content-Type: application/json');
-                    echo json_encode(['status' => 'error', 'message' => 'No autorizado: no tienes acceso para aprobar pre-registros de Ventas.']);
-                    exit;
-                }
-            }
-        }
 
         $sqlUpdate = "UPDATE servicios_planeados_mess
                         SET engineer = '$ingeniero',
@@ -376,8 +219,6 @@ if ($opcion == "solicitudesAbiertas") {
     $ciudad = isset($_POST['ciudad']) && is_array($_POST['ciudad']) ? $_POST['ciudad'] : [];
     $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['estatus'] : [];
     $region = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
-    // Filtro por origen de captura: '' (todos), 'ventas' o 'lab'
-    $origen = isset($_POST['origen']) ? $_POST['origen'] : '';
 
     $fechaHoy = date('Y-m-d');
     $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
@@ -462,13 +303,6 @@ if ($opcion == "solicitudesAbiertas") {
                 $param_types .= "s";
             }
         }
-    }
-
-    // --- 6b. Manejo del origen de captura (ventas / lab)
-    if ($origen === 'ventas' || $origen === 'lab') {
-        $whereClauses[] = "ot.origen_captura = ?";
-        $params[] = $origen;
-        $param_types .= "s";
     }
 
     // --- 7. Construcción Final

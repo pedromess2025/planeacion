@@ -86,29 +86,20 @@
                                                     <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
                                                 </div>
                                             </div>
-                                            <div class="col-md-4 mb-0">
-                                                <label for="slcAreas">Área:</label>
-                                                <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
-                                                    <option value="">Todas las áreas</option> 
-                                                    <option value="ALTA EXACITUD">Servicios Alta Exactitud</option> 
-                                                    <option value="CALIBRACIONES">Servicios Calibraciones</option>
-                                                    <option value="DIMENSIONAL">Servicios Dimensional</option>
-                                                    <option value="SFG">Servicios SFG</option>
-                                                    <option value="MITUTOYO">Servicios Mitutoyo</option>
-                                                    <option value="DUREZA">Servicios Dureza</option>
-                                                    <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                                    <option value="ELECTRICA">Servicios Eléctrica</option>
-                                                    <option value="TEMPERATURA">Servicios Temperatura</option>
-                                                    <option value="PRESION">Servicios Presión</option>
-                                                    <option value="APLICACIONES">Servicios APP Aplicaciones</option>
-                                                    <option value="MT">Servicios MT</option>
-                                                    <option value="MTS">Servicios MTS</option>
-                                                    <option value="ZEISS">Servicios Zeiss</option>
-                                                    <option value="MASA">Servicios Masa</option>
-                                                    <option value="FUERZA">Servicios Fuerza</option>
-                                                    <option value="PAR TORSIONAL">Servicios Par Torsional</option>
-                                                </select>
-                                            </div>                                                                                        
+                                            <div class="col-sm-4 mb-0">
+                                                <label for="slcEstatus">Estatus</label>
+                                                <div id="DivEstatus" name="DivEstatus">
+                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onChange="mostrarMensajeEstatus()">
+                                                        <option value="">Selecciona...</option>
+                                                        <option value="Pendientedeinformacion">Pendiente de información</option>
+                                                        <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                                                        <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
+                                                        <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                                                        <option value="Enlaboratorio">En laboratorio</option>
+                                                        <option value="Capacitacion">Capacitación</option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
 
                                         <div class="row">
@@ -154,28 +145,39 @@
                                             </div>
                                         </div>
 
-                                        <div class="row mb-3">                                            
-                                            <div class="col-sm-4">
-                                                <label for="slcEstatus">Estatus</label>
-                                                <div id="DivEstatus" name="DivEstatus">
-                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onChange="mostrarMensajeEstatus()">
-                                                        <option value="">Selecciona...</option>
-                                                        <option value="Pendientedeinformacion">Pendiente de información</option>
-                                                        <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                                        <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
-                                                        <option value="Fechareservadasininformación">Fecha reservada sin información</option>
-                                                    </select>
-                                                </div>
+                                        <div class="row mb-3">
+                                            <div class="col-md-4 mb-0">
+                                                <label for="slcAreas">Área:</label>
+                                                <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
+                                                    <option value="">Todas las áreas</option>
+                                                    <option value="ALTA EXACITUD">Servicios Alta Exactitud</option>
+                                                    <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                                                    <option value="DIMENSIONAL">Servicios Dimensional</option>
+                                                    <option value="SFG">Servicios SFG</option>
+                                                    <option value="MITUTOYO">Servicios Mitutoyo</option>
+                                                    <option value="DUREZA">Servicios Dureza</option>
+                                                    <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                                                    <option value="ELECTRICA">Servicios Eléctrica</option>
+                                                    <option value="TEMPERATURA">Servicios Temperatura</option>
+                                                    <option value="PRESION">Servicios Presión</option>
+                                                    <option value="APLICACIONES">Servicios APP Aplicaciones</option>
+                                                    <option value="MT">Servicios MT</option>
+                                                    <option value="MTS">Servicios MTS</option>
+                                                    <option value="ZEISS">Servicios Zeiss</option>
+                                                    <option value="MASA">Servicios Masa</option>
+                                                    <option value="FUERZA">Servicios Fuerza</option>
+                                                    <option value="PAR TORSIONAL">Servicios Par Torsional</option>
+                                                </select>
                                             </div>
                                             <div class="col-sm-4 mt-4">
                                                 <div class="alert alert-primary" role="alert" id="DivMensajeInfoEstatus" style="display: none;">
                                                     <p class="mb-0" id="mensajeInfoEstatus" style="font-size: 14px;"></p>
-                                                </div>                                                
+                                                </div>
                                             </div>
                                             <div class="col-sm-4">
                                                 <label for="txtComentarios">Comentario</label>
                                                 <textarea name="txtComentarios" id="txtComentarios" class="form-control" rows="2"></textarea>
-                                            </div>                                            
+                                            </div>
                                         </div>
                                         <div class="row">
                                             <div class="col-xl-3"></div>
@@ -377,9 +379,14 @@
                         
                         // Limpiar el formulario después de un registro exitoso
                         $('#formPlaneacion')[0].reset();
-                        // Redirigir a seguimiento de actividades
-                        window.location.href = 'seguimiento_actividades.php';
-                        enviaNotificacionActividad(data.id_actividad);
+                        if (esEstatusLab(estatus)) {
+                            // Disponibilidad (lab/capacitación): no es un servicio, no se notifica
+                            window.location.href = 'disponibilidadIngenieros';
+                        } else {
+                            // Redirigir a seguimiento de actividades
+                            window.location.href = 'seguimiento_actividades.php';
+                            enviaNotificacionActividad(data.id_actividad);
+                        }
                     } else {
                         Swal.fire({
                             title: "Error al registrar la actividad: " + data.message,
@@ -404,18 +411,23 @@
 
             // --- 1. Mapeo de Campos, Valores, IDs y Mensajes ---
             // Define todos los campos que requieren validación.
+            // Disponibilidad (En laboratorio / Capacitación): solo ing + área + fecha + estatus
+            const esLab = esEstatusLab(formData["slcEstatus"]);
+
             const camposAValidar = [
                 // Campos que no pueden ser cadena vacía ("") o "0"
                 { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
-                { valor: formData["txtCiudad"],         mensaje: "Selecciona una ciudad" },
-                { valor: formData["slcAutomovil"],      mensaje: "Selecciona un automóvil" },
                 { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
                 { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
-                
-                // Campos de texto que deben validarse con .trim() para evitar solo espacios
-                { valor: formData["txtCliente"],        mensaje: "Ingresa un cliente",      esTexto: true },
-                // Los campos txtDuracion y txtDuracionViaje se validarán en el Paso 3
             ];
+            // Campos exclusivos de un servicio de campo (no aplican a disponibilidad)
+            if (!esLab) {
+                camposAValidar.push(
+                    { valor: formData["txtCiudad"],     mensaje: "Selecciona una ciudad" },
+                    { valor: formData["slcAutomovil"],  mensaje: "Selecciona un automóvil" },
+                    { valor: formData["txtCliente"],    mensaje: "Ingresa un cliente", esTexto: true }
+                );
+            }
 
             const mensajesDeError = [];
             
@@ -433,16 +445,18 @@
                 mensajesDeError.push("Debes seleccionar **al menos un ingeniero**");
             }
 
-            // --- 3. Validar Campos de Duración ---
-            const duracionVal = parseFloat(formData["txtDuracion"]);
-            if (isNaN(duracionVal) || duracionVal <= 0) {
-                mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
-            }
+            // --- 3. Validar Campos de Duración (solo para servicios de campo) ---
+            if (!esLab) {
+                const duracionVal = parseFloat(formData["txtDuracion"]);
+                if (isNaN(duracionVal) || duracionVal <= 0) {
+                    mensajesDeError.push("La duración estimada debe ser **mayor que 0**");
+                }
 
-            // Duración del viaje: vacío o 0 = sin traslado, solo rechazar negativos
-            const viajeVal = formData["txtDuracionViaje"].trim();
-            if (viajeVal !== '' && (isNaN(parseFloat(viajeVal)) || parseFloat(viajeVal) < 0)) {
-                mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
+                // Duración del viaje: vacío o 0 = sin traslado, solo rechazar negativos
+                const viajeVal = formData["txtDuracionViaje"].trim();
+                if (viajeVal !== '' && (isNaN(parseFloat(viajeVal)) || parseFloat(viajeVal) < 0)) {
+                    mensajesDeError.push("La duración del viaje debe ser **igual o mayor que 0**");
+                }
             }
 
 
@@ -621,11 +635,37 @@
             });
         }
 
+        // Estatus de disponibilidad (no son un servicio de campo): solo requieren ing + área + fecha + estatus
+        function esEstatusLab(estatus) {
+            return estatus === 'Enlaboratorio' || estatus === 'Capacitacion';
+        }
+
+        // Oculta/limpia los campos exclusivos de servicio cuando el estatus es de disponibilidad
+        function toggleCamposServicio() {
+            var lab = esEstatusLab($('#slcEstatus').val());
+            $('#txtCliente').closest('.col-sm-4').toggle(!lab);
+            $('#txtCiudad').closest('.col-sm-4').toggle(!lab);
+            $('#txtOT').closest('.col-sm-4').toggle(!lab);
+            $('#txtDuracion').closest('.col-sm-2').toggle(!lab);
+            $('#txtDuracionViaje').closest('.col-sm-2').toggle(!lab);
+            $('#slcAutomovil').closest('.col-sm-4').toggle(!lab);
+            if (lab) {
+                $('#txtCliente').val('');
+                $('#txtCiudad').val('').trigger('change');
+                $('#txtOT').val('');
+                $('#txtDuracion').val('');
+                $('#txtDuracionViaje').val('');
+                $('#slcAutomovil').val('').trigger('change');
+            }
+        }
+
         //Funcion para mostrar mensaje segun estatus
         function mostrarMensajeEstatus() {
             var estatus = $('#slcEstatus').val();
             var mensajeEstatus = $('#mensajeInfoEstatus');
             var divMensaje = $('#DivMensajeInfoEstatus');
+
+            toggleCamposServicio();
 
             if (estatus === 'Pendientedeinformacion') {
                 mensajeEstatus.text('Le falta documentación a la orden de venta por parte del área comercial.');
@@ -638,6 +678,12 @@
                 divMensaje.show();
             } else if (estatus === 'Fechareservadasininformación') {
                 mensajeEstatus.text('Fecha reservada, No hay información en el sistema formal de Mess.');
+                divMensaje.show();
+            } else if (estatus === 'Enlaboratorio') {
+                mensajeEstatus.text('Disponibilidad: el ingeniero estará en laboratorio. Solo se requiere ingeniero, área y fecha.');
+                divMensaje.show();
+            } else if (estatus === 'Capacitacion') {
+                mensajeEstatus.text('Disponibilidad: el ingeniero estará en capacitación. Solo se requiere ingeniero, área y fecha.');
                 divMensaje.show();
             } else {
                 divMensaje.hide();

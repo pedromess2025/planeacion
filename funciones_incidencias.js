@@ -124,45 +124,6 @@ function ActualizarActividad(pendientes) {
     });
 }
 
-//FUNCION PARA NEGAR (RECHAZAR) UN PRE-REGISTRO DE VENTAS -> CanceladaLab (guarda motivo en motivo_cancelacion)
-function negarPreRegistro(id) {
-    Swal.fire({
-        title: "Negar pre-registro",
-        input: "textarea",
-        inputLabel: "Motivo del rechazo (obligatorio)",
-        inputPlaceholder: "Escribe por qué se rechaza este pre-registro...",
-        inputAttributes: { "aria-label": "Motivo del rechazo" },
-        showCancelButton: true,
-        confirmButtonColor: "#dc3545",
-        confirmButtonText: "Negar",
-        cancelButtonText: "Cancelar",
-        inputValidator: function(value) {
-            if (!value || !value.trim()) {
-                return "Debes escribir un motivo del rechazo.";
-            }
-        }
-    }).then(function(result) {
-        if (!result.isConfirmed) return;
-        $.ajax({
-            url: 'acciones_solicitud.php',
-            method: 'POST',
-            dataType: 'json',
-            data: { opcion: 'negarPreRegistroVentas', id: id, motivo: result.value.trim() },
-            success: function(data) {
-                if (data.status === 'success') {
-                    Swal.fire({ title: "Pre-registro rechazado", icon: "success", draggable: true })
-                        .then(function() { SolicitudesAbiertas(); });
-                } else {
-                    Swal.fire({ title: "No se pudo rechazar", text: data.message || '', icon: "error" });
-                }
-            },
-            error: function() {
-                Swal.fire({ title: "Error al rechazar el pre-registro", icon: "error" });
-            }
-        });
-    });
-}
-
 //FUNCION PARA MOSTRAR LAS SOLICITUDES ABIERTAS
 function SolicitudesAbiertas() {
     manejarVisibilidadDeTablas("#TSolAbiertas_wrapper");
@@ -178,37 +139,19 @@ function manejarVisibilidadDeTablas(tablaAMostrar) {
     $(tablaAMostrar).show();
 }
 
-// Cache del acceso especial 'verPreRegistroVentas' (true/false; null = sin resolver)
-var accesoVerPreRegVentas = null;
-
-// Resuelve (una sola vez) si el usuario tiene el acceso especial para aprobar/negar pre-registros de Ventas
-async function resolverAccesoVerPreRegVentas() {
-    if (accesoVerPreRegVentas !== null) return accesoVerPreRegVentas;
-    try {
-        const resp = await validaOpciones('planeacion', 'verPreRegistroVentas');
-        const cuantos = (resp && resp.status === 'success') ? parseInt(resp.data[0].cuantos) : 0;
-        accesoVerPreRegVentas = cuantos > 0;
-    } catch (e) {
-        accesoVerPreRegVentas = false;
-    }
-    return accesoVerPreRegVentas;
-}
-
 // FUNCIÓN PARA OBTENER Y RENDERIZAR LAS SOLICITUDES
-async function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
-    await resolverAccesoVerPreRegVentas(); // asegura el cache del acceso antes de renderizar
+function obtenerYRenderizarSolicitudes(opcion, tablaSeleccionada) {
     var ing = $('#filtro-ingeniero').val();
     var area = $('#filtro-area').val();
     var ciudad = $('#filtro-ciudad').val();
     var estatus = $('#filtro-estatus').val();
     var region = $('#filtro-region').val();
-    var origen = $('#filtro-origen').val() || ''; // '' (todos), 'ventas' o 'lab'
 
     $.ajax({
         url: 'acciones_solicitud.php',
         method: 'POST',
         dataType: 'json',
-        data: { opcion, ing, area, ciudad, estatus, region, origen },
+        data: { opcion, ing, area, ciudad, estatus, region },
         success: function(data) {
             // Lógica de Renderizado: Procesa los datos y los inserta en la tabla
             renderizarTabla(tablaSeleccionada, data);
@@ -253,13 +196,6 @@ function renderizarTabla(selectorTabla, data) {
         }
         if (solicitud.estatus == 'Cerrada') {
             estatus = '<span class="badge text-bg-dark">Cerrada</span>';
-        }
-        if (solicitud.estatus == 'Solicitadoventas') {
-            estatus = '<span class="badge bg-warning text-dark">Solicitado Ventas</span>';
-        }
-        // Distintivo del origen de captura (Ventas / Lab)
-        if (solicitud.origen_captura == 'ventas') {
-            estatus += ' <span class="badge bg-secondary"><i class="fas fa-store"></i> Ventas</span>';
         }
 
 
@@ -343,30 +279,6 @@ function renderizarTabla(selectorTabla, data) {
                 `;
             }
         }
-
-        // Aprobar/Negar pre-registros de Ventas: requiere el acceso especial 'verPreRegistroVentas'
-        // (se resuelve una sola vez en obtenerYRenderizarSolicitudes y se cachea en accesoVerPreRegVentas).
-        var esPreRegistroVentas = (solicitud.estatus === 'Solicitadoventas');
-        if (esPreRegistroVentas && accesoVerPreRegVentas === true) {
-            accion = `
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-outline-secondary" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">
-                        <i class="fas fa-comment fa-sm fa-fw mr-0 text-gray-800"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-success" title="Aprobar y completar"
-                        onclick="modalactualizarActividad('${solicitud.engineer}', '${solicitud.engineer2}', '${solicitud.engineer3}', '${solicitud.order_code}', '${solicitud.vehiculo}', '${solicitud.start_date}', '${solicitud.id}', '${solicitud.estatus}', '${comentarioLimpio}', '${solicitud.reprogramado}', '${solicitud.motivo_reprogramacion}', '${solicitud.motivo_cancelacion}', '${solicitud.durationhr}', '${solicitud.travelhr}')">
-                        <i class="fas fa-check"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-danger" title="Negar pre-registro"
-                        onclick="negarPreRegistro('${solicitud.id}')">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            `;
-        }
-
-
-
 
         let fechaActividad = '';
         const startDate = new Date(solicitud.start_date);

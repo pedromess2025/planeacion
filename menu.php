@@ -74,10 +74,10 @@
         </a>
     </li>
 
-    <li class="nav-item" id="menuCalendarioVentas" style="display:none;">
-        <a class="nav-link" href="calendarioVentas">
-            <i class="fas fa-fw fa-store text-warning"></i>
-            <span>Calendario Ventas</span>
+    <li class="nav-item">
+        <a class="nav-link" href="disponibilidadIngenieros">
+            <i class="fas fa-fw fa-user-clock text-warning"></i>
+            <span>Disponibilidad de Ingenieros</span>
         </a>
     </li>
 
@@ -123,11 +123,6 @@
 <script type="text/javascript">
     $(document).ready(function() {
         verificarVistaMenu();
-        // Mostrar Calendario Ventas solo para departamento 40
-        var deptoMenu = (new URLSearchParams(document.cookie.replace(/; /g, '&'))).get('departamento');
-        if (deptoMenu === '40') {
-            $('#menuCalendarioVentas').show();
-        }
     });
 
     // Funcion para validar si puede ver la opción de registro en el menú de actividades (solo encargados pueden verla)

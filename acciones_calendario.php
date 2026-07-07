@@ -279,11 +279,13 @@ if ($accion == 'disponibilidadIngenieros') {
             }
         };
 
-        // 1. Ingenieros activos (puestos 34/38) con filtros opcionales (área/lab, ingeniero, región)
+        // 1. Ingenieros / jefes activos, con filtros opcionales (área/lab, ingeniero, región).
+        //    Se identifican por `usuarios.tipo_usr` ('ING' / 'JEFE') — campo independiente del entorno,
+        //    a diferencia del catálogo `puesto` (cuyos ids difieren entre LOCAL y PRODUCCIÓN).
         $sqlIngs = "SELECT id_usuario, noEmpleado, region,
                            COALESCE(NULLIF(TRIM(CONCAT_WS(' ', nombres, apellidos)), ''), nombre) AS nombre
                     FROM usuarios
-                    WHERE estatus = 1 AND puesto IN (34,38)";
+                    WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE')";
         $params = []; $types = '';
         if ($departamentoId > 0) { $sqlIngs .= " AND departamento = ?"; $params[] = $departamentoId; $types .= 'i'; }
         if (!empty($ingenieroF)) {
@@ -320,6 +322,54 @@ if ($accion == 'disponibilidadIngenieros') {
 
         $celdas = [];
         $ph = implode(',', array_fill(0, count($idsIngs), '?'));
+
+        // 1b. Asignación -> estatus BASE por ingeniero (default de la celda, prioridad 0)
+        //     'Servicio en sitio 100' -> disponible ; Laboratorio/Jefatura/Administración -> enlaboratorio
+        //     Resiliente: si la tabla aún no existe (migración pendiente), degrada a base 'disponible'.
+        $baseByIng = [];
+        $asigByIng = [];
+        try {
+            $sqlAsig = "SELECT id_usuario, asignacion FROM planeacion_asignacion_ingenieros WHERE id_usuario IN ($ph)";
+            $stmt = $conn->prepare($sqlAsig);
+            $stmt->bind_param(str_repeat('i', count($idsIngs)), ...$idsIngs);
+            $stmt->execute();
+            $res = $stmt->get_result();
+            while ($row = $res->fetch_assoc()) {
+                $asigByIng[$row['id_usuario']] = $row['asignacion'];
+                $baseByIng[$row['id_usuario']] = (stripos($row['asignacion'], 'Servicio') !== false) ? 'disponible' : 'enlaboratorio';
+            }
+            $stmt->close();
+        } catch (Throwable $e) {
+            $baseByIng = [];
+            $asigByIng = [];
+        }
+
+        // 1c. Enlace personalizado de PowerBI por ingeniero (tabla `usuarios_enlace_planeacion`, ligada por NoEmpleado).
+        //     Resiliente: si la tabla no existe, se degrada a "sin enlace".
+        //     Un mismo NoEmpleado puede aparecer duplicado -> se prefiere la fila con `pageName` (link más específico).
+        $enlaceByIng = [];
+        if (!empty($noEmpToId)) {
+            try {
+                $noEmps = array_keys($noEmpToId);
+                $phE = implode(',', array_fill(0, count($noEmps), '?'));
+                $sqlEnl = "SELECT NoEmpleado, Enlace FROM usuarios_enlace_planeacion WHERE NoEmpleado IN ($phE)";
+                $stmt = $conn->prepare($sqlEnl);
+                $stmt->bind_param(str_repeat('i', count($noEmps)), ...$noEmps);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $idU = $noEmpToId[$row['NoEmpleado']];
+                    $url = $row['Enlace'];
+                    if (!isset($enlaceByIng[$idU]) ||
+                        (stripos($url, 'pageName') !== false && stripos($enlaceByIng[$idU], 'pageName') === false)) {
+                        $enlaceByIng[$idU] = $url;
+                    }
+                }
+                $stmt->close();
+            } catch (Throwable $e) {
+                $enlaceByIng = [];
+            }
+        }
 
         // 2. Servicios planeados -> 'servicio' (prioridad 1)
         $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, DATE(start_date) AS fecha
@@ -361,14 +411,19 @@ if ($accion == 'disponibilidadIngenieros') {
         }
         $stmt->close();
 
-        // 4. Vacaciones / ausencias autorizadas por el jefe (solicitudes.estatus = 2) -> prioridad 3
+        // 4. Vacaciones / ausencias -> prioridad 3
+        //    Cuenta desde que el empleado hace la solicitud; solo se EXCLUYE si fue RECHAZADA.
+        //    Rechazada = jefe (estatus = 3) O RRHH (autorizaRH = 3) — misma regla que la app `incidencias`
+        //    (acciones_solicitudempleado.php: canceladas/rechazadas = estatus=3 OR autorizaRH=3).
+        //    Se incluyen pendientes (estatus 1 / autorizaRH 1) y autorizadas (estatus=2 AND autorizaRH=2).
         $noEmps = array_keys($noEmpToId);
         if (!empty($noEmps)) {
             $phN = implode(',', array_fill(0, count($noEmps), '?'));
             // Solape con el rango: feinicio <= fechaFin AND fefin >= fechaInicio
-            $sqlVac = "SELECT empleado, feinicio, fefin
+            $sqlVac = "SELECT empleado, feinicio, fefin, estatus, autorizaRH
                        FROM solicitudes
-                       WHERE empleado IN ($phN) AND estatus = 2
+                       WHERE empleado IN ($phN)
+                         AND estatus <> 3 AND autorizaRH <> 3
                          AND feinicio <= ? AND fefin >= ?";
             $stmt = $conn->prepare($sqlVac);
             $typesV = str_repeat('i', count($noEmps)) . 'ss';
@@ -379,15 +434,26 @@ if ($accion == 'disponibilidadIngenieros') {
             while ($row = $res->fetch_assoc()) {
                 $idu = isset($noEmpToId[$row['empleado']]) ? $noEmpToId[$row['empleado']] : null;
                 if (!$idu) continue;
+                // Autorizada = jefe (2) Y RRHH (2); en otro caso sigue pendiente de autorización.
+                $autorizada = ($row['estatus'] == 2 && $row['autorizaRH'] == 2);
+                $detalle = $autorizada ? 'Ausencia autorizada' : 'Ausencia solicitada (por autorizar)';
                 $f   = ($row['feinicio'] > $fechaInicio) ? $row['feinicio'] : $fechaInicio;
                 $end = ($row['fefin'] < $fechaFin) ? $row['fefin'] : $fechaFin;
                 while ($f <= $end) {
-                    $setCelda($celdas, $idu, $f, 'vacaciones', 'Ausencia autorizada', 3);
+                    $setCelda($celdas, $idu, $f, 'vacaciones', $detalle, 3);
                     $f = date('Y-m-d', strtotime($f . ' +1 day'));
                 }
             }
             $stmt->close();
         }
+
+        // Adjuntar el estatus base, el texto de la Asignación y el enlace personalizado a cada ingeniero
+        foreach ($ingenieros as &$ing) {
+            $ing['base'] = isset($baseByIng[$ing['id_usuario']]) ? $baseByIng[$ing['id_usuario']] : 'disponible';
+            $ing['asignacion'] = isset($asigByIng[$ing['id_usuario']]) ? $asigByIng[$ing['id_usuario']] : '';
+            $ing['enlace'] = isset($enlaceByIng[$ing['id_usuario']]) ? $enlaceByIng[$ing['id_usuario']] : '';
+        }
+        unset($ing);
 
         echo json_encode(['status' => 'success', 'ingenieros' => $ingenieros, 'celdas' => empty($celdas) ? (object)[] : $celdas]);
 
@@ -396,21 +462,22 @@ if ($accion == 'disponibilidadIngenieros') {
     }
 }
 
-// Endpoint: lista de departamentos que son áreas/labs
+// Endpoint: lista de departamentos que tienen ingenieros/jefes (para el filtro de área/lab del grid)
 if ($accion == 'departamentosLab') {
-    $ids = [4,14,15,17,18,19,20,22,25,32,38,48,50];
-    $placeholders = implode(',', array_fill(0, count($ids), '?'));
-    $sql = "SELECT id, departamento FROM departamento WHERE id IN ($placeholders) ORDER BY departamento";
-    $stmt = $conn->prepare($sql);
-    $types = str_repeat('i', count($ids));
-    $stmt->bind_param($types, ...$ids);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    // Se derivan de los departamentos donde hay usuarios activos con tipo_usr ING/JEFE
+    // (env-independiente: ya no depende de una lista de ids hardcodeada por entorno).
+    $sql = "SELECT d.id, d.departamento
+            FROM departamento d
+            WHERE d.id IN (SELECT DISTINCT departamento FROM usuarios
+                           WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE') AND departamento IS NOT NULL)
+            ORDER BY d.departamento";
+    $result = $conn->query($sql);
     $deptos = [];
-    while ($row = $result->fetch_assoc()) {
-        $deptos[] = $row;
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $deptos[] = $row;
+        }
     }
-    $stmt->close();
     echo json_encode(['status' => 'success', 'departamentos' => $deptos]);
 }
 

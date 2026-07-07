@@ -26,6 +26,14 @@
         .grid-disp th { background: #4e73df; color: #fff; position: sticky; top: 0; z-index: 2; }
         .grid-disp th.col-ing { width: 200px; min-width: 160px; text-align: left; }
         .grid-disp td.col-ing { text-align: left; font-weight: 600; background: #f8f9fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .asig-badge { display: block; margin-top: 3px; font-weight: 500; font-size: 10px; line-height: 1.3; border-radius: 8px; padding: 1px 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .asig-servicio { color: #1b5e20; background: #e3f6e6; }
+        .asig-laboratorio { color: #0b4f8a; background: #e3f0fb; }
+        .asig-jefatura { color: #5a2d82; background: #f0e6fa; }
+        .asig-administracion { color: #6c5300; background: #fbf3d6; }
+        .asig-none { color: #adb5bd; background: #f1f3f5; font-style: italic; }
+        .link-tablero { display: block; margin-top: 3px; font-size: 10px; line-height: 1.3; font-weight: 500; color: #0b5ed7; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .link-tablero:hover { text-decoration: underline; }
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
@@ -251,6 +259,25 @@
             });
         }
 
+        // Badge con la Asignación (fija) del ingeniero, bajo su nombre
+        function badgeAsignacion(asig) {
+            if (!asig) return '<small class="asig-badge asig-none"><i class="fas fa-tag"></i> Sin asignación</small>';
+            var a = asig.toLowerCase(), clase = 'asig-none';
+            if (a.indexOf('servicio') !== -1)           clase = 'asig-servicio';
+            else if (a.indexOf('laboratorio') !== -1)   clase = 'asig-laboratorio';
+            else if (a.indexOf('jefatura') !== -1)      clase = 'asig-jefatura';
+            else if (a.indexOf('administ') !== -1)       clase = 'asig-administracion';
+            var txt = asig.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return '<small class="asig-badge ' + clase + '" title="Asignación: ' + txt + '"><i class="fas fa-tag"></i> ' + txt + '</small>';
+        }
+
+        // Link personalizado de PowerBI del ingeniero (tabla usuarios_enlace_planeacion), bajo su nombre
+        function linkTablero(url) {
+            if (!url) return '';
+            var safe = String(url).replace(/"/g, '&quot;');
+            return '<a class="link-tablero" href="' + safe + '" target="_blank" rel="noopener" title="Abrir tablero personal de PowerBI"><i class="fas fa-chart-line"></i> Ver tablero</a>';
+        }
+
         // ================ RENDER ================
         function renderizarGrid(ingenieros, celdas) {
             if (!ingenieros || ingenieros.length === 0) {
@@ -279,11 +306,12 @@
             html += '</tr></thead><tbody>';
 
             ingenieros.forEach(function(ing) {
-                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + '</td>';
+                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace) + '</td>';
                 var celdasIng = celdas[ing.id_usuario] || {};
                 fechas.forEach(function(f) {
                     var info = celdasIng[f];
-                    var estatus = info ? info.estatus : 'disponible';
+                    // Sin evento en la celda -> estatus BASE del ingeniero (según su Asignación); default 'disponible'
+                    var estatus = info ? info.estatus : (ing.base || 'disponible');
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
                     var detalle = (info && info.detalle) ? info.detalle : '';

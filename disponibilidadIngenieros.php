@@ -122,7 +122,6 @@
     <script src="vendor/jquery-easing/jquery.easing.min.js"></script>
     <script src="js/sb-admin-2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script type="text/javascript">
         var fechaBaseSemana = getLunes(new Date());
@@ -271,11 +270,12 @@
             return '<small class="asig-badge ' + clase + '" title="Asignación: ' + txt + '"><i class="fas fa-tag"></i> ' + txt + '</small>';
         }
 
-        // Link personalizado de PowerBI del ingeniero (tabla usuarios_enlace_planeacion), bajo su nombre
-        function linkTablero(url) {
-            if (!url) return '';
-            var safe = String(url).replace(/"/g, '&quot;');
-            return '<a class="link-tablero" href="' + safe + '" target="_blank" rel="noopener" title="Abrir tablero personal de PowerBI"><i class="fas fa-chart-line"></i> Ver tablero</a>';
+        // Link al tablero personal de PowerBI del ingeniero. Abre nuestra página interna (tras login)
+        // en otra pestaña, con encabezado/pie; el embed vive ahí y la URL pública no se expone aquí.
+        function linkTablero(enlace, idUsuario) {
+            if (!enlace) return '';
+            return '<a class="link-tablero" href="tableroIngeniero.php?ing=' + encodeURIComponent(idUsuario) +
+                   '" target="_blank" rel="noopener" title="Ver tablero de PowerBI"><i class="fas fa-chart-line"></i> Ver tablero</a>';
         }
 
         // ================ RENDER ================
@@ -306,7 +306,7 @@
             html += '</tr></thead><tbody>';
 
             ingenieros.forEach(function(ing) {
-                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace) + '</td>';
+                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_usuario) + '</td>';
                 var celdasIng = celdas[ing.id_usuario] || {};
                 fechas.forEach(function(f) {
                     var info = celdasIng[f];

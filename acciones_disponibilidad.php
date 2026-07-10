@@ -179,6 +179,35 @@ if ($accion == 'disponibilidadIngenieros') {
         }
         $stmt->close();
 
+        // 3b. Servicios de LABORATORIO planeados en SCOT (servicios_planeados, tipo_ot = 'LaboratoryServiceOrder')
+        //     -> 'enlaboratorio' (prioridad 2). Se ligan al ingeniero por `id_usr` = usuarios.id_usuario.
+        //     Marca cada día del rango start_date..end_date que caiga dentro de la ventana consultada.
+        $sqlLabScot = "SELECT id_usr, ds_cliente, region, order_code,
+                              DATE(start_date) AS f_ini,
+                              DATE(COALESCE(NULLIF(end_date, '0000-00-00 00:00:00'), start_date)) AS f_fin
+                       FROM servicios_planeados
+                       WHERE tipo_ot = 'LaboratoryServiceOrder'
+                         AND id_usr IN ($ph)
+                         AND DATE(start_date) <= ?
+                         AND DATE(COALESCE(NULLIF(end_date, '0000-00-00 00:00:00'), start_date)) >= ?";
+        $stmt = $conn->prepare($sqlLabScot);
+        $typesL = str_repeat('i', count($idsIngs)) . 'ss';
+        $paramsL = array_merge($idsIngs, [$fechaFin, $fechaInicio]);
+        $stmt->bind_param($typesL, ...$paramsL);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $detalle = trim($row['ds_cliente'] ?: ($row['order_code'] ?: 'Laboratorio'));
+            $ini = ($row['f_ini'] > $fechaInicio) ? $row['f_ini'] : $fechaInicio;
+            $fin = ($row['f_fin'] < $fechaFin)   ? $row['f_fin'] : $fechaFin;
+            $d = $ini;
+            while ($d <= $fin) {
+                $setCelda($celdas, $row['id_usr'], $d, 'enlaboratorio', $detalle, 2);
+                $d = date('Y-m-d', strtotime($d . ' +1 day'));
+            }
+        }
+        $stmt->close();
+
         // 4. Vacaciones / ausencias -> prioridad 3
         //    Cuenta desde que el empleado hace la solicitud; solo se EXCLUYE si fue RECHAZADA.
         //    Rechazada = jefe (estatus = 3) O RRHH (autorizaRH = 3) — misma regla que la app `incidencias`

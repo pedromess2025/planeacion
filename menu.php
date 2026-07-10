@@ -74,7 +74,9 @@
         </a>
     </li>
 
-    <!-- TODO PROD: volver a ocultar estos dos items (style="display:none;") antes de subir a producción -->
+    <!-- OCULTOS EN PRODUCCIÓN (aún no liberados a la empresa). Se acceden por URL directa para pruebas.
+         Para liberar: descomentar estos dos <li>. -->
+    <!--
     <li class="nav-item">
         <a class="nav-link" href="disponibilidadIngenieros">
             <i class="fas fa-fw fa-user-clock text-warning"></i>
@@ -88,6 +90,7 @@
             <span>Disponibilidad de Vehículos</span>
         </a>
     </li>
+    -->
 
     <li class="nav-item">
         <a class="nav-link" href="verActividades">

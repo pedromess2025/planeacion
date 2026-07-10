@@ -29,11 +29,13 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
 
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {
-        // Filtro opcional: solo ingenieros de servicio (puesto = 38)
+        // Filtro opcional: solo ingenieros / jefes, identificados por `tipo_usr` (ING/JEFE).
+        // Env-independiente y alineado con la población del grid de Disponibilidad
+        // (antes usaba `puesto IN (...)` hardcodeado, cuyos ids difieren entre LOCAL y PROD).
         $soloServicio = isset($_POST['soloServicio']) && $_POST['soloServicio'] == '1';
         $sql = "SELECT * from usuarios WHERE estatus = 1";
         if ($soloServicio) {
-            $sql .= " AND puesto = 38";
+            $sql .= " AND tipo_usr IN ('ING','JEFE')";
         }
         $sql .= " ORDER BY nombre";
         $result = $conn->query($sql);

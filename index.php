@@ -502,7 +502,7 @@
         }        
 
         // Función para cargar empleados en los select de responsables
-        // soloServicio = 1 -> solo ingenieros de servicio (puesto = 38)
+        // soloServicio = 1 -> solo ingenieros/jefes (usuarios.tipo_usr IN ('ING','JEFE'))
         function empleadoSolicita(seleccionado) {
             opcion = "empleados";
             $.ajax({

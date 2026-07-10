@@ -182,14 +182,17 @@ if ($accion == 'disponibilidadIngenieros') {
         // 3b. Servicios de LABORATORIO planeados en SCOT (servicios_planeados, tipo_ot = 'LaboratoryServiceOrder')
         //     -> 'enlaboratorio' (prioridad 2). Se ligan al ingeniero por `id_usr` = usuarios.id_usuario.
         //     Marca cada día del rango start_date..end_date que caiga dentro de la ventana consultada.
+        //     Se evita el literal '0000-00-00 00:00:00' (lo rechaza el sql_mode estricto/NO_ZERO_DATE de PROD);
+        //     GREATEST(start_date, IFNULL(end_date, start_date)) da el fin real y degrada a start_date si
+        //     end_date es NULL o fecha cero, sin usar literales de fecha inválidos.
         $sqlLabScot = "SELECT id_usr, ds_cliente, region, order_code,
                               DATE(start_date) AS f_ini,
-                              DATE(COALESCE(NULLIF(end_date, '0000-00-00 00:00:00'), start_date)) AS f_fin
+                              DATE(GREATEST(start_date, IFNULL(end_date, start_date))) AS f_fin
                        FROM servicios_planeados
                        WHERE tipo_ot = 'LaboratoryServiceOrder'
                          AND id_usr IN ($ph)
                          AND DATE(start_date) <= ?
-                         AND DATE(COALESCE(NULLIF(end_date, '0000-00-00 00:00:00'), start_date)) >= ?";
+                         AND DATE(GREATEST(start_date, IFNULL(end_date, start_date))) >= ?";
         $stmt = $conn->prepare($sqlLabScot);
         $typesL = str_repeat('i', count($idsIngs)) . 'ss';
         $paramsL = array_merge($idsIngs, [$fechaFin, $fechaInicio]);

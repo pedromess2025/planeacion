@@ -74,10 +74,18 @@
         </a>
     </li>
 
-    <li class="nav-item" style="display:none;">
+    <!-- TODO PROD: volver a ocultar estos dos items (style="display:none;") antes de subir a producción -->
+    <li class="nav-item">
         <a class="nav-link" href="disponibilidadIngenieros">
             <i class="fas fa-fw fa-user-clock text-warning"></i>
             <span>Disponibilidad de Ingenieros</span>
+        </a>
+    </li>
+
+    <li class="nav-item">
+        <a class="nav-link" href="disponibilidadVehiculos">
+            <i class="fas fa-fw fa-car text-warning"></i>
+            <span>Disponibilidad de Vehículos</span>
         </a>
     </li>
 

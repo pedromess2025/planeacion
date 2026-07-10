@@ -7,3 +7,4 @@ imgEntradas/
 *.log
 /logs
 logs/notificacion_entrada.log
+*.sql

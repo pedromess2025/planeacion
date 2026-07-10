@@ -187,7 +187,7 @@
         // ================ CARGAR FILTROS ================
         function cargarDepartamentos() {
             $.ajax({
-                url: 'acciones_calendario.php', method: 'POST', dataType: 'json',
+                url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
                 data: { accion: 'departamentosLab' },
                 success: function(data) {
                     if (data.status === 'success') {
@@ -234,7 +234,7 @@
 
             $('#contenedorGrid').html('<p class="text-muted"><i class="fas fa-info-circle"></i> Cargando disponibilidad...</p>');
             $.ajax({
-                url: 'acciones_calendario.php', method: 'POST', dataType: 'json',
+                url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
                 data: {
                     accion: 'disponibilidadIngenieros',
                     fechaInicio: fechaInicio,

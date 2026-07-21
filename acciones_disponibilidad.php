@@ -35,38 +35,38 @@ if ($accion == 'disponibilidadIngenieros') {
     try {
         $fechaInicio    = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
         $fechaFin       = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
-        $departamentoId = isset($_POST['departamento']) ? intval($_POST['departamento']) : 0;
+        $zonaF          = isset($_POST['zona']) ? trim($_POST['zona']) : '';
         $ingenieroF     = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
-        $regionF        = isset($_POST['region']) && is_array($_POST['region']) ? $_POST['region'] : [];
 
         // Marca una celda solo si la nueva prioridad es mayor o igual a la existente.
-        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p) {
+        // $titulo (opcional) = HTML del popup (tooltip on-hover); solo lo usa 'servicio'.
+        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null) {
             if (!isset($celdas[$idu])) $celdas[$idu] = [];
             if (!isset($celdas[$idu][$fecha]) || $celdas[$idu][$fecha]['p'] < $p) {
-                $celdas[$idu][$fecha] = ['estatus' => $estatus, 'detalle' => $detalle, 'p' => $p];
+                $celdas[$idu][$fecha] = ['estatus' => $estatus, 'detalle' => $detalle, 'titulo' => $titulo, 'p' => $p];
             }
         };
 
-        // 1. Ingenieros / jefes activos, con filtros opcionales (área/lab, ingeniero, región).
-        //    Se identifican por `usuarios.tipo_usr` ('ING' / 'JEFE') — campo independiente del entorno,
+        // 1. Ingenieros / jefes activos, con filtros opcionales (área/zona, ingeniero, región).
+        //    Se identifican por `usuarios.tipo_usr` (ING / JEFE_ENCARGADO / JEFE_LAB) — campo indep. del entorno,
         //    a diferencia del catálogo `puesto` (cuyos ids difieren entre LOCAL y PRODUCCIÓN).
-        $sqlIngs = "SELECT id_usuario, noEmpleado, region,
-                           COALESCE(NULLIF(TRIM(CONCAT_WS(' ', nombres, apellidos)), ''), nombre) AS nombre
+        //    El filtro de Área/Laboratorio usa la columna `usuarios.zona` (texto).
+        //    GROUP BY id_usuario: la PK de `usuarios` es `id`, no `id_usuario`, así que un mismo
+        //    id_usuario puede tener filas duplicadas; se colapsan para no repetir renglones en el grid.
+        //    Con ONLY_FULL_GROUP_BY (PROD) las columnas no agrupadas se agregan con MAX().
+        $sqlIngs = "SELECT id_usuario,
+                           MAX(noEmpleado) AS noEmpleado,
+                           COALESCE(NULLIF(TRIM(CONCAT_WS(' ', MAX(nombres), MAX(apellidos))), ''), MAX(nombre)) AS nombre
                     FROM usuarios
-                    WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE')";
+                    WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')";
         $params = []; $types = '';
-        if ($departamentoId > 0) { $sqlIngs .= " AND departamento = ?"; $params[] = $departamentoId; $types .= 'i'; }
+        if ($zonaF !== '') { $sqlIngs .= " AND zona = ?"; $params[] = $zonaF; $types .= 's'; }
         if (!empty($ingenieroF)) {
             $ph = implode(',', array_fill(0, count($ingenieroF), '?'));
             $sqlIngs .= " AND id_usuario IN ($ph)";
             foreach ($ingenieroF as $v) { $params[] = intval($v); $types .= 'i'; }
         }
-        if (!empty($regionF)) {
-            $ph = implode(',', array_fill(0, count($regionF), '?'));
-            $sqlIngs .= " AND region IN ($ph)";
-            foreach ($regionF as $v) { $params[] = intval($v); $types .= 'i'; }
-        }
-        $sqlIngs .= " ORDER BY nombre";
+        $sqlIngs .= " GROUP BY id_usuario ORDER BY nombre";
         $stmt = $conn->prepare($sqlIngs);
         if ($types !== '') $stmt->bind_param($types, ...$params);
         $stmt->execute();
@@ -93,23 +93,31 @@ if ($accion == 'disponibilidadIngenieros') {
 
         // 1b. Asignación -> estatus BASE por ingeniero (default de la celda, prioridad 0)
         //     'Servicio en sitio 100' -> disponible ; Laboratorio/Jefatura/Administración -> enlaboratorio
+        //     La tabla se liga por `noEmpleado` (más estable que id_usuario, que puede ser NULL/duplicado);
+        //     se traduce a id_usuario con $noEmpToId para colgar el dato en cada ingeniero del grid.
         //     Resiliente: si la tabla aún no existe (migración pendiente), degrada a base 'disponible'.
         $baseByIng = [];
         $asigByIng = [];
-        try {
-            $sqlAsig = "SELECT id_usuario, asignacion FROM planeacion_asignacion_ingenieros WHERE id_usuario IN ($ph)";
-            $stmt = $conn->prepare($sqlAsig);
-            $stmt->bind_param(str_repeat('i', count($idsIngs)), ...$idsIngs);
-            $stmt->execute();
-            $res = $stmt->get_result();
-            while ($row = $res->fetch_assoc()) {
-                $asigByIng[$row['id_usuario']] = $row['asignacion'];
-                $baseByIng[$row['id_usuario']] = (stripos($row['asignacion'], 'Servicio') !== false) ? 'disponible' : 'enlaboratorio';
+        if (!empty($noEmpToId)) {
+            try {
+                $noEmpsA = array_keys($noEmpToId);
+                $phA = implode(',', array_fill(0, count($noEmpsA), '?'));
+                $sqlAsig = "SELECT noEmpleado, asignacion FROM planeacion_asignacion_ingenieros WHERE noEmpleado IN ($phA)";
+                $stmt = $conn->prepare($sqlAsig);
+                $stmt->bind_param(str_repeat('i', count($noEmpsA)), ...$noEmpsA);
+                $stmt->execute();
+                $res = $stmt->get_result();
+                while ($row = $res->fetch_assoc()) {
+                    $idU = isset($noEmpToId[$row['noEmpleado']]) ? $noEmpToId[$row['noEmpleado']] : null;
+                    if ($idU === null) continue;
+                    $asigByIng[$idU] = $row['asignacion'];
+                    $baseByIng[$idU] = (stripos($row['asignacion'], 'Servicio') !== false) ? 'disponible' : 'enlaboratorio';
+                }
+                $stmt->close();
+            } catch (Throwable $e) {
+                $baseByIng = [];
+                $asigByIng = [];
             }
-            $stmt->close();
-        } catch (Throwable $e) {
-            $baseByIng = [];
-            $asigByIng = [];
         }
 
         // 1c. Enlace personalizado de PowerBI por ingeniero (tabla `usuarios_enlace_planeacion`, ligada por NoEmpleado).
@@ -140,11 +148,17 @@ if ($accion == 'disponibilidadIngenieros') {
         }
 
         // 2. Servicios planeados -> 'servicio' (prioridad 1)
-        $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, DATE(start_date) AS fecha
+        //    Incluye los CERRADOS (estatus 'Cerrada'): se muestran IGUAL que uno activo (mismo color café);
+        //    el estatus real va en el popup. Solo se excluyen cancelados y el marcador de captura-Ventas.
+        //    Popup (tooltip HTML on-hover, estilo Disponibilidad de Vehículos): cliente / fecha planeada /
+        //    hora / estatus / ciudad / OT.
+        $escServ = function ($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); };
+        $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, order_code, estatus,
+                           DATE(start_date) AS fecha, TIME(start_date) AS hora
                     FROM servicios_planeados_mess
                     WHERE (engineer IN ($ph) OR engineer2 IN ($ph) OR engineer3 IN ($ph))
                       AND DATE(start_date) BETWEEN ? AND ?
-                      AND estatus NOT IN ('Cancelada','CanceladaV','CanceladaLab','Cerrada','Solicitadoventas')";
+                      AND estatus NOT IN ('Cancelada','CanceladaV','CanceladaLab','Solicitadoventas')";
         $stmt = $conn->prepare($sqlServ);
         $typesS = str_repeat('i', count($idsIngs) * 3) . 'ss';
         $paramsS = array_merge($idsIngs, $idsIngs, $idsIngs, [$fechaInicio, $fechaFin]);
@@ -153,10 +167,17 @@ if ($accion == 'disponibilidadIngenieros') {
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
             $detalle = trim(($row['ds_cliente'] ?: 'S/C') . ($row['city'] ? ' · ' . $row['city'] : ''));
+            $hora = (!empty($row['hora']) && $row['hora'] !== '00:00:00') ? substr($row['hora'], 0, 5) : '—';
+            $titulo = "<i class='fas fa-briefcase'></i> <b>" . $escServ($row['ds_cliente'] ?: 'S/C') . "</b><br>"
+                    . "Fecha planeada: " . $escServ($row['fecha']) . "<br>"
+                    . "Hora: " . $escServ($hora) . "<br>"
+                    . "Estatus: " . $escServ($row['estatus'] ?: '-') . "<br>"
+                    . "Ciudad: " . $escServ($row['city'] ?: '-') . "<br>"
+                    . "OT: " . $escServ($row['order_code'] ?: 's/OT');
             foreach (['engineer', 'engineer2', 'engineer3'] as $c) {
                 $idu = $row[$c];
                 if ($idu && in_array($idu, $idsIngs)) {
-                    $setCelda($celdas, $idu, $row['fecha'], 'servicio', $detalle, 1);
+                    $setCelda($celdas, $idu, $row['fecha'], 'servicio', $detalle, 1, $titulo);
                 }
             }
         }
@@ -262,33 +283,31 @@ if ($accion == 'disponibilidadIngenieros') {
     }
 }
 
-// Endpoint: lista de departamentos que tienen ingenieros/jefes (para el filtro de área/lab del grid)
-if ($accion == 'departamentosLab') {
-    // Se derivan de los departamentos donde hay usuarios activos con tipo_usr ING/JEFE
-    // (env-independiente: ya no depende de una lista de ids hardcodeada por entorno).
-    $sql = "SELECT d.id, d.departamento
-            FROM departamento d
-            WHERE d.id IN (SELECT DISTINCT departamento FROM usuarios
-                           WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE') AND departamento IS NOT NULL)
-            ORDER BY d.departamento";
-    $result = $conn->query($sql);
-    $deptos = [];
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $deptos[] = $row;
-        }
+// Endpoint: zonas (área / laboratorio) para el filtro del grid.
+// Cada valor distinto de `usuarios.zona` entre los ING/JEFE activos es una opción.
+// Se DERIVA de la población real del grid -> siempre consistente con lo que se muestra.
+if ($accion == 'zonasLab') {
+    $sql = "SELECT DISTINCT zona
+            FROM usuarios
+            WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')
+              AND zona IS NOT NULL AND TRIM(zona) <> ''
+            ORDER BY zona";
+    $zonas = [];
+    if ($result = $conn->query($sql)) {
+        while ($row = $result->fetch_assoc()) { $zonas[] = $row['zona']; }
     }
-    echo json_encode(['status' => 'success', 'departamentos' => $deptos]);
+    echo json_encode(['status' => 'success', 'zonas' => $zonas]);
 }
 
+
 // Endpoint: disponibilidad de vehículos (cuadrícula de consulta, read-only)
-// Filas = vehículos activos asignados a ingenieros (mess_rrhh.usuarios.tipo_usr IN ('ING','JEFE')).
+// Filas = vehículos activos asignados a ingenieros (mess_rrhh.usuarios.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')).
 // Estatus por celda día×vehículo, prioridad: mantenimiento (2) > préstamo (1) > disponible (0).
 if ($accion == 'disponibilidadVehiculos') {
     try {
         $fechaInicio = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
         $fechaFin    = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
-        $areaF       = isset($_POST['area']) ? trim($_POST['area']) : '';
+        $zonaF       = isset($_POST['zona']) ? trim($_POST['zona']) : '';
         $vehiculoF   = isset($_POST['vehiculo']) && is_array($_POST['vehiculo']) ? $_POST['vehiculo'] : [];
         $deptoF      = isset($_POST['departamento']) && is_array($_POST['departamento']) ? $_POST['departamento'] : [];
         $ingenieroF  = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
@@ -313,14 +332,15 @@ if ($accion == 'disponibilidadVehiculos') {
         //    comodín no tiene usuario. Filtros opcionales. Los comodines se marcan y se ordenan primero.
         // DISTINCT: un id_usuario puede casar con >1 fila en usuarios (duplicados) y multiplicar el vehículo;
         // como solo seleccionamos columnas de inventario, DISTINCT colapsa esos duplicados sin riesgo.
-        $sqlVeh = "SELECT DISTINCT inv.id_vehiculo, inv.placa, inv.marca, inv.modelo, inv.usuario, inv.area,
+        $sqlVeh = "SELECT DISTINCT inv.id_vehiculo, inv.placa, inv.marca, inv.modelo, inv.usuario, inv.area, u.zona,
                           (inv.id_vehiculo IN ($comodinList)) AS comodin
                    FROM inventario inv
                    LEFT JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
                    WHERE inv.estatus = 'Activo'
-                     AND (u.tipo_usr IN ('ING','JEFE') OR inv.id_vehiculo IN ($comodinList))";
+                     AND (u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB') OR inv.id_vehiculo IN ($comodinList))";
         $params = []; $types = '';
-        if ($areaF !== '') { $sqlVeh .= " AND inv.area = ?"; $params[] = $areaF; $types .= 's'; }
+        // Filtro de Área/Zona: por la `zona` del ingeniero dueño del vehículo (mess_rrhh.usuarios.zona)
+        if ($zonaF !== '') { $sqlVeh .= " AND u.zona = ?"; $params[] = $zonaF; $types .= 's'; }
         if (!empty($deptoF)) {
             $phD = implode(',', array_fill(0, count($deptoF), '?'));
             $sqlVeh .= " AND u.departamento IN ($phD)";
@@ -450,15 +470,23 @@ if ($accion == 'disponibilidadVehiculos') {
     }
 }
 
-// Endpoint: áreas de vehículos (para el filtro del módulo de disponibilidad de vehículos)
-if ($accion == 'areasVehiculos') {
+// Endpoint: zonas (área / laboratorio) para el filtro del módulo de vehículos.
+// Cada valor distinto de `usuarios.zona` entre los ING/JEFE con vehículo activo es una opción.
+// Se DERIVA de la población real del grid -> siempre consistente con lo que se muestra.
+if ($accion == 'zonasVehiculos') {
     try {
         $connCV = conexionVehiculos();
-        $res = $connCV->query("SELECT DISTINCT area FROM inventario WHERE estatus = 'Activo' AND area <> '' ORDER BY area");
-        $areas = [];
-        while ($row = $res->fetch_assoc()) { $areas[] = $row['area']; }
+        $sql = "SELECT DISTINCT u.zona
+                FROM inventario inv
+                JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
+                WHERE inv.estatus = 'Activo' AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')
+                  AND u.zona IS NOT NULL AND TRIM(u.zona) <> ''
+                ORDER BY u.zona";
+        $res = $connCV->query($sql);
+        $zonas = [];
+        while ($row = $res->fetch_assoc()) { $zonas[] = $row['zona']; }
         $connCV->close();
-        echo json_encode(['status' => 'success', 'areas' => $areas]);
+        echo json_encode(['status' => 'success', 'zonas' => $zonas]);
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
     }
@@ -474,7 +502,7 @@ if ($accion == 'laboratoriosVehiculos') {
                 FROM inventario inv
                 JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
                 LEFT JOIN mess_rrhh.departamento d ON u.departamento = d.id
-                WHERE inv.estatus = 'Activo' AND u.tipo_usr IN ('ING','JEFE')
+                WHERE inv.estatus = 'Activo' AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')
                   AND u.departamento IS NOT NULL AND u.departamento <> 0
                 ORDER BY nombre";
         $res = $connCV->query($sql);
@@ -500,7 +528,7 @@ if ($accion == 'ingenierosVehiculos') {
                        COALESCE(NULLIF(TRIM(CONCAT_WS(' ', u.nombres, u.apellidos)), ''), u.nombre) AS nombre
                 FROM inventario inv
                 JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
-                WHERE inv.estatus = 'Activo' AND (u.tipo_usr IN ('ING','JEFE') OR inv.id_vehiculo IN ($comodinList))
+                WHERE inv.estatus = 'Activo' AND (u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB') OR inv.id_vehiculo IN ($comodinList))
                 ORDER BY nombre";
         $res = $connCV->query($sql);
         $ings = [];

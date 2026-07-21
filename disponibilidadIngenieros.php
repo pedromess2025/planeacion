@@ -57,21 +57,17 @@
                     <p class="text-muted">Vista de consulta. Los estatus se derivan de servicios planeados, ausencias autorizadas y la planeación de laboratorio/capacitación.</p>
 
                     <div class="row mb-2">
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="filtro-area"><b>Área / Laboratorio:</b></label>
                             <select id="filtro-area" class="form-select">
                                 <option value="">Todas</option>
                             </select>
                         </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="filtro-ingeniero"><b>Ingeniero:</b></label>
                             <select id="filtro-ingeniero" class="form-select" multiple="multiple"></select>
                         </div>
-                        <div class="col-md-3">
-                            <label for="filtro-region"><b>Región:</b></label>
-                            <select id="filtro-region" class="form-select" multiple="multiple"></select>
-                        </div>
-                        <div class="col-md-3">
+                        <div class="col-md-4">
                             <label for="filtro-estatus"><b>Estatus:</b></label>
                             <select id="filtro-estatus" class="form-select" multiple="multiple">
                                 <option value="disponible">Disponible</option>
@@ -143,16 +139,14 @@
             actualizarTituloSemana();
             $('#filtro-area').select2({ placeholder: 'Todas las áreas', allowClear: true });
             $('#filtro-ingeniero').select2({ placeholder: 'Uno o varios ingenieros', allowClear: true });
-            $('#filtro-region').select2({ placeholder: 'Una o varias regiones', allowClear: true });
             $('#filtro-estatus').select2({ placeholder: 'Uno o varios estatus', allowClear: true });
 
-            cargarDepartamentos();
+            cargarZonas();
             cargarIngenieros();
-            cargarRegiones();
             cargarDisponibilidad();
 
             // Refetch al cambiar filtros que afectan el conjunto de ingenieros / rango
-            $('#filtro-area, #filtro-ingeniero, #filtro-region').on('change', cargarDisponibilidad);
+            $('#filtro-area, #filtro-ingeniero').on('change', cargarDisponibilidad);
             // El filtro de estatus solo re-renderiza (es por celda)
             $('#filtro-estatus').on('change', function() { renderizarGrid(ingenierosData, celdasData); });
         });
@@ -185,16 +179,15 @@
         }
 
         // ================ CARGAR FILTROS ================
-        function cargarDepartamentos() {
+        function cargarZonas() {
             $.ajax({
                 url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
-                data: { accion: 'departamentosLab' },
+                data: { accion: 'zonasLab' },
                 success: function(data) {
                     if (data.status === 'success') {
                         var sel = $('#filtro-area');
-                        data.departamentos.forEach(function(d) {
-                            var deptoName = d.departamento.replace(' / Laboratorio', '').replace('/Laboratorio', '').trim();
-                            sel.append('<option value="' + d.id + '">' + deptoName + '</option>');
+                        data.zonas.forEach(function(z) {
+                            sel.append('<option value="' + z + '">' + z + '</option>');
                         });
                     }
                 }
@@ -212,19 +205,6 @@
                 }
             });
         }
-        function cargarRegiones() {
-            $.ajax({
-                url: 'acciones_solicitud.php', method: 'POST', dataType: 'json',
-                data: { opcion: 'consultarRegiones' },
-                success: function(data) {
-                    var sel = $('#filtro-region');
-                    data.forEach(function(r) {
-                        sel.append('<option value="' + r.id + '">' + r.region + '</option>');
-                    });
-                }
-            });
-        }
-
         // ================ CARGAR DISPONIBILIDAD ================
         function cargarDisponibilidad() {
             var fechaInicio = formatFecha(fechaBaseSemana);
@@ -239,9 +219,8 @@
                     accion: 'disponibilidadIngenieros',
                     fechaInicio: fechaInicio,
                     fechaFin: fechaFin,
-                    departamento: $('#filtro-area').val() || '',
-                    ingeniero: $('#filtro-ingeniero').val() || [],
-                    region: $('#filtro-region').val() || []
+                    zona: $('#filtro-area').val() || '',
+                    ingeniero: $('#filtro-ingeniero').val() || []
                 },
                 success: function(data) {
                     if (data.status === 'success') {
@@ -315,20 +294,26 @@
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
                     var detalle = (info && info.detalle) ? info.detalle : '';
+                    var titulo = (info && info.titulo) ? info.titulo : '';
 
                     var visible = (filtroEstatus.length === 0) || (filtroEstatus.indexOf(estatus) !== -1);
                     if (!visible) {
                         html += '<td class="celda-disp celda-muted' + claseHoy + '"></td>';
                     } else {
-                        var det = detalle ? '<small title="' + detalle.replace(/"/g,'&quot;') + '">' + detalle + '</small>' : '';
-                        html += '<td class="celda-disp' + claseHoy + '" style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + det + '</td>';
+                        // Con popup (servicio) -> tooltip Bootstrap HTML en la celda; sin popup -> title nativo en el detalle
+                        var det = detalle ? '<small' + (titulo ? '' : ' title="' + detalle.replace(/"/g,'&quot;') + '"') + '>' + detalle + '</small>' : '';
+                        var ttAttr = titulo ? ' data-toggle="tooltip" data-html="true" title="' + titulo.replace(/"/g,'&quot;') + '"' : '';
+                        html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + det + '</td>';
                     }
                 });
                 html += '</tr>';
             });
 
             html += '</tbody></table>';
+            $('body > .tooltip').remove(); // limpia tooltips flotantes de un render anterior
             $('#contenedorGrid').html(html);
+            // Popup (tooltip Bootstrap HTML on-hover) en las celdas de servicio, estilo Disponibilidad de Vehículos
+            $('#contenedorGrid [data-toggle="tooltip"]').tooltip({ html: true, placement: 'top', container: 'body', trigger: 'hover' });
         }
     </script>
 </body>

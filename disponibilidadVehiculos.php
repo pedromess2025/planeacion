@@ -53,22 +53,27 @@
 
                     <div class="row mb-2">
                         <div class="col-md-3">
-                            <label for="filtro-laboratorio"><b>Laboratorio:</b></label>
-                            <select id="filtro-laboratorio" class="form-select" multiple="multiple"></select>
-                        </div>
-                        <div class="col-md-3">
-                            <label for="filtro-vehiculo"><b>Vehículo:</b></label>
-                            <select id="filtro-vehiculo" class="form-select" multiple="multiple"></select>
+                            <label for="filtro-area"><b>Área / Laboratorio:</b></label>
+                            <select id="filtro-area" class="form-select">
+                                <option value="">Todas</option>
+                            </select>
                         </div>
                         <div class="col-md-3">
                             <label for="filtro-ingeniero"><b>Ingeniero:</b></label>
                             <select id="filtro-ingeniero" class="form-select" multiple="multiple"></select>
                         </div>
                         <div class="col-md-3">
-                            <label for="filtro-area"><b>Región:</b></label>
-                            <select id="filtro-area" class="form-select">
-                                <option value="">Todas</option>
+                            <label for="filtro-estatus"><b>Estatus:</b></label>
+                            <select id="filtro-estatus" class="form-select" multiple="multiple">
+                                <option value="disponible">Disponible</option>
+                                <option value="servicio">En servicio</option>
+                                <option value="prestamo">En préstamo</option>
+                                <option value="mantenimiento">En mantenimiento</option>
                             </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="filtro-vehiculo"><b>Vehículo:</b></label>
+                            <select id="filtro-vehiculo" class="form-select" multiple="multiple"></select>
                         </div>
                     </div>
 
@@ -133,26 +138,26 @@
 
         $(document).ready(function() {
             actualizarTituloSemana();
-            $('#filtro-laboratorio').select2({ placeholder: 'Uno o varios laboratorios', allowClear: true });
-            $('#filtro-vehiculo').select2({ placeholder: 'Uno o varios vehículos', allowClear: true });
+            $('#filtro-area').select2({ placeholder: 'Todas las áreas', allowClear: true });
             $('#filtro-ingeniero').select2({ placeholder: 'Uno o varios ingenieros', allowClear: true });
-            $('#filtro-area').select2({ placeholder: 'Todas las regiones', allowClear: true });
+            $('#filtro-estatus').select2({ placeholder: 'Uno o varios estatus', allowClear: true });
+            $('#filtro-vehiculo').select2({ placeholder: 'Uno o varios vehículos', allowClear: true });
 
-            cargarLaboratorios();
             cargarIngenieros();
-            cargarAreas();
+            cargarZonas();
             cargarDisponibilidad();
 
-            // Al cambiar la Región: filtrar el dropdown de Vehículo a esa región (y recargar el grid)
+            // Al cambiar el Área/Zona: filtrar el dropdown de Vehículo a esa zona (y recargar el grid)
             $('#filtro-area').on('change', function() {
-                var area = $('#filtro-area').val() || '';
-                var lista = area ? todosVehiculos.filter(function(v){ return v.area === area; }) : todosVehiculos;
+                var zona = $('#filtro-area').val() || '';
+                var lista = zona ? todosVehiculos.filter(function(v){ return v.zona === zona; }) : todosVehiculos;
                 $('#filtro-vehiculo').val(null);
                 poblarFiltroVehiculos(lista, true);
                 cargarDisponibilidad();
             });
-            // Los otros filtros solo recargan el grid
-            $('#filtro-vehiculo, #filtro-laboratorio, #filtro-ingeniero').on('change', cargarDisponibilidad);
+            // Vehículo / Ingeniero recargan el grid; Estatus solo re-renderiza (es por celda)
+            $('#filtro-vehiculo, #filtro-ingeniero').on('change', cargarDisponibilidad);
+            $('#filtro-estatus').on('change', function() { renderizarGrid(vehiculosData, celdasData); });
         });
 
         // ================ NAVEGACIÓN SEMANAL ================
@@ -183,29 +188,15 @@
         }
 
         // ================ CARGAR FILTROS ================
-        function cargarAreas() {
+        function cargarZonas() {
             $.ajax({
                 url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
-                data: { accion: 'areasVehiculos' },
+                data: { accion: 'zonasVehiculos' },
                 success: function(data) {
                     if (data.status === 'success') {
                         var sel = $('#filtro-area');
-                        data.areas.forEach(function(a) {
-                            sel.append('<option value="' + a + '">' + a + '</option>');
-                        });
-                    }
-                }
-            });
-        }
-        function cargarLaboratorios() {
-            $.ajax({
-                url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
-                data: { accion: 'laboratoriosVehiculos' },
-                success: function(data) {
-                    if (data.status === 'success') {
-                        var sel = $('#filtro-laboratorio');
-                        data.laboratorios.forEach(function(l) {
-                            sel.append('<option value="' + l.id + '">' + l.nombre + '</option>');
+                        data.zonas.forEach(function(z) {
+                            sel.append('<option value="' + z + '">' + z + '</option>');
                         });
                     }
                 }
@@ -249,8 +240,7 @@
                     accion: 'disponibilidadVehiculos',
                     fechaInicio: fechaInicio,
                     fechaFin: fechaFin,
-                    area: $('#filtro-area').val() || '',
-                    departamento: $('#filtro-laboratorio').val() || [],
+                    zona: $('#filtro-area').val() || '',
                     ingeniero: $('#filtro-ingeniero').val() || [],
                     vehiculo: $('#filtro-vehiculo').val() || []
                 },
@@ -283,6 +273,7 @@
                 return;
             }
             celdas = celdas || {};
+            var filtroEstatus = $('#filtro-estatus').val() || [];
 
             // Paginación: 10 vehículos por hoja (respeta el orden comodines-primero del backend)
             var totalReg = vehiculos.length;
@@ -324,9 +315,14 @@
                     var estatus = info ? info.estatus : 'disponible';
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
+
+                    var visible = (filtroEstatus.length === 0) || (filtroEstatus.indexOf(estatus) !== -1);
+                    if (!visible) {
+                        html += '<td class="celda-disp celda-muted' + claseHoy + '"></td>';
+                        return;
+                    }
                     var detalle = (info && info.detalle) ? info.detalle : '';
                     var titulo = (info && info.titulo) ? info.titulo : detalle;
-
                     var det = detalle ? '<small>' + detalle + '</small>' : '';
                     var ttAttr = titulo ? ' data-toggle="tooltip" data-html="true" title="' + titulo.replace(/"/g,'&quot;') + '"' : '';
                     html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + det + '</td>';

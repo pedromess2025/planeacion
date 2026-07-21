@@ -8,3 +8,4 @@ imgEntradas/
 /logs
 logs/notificacion_entrada.log
 *.sql
+*.csv

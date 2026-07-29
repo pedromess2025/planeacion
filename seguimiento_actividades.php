@@ -118,7 +118,7 @@
                                                         <th>Área</th>
                                                         <th>OT</th>
                                                         <th>Fecha de Captura</th>
-                                                        <th>Fecha Planeada</th>                                                        
+                                                        <th>Fecha/hora compromiso</th>                                                        
                                                         <th>Cliente</th>
                                                         <th>Ciudad</th>
                                                         <th>Vehículo</th>
@@ -205,7 +205,7 @@
                             <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" placeholder="Ej. EL25-01E-1">
                         </div>
                         <div class="col-sm-6 mb-0">
-                            <label for="datefechaCierre">Fecha planeada</label>
+                            <label for="datefechaCierre">Fecha/hora compromiso</label>
                             <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre" onchange="validaFechas()">
                             <input type="hidden" class="form-control form-control-sm" id="datefechaCierreAnt" name="datefechaCierreAnt">
                             <input type="hidden" id="reprogramado" name="reprogramado">

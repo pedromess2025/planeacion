@@ -36,6 +36,7 @@ if ($accion == 'disponibilidadIngenieros') {
         $fechaInicio    = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
         $fechaFin       = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
         $zonaF          = isset($_POST['zona']) ? trim($_POST['zona']) : '';
+        $deptoF         = isset($_POST['departamento']) ? trim($_POST['departamento']) : ''; // 2º filtro (cascada Lab Hugo)
         $ingenieroF     = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
 
         // Marca una celda solo si la nueva prioridad es mayor o igual a la existente.
@@ -50,23 +51,28 @@ if ($accion == 'disponibilidadIngenieros') {
         // 1. Ingenieros / jefes activos, con filtros opcionales (área/zona, ingeniero, región).
         //    Se identifican por `usuarios.tipo_usr` (ING / JEFE_ENCARGADO / JEFE_LAB) — campo indep. del entorno,
         //    a diferencia del catálogo `puesto` (cuyos ids difieren entre LOCAL y PRODUCCIÓN).
-        //    El filtro de Área/Laboratorio usa la columna `usuarios.zona` (texto).
+        //    El filtro de Área/Laboratorio usa la columna `usuarios.zona` (texto). El 2º filtro opcional
+        //    (cascada "Lab Hugo") acota por `usuarios.departamento`.
         //    GROUP BY id_usuario: la PK de `usuarios` es `id`, no `id_usuario`, así que un mismo
         //    id_usuario puede tener filas duplicadas; se colapsan para no repetir renglones en el grid.
         //    Con ONLY_FULL_GROUP_BY (PROD) las columnas no agrupadas se agregan con MAX().
-        $sqlIngs = "SELECT id_usuario,
-                           MAX(noEmpleado) AS noEmpleado,
-                           COALESCE(NULLIF(TRIM(CONCAT_WS(' ', MAX(nombres), MAX(apellidos))), ''), MAX(nombre)) AS nombre
-                    FROM usuarios
-                    WHERE estatus = 1 AND tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')";
+        //    LEFT JOIN departamento -> nombre del lab del ingeniero (se muestra en el grid).
+        $sqlIngs = "SELECT u.id_usuario,
+                           MAX(u.noEmpleado) AS noEmpleado,
+                           COALESCE(NULLIF(TRIM(CONCAT_WS(' ', MAX(u.nombres), MAX(u.apellidos))), ''), MAX(u.nombre)) AS nombre,
+                           MAX(d.departamento) AS lab
+                    FROM usuarios u
+                    LEFT JOIN departamento d ON u.departamento = d.id
+                    WHERE u.estatus = 1 AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')";
         $params = []; $types = '';
-        if ($zonaF !== '') { $sqlIngs .= " AND zona = ?"; $params[] = $zonaF; $types .= 's'; }
+        if ($zonaF !== '') { $sqlIngs .= " AND u.zona = ?"; $params[] = $zonaF; $types .= 's'; }
+        if ($deptoF !== '') { $sqlIngs .= " AND u.departamento = ?"; $params[] = intval($deptoF); $types .= 'i'; }
         if (!empty($ingenieroF)) {
             $ph = implode(',', array_fill(0, count($ingenieroF), '?'));
-            $sqlIngs .= " AND id_usuario IN ($ph)";
+            $sqlIngs .= " AND u.id_usuario IN ($ph)";
             foreach ($ingenieroF as $v) { $params[] = intval($v); $types .= 'i'; }
         }
-        $sqlIngs .= " GROUP BY id_usuario ORDER BY nombre";
+        $sqlIngs .= " GROUP BY u.id_usuario ORDER BY nombre";
         $stmt = $conn->prepare($sqlIngs);
         if ($types !== '') $stmt->bind_param($types, ...$params);
         $stmt->execute();
@@ -75,7 +81,7 @@ if ($accion == 'disponibilidadIngenieros') {
         $idsIngs = [];
         $noEmpToId = [];
         while ($row = $res->fetch_assoc()) {
-            $ingenieros[] = ['id_usuario' => $row['id_usuario'], 'nombre' => $row['nombre']];
+            $ingenieros[] = ['id_usuario' => $row['id_usuario'], 'nombre' => $row['nombre'], 'lab' => $row['lab']];
             $idsIngs[] = $row['id_usuario'];
             if ($row['noEmpleado'] !== null && $row['noEmpleado'] !== '') {
                 $noEmpToId[$row['noEmpleado']] = $row['id_usuario'];
@@ -150,7 +156,7 @@ if ($accion == 'disponibilidadIngenieros') {
         // 2. Servicios planeados -> 'servicio' (prioridad 1)
         //    Incluye los CERRADOS (estatus 'Cerrada'): se muestran IGUAL que uno activo (mismo color café);
         //    el estatus real va en el popup. Solo se excluyen cancelados y el marcador de captura-Ventas.
-        //    Popup (tooltip HTML on-hover, estilo Disponibilidad de Vehículos): cliente / fecha planeada /
+        //    Popup (tooltip HTML on-hover, estilo Disponibilidad de Vehículos): cliente / fecha compromiso /
         //    hora / estatus / ciudad / OT.
         $escServ = function ($s) { return htmlspecialchars($s ?? '', ENT_QUOTES, 'UTF-8'); };
         $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, order_code, estatus,
@@ -169,7 +175,7 @@ if ($accion == 'disponibilidadIngenieros') {
             $detalle = trim(($row['ds_cliente'] ?: 'S/C') . ($row['city'] ? ' · ' . $row['city'] : ''));
             $hora = (!empty($row['hora']) && $row['hora'] !== '00:00:00') ? substr($row['hora'], 0, 5) : '—';
             $titulo = "<i class='fas fa-briefcase'></i> <b>" . $escServ($row['ds_cliente'] ?: 'S/C') . "</b><br>"
-                    . "Fecha planeada: " . $escServ($row['fecha']) . "<br>"
+                    . "Fecha compromiso: " . $escServ($row['fecha']) . "<br>"
                     . "Hora: " . $escServ($hora) . "<br>"
                     . "Estatus: " . $escServ($row['estatus'] ?: '-') . "<br>"
                     . "Ciudad: " . $escServ($row['city'] ?: '-') . "<br>"
@@ -194,7 +200,9 @@ if ($accion == 'disponibilidadIngenieros') {
         $stmt->execute();
         $res = $stmt->get_result();
         while ($row = $res->fetch_assoc()) {
-            $est = (stripos($row['estatus'], 'capac') !== false) ? 'capacitacion' : 'enlaboratorio';
+            if (stripos($row['estatus'], 'capac') !== false)        $est = 'capacitacion';
+            elseif (stripos($row['estatus'], 'interna') !== false)  $est = 'otinterna';   // OT interna
+            else                                                    $est = 'enlaboratorio';
             $detalle = trim(($row['area'] ?: '') . ($row['comentario'] ? ' · ' . $row['comentario'] : ''));
             $setCelda($celdas, $row['id_usuario'], $row['fecha'], $est, $detalle, 2);
         }
@@ -231,6 +239,75 @@ if ($accion == 'disponibilidadIngenieros') {
             }
         }
         $stmt->close();
+
+        // 3c. OT internas (reporte cargado en `planeacion_ot_interna`) -> 'otinterna' (prioridad 2).
+        //     La columna `Engineers` guarda NOMBRE(S) en texto (no id) -> se casa por nombre normalizado
+        //     (sin acentos/mayúsculas, tolerando el orden "Apellido Nombre") contra los ingenieros del grid.
+        //     Un registro puede listar varios ingenieros (separados por , ; / & o " y "). Pinta cada día del
+        //     rango startDate..endDate. Status: TODAS. Resiliente: si la tabla no existe aún, se omite sin romper.
+        try {
+            $norm = function ($s) {
+                $s = mb_strtolower(trim((string)$s), 'UTF-8');
+                $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n',
+                                'à'=>'a','è'=>'e','ì'=>'i','ò'=>'o','ù'=>'u']);
+                $s = preg_replace('/[^a-z0-9 ]+/', ' ', $s);
+                return trim(preg_replace('/\s+/', ' ', $s));
+            };
+            // Mapa nombre-normalizado -> id_usuario (varias variantes para maximizar el match por nombre)
+            $nombreToId = [];
+            $sqlNom = "SELECT id_usuario, nombres, apellidos, nombre FROM usuarios WHERE id_usuario IN ($ph)";
+            $stmt = $conn->prepare($sqlNom);
+            $stmt->bind_param(str_repeat('i', count($idsIngs)), ...$idsIngs);
+            $stmt->execute();
+            $resN = $stmt->get_result();
+            while ($r = $resN->fetch_assoc()) {
+                foreach ([trim($r['nombres'] . ' ' . $r['apellidos']),
+                          trim($r['apellidos'] . ' ' . $r['nombres']),
+                          $r['nombre']] as $cand) {
+                    $k = $norm($cand);
+                    if ($k !== '' && !isset($nombreToId[$k])) $nombreToId[$k] = $r['id_usuario'];
+                }
+            }
+            $stmt->close();
+
+            $sqlOt = "SELECT codigo_ot, estatus, areas_calidad, ingenieros,
+                             DATE(fecha_inicio) AS f_ini, DATE(fecha_fin) AS f_fin
+                      FROM planeacion_ot_interna
+                      WHERE fecha_inicio IS NOT NULL
+                        AND DATE(fecha_inicio) <= ?
+                        AND DATE(IFNULL(fecha_fin, fecha_inicio)) >= ?";
+            $stmt = $conn->prepare($sqlOt);
+            $stmt->bind_param('ss', $fechaFin, $fechaInicio);
+            $stmt->execute();
+            $resO = $stmt->get_result();
+            while ($row = $resO->fetch_assoc()) {
+                $ini = ($row['f_ini'] > $fechaInicio) ? $row['f_ini'] : $fechaInicio;
+                $finReal = !empty($row['f_fin']) ? $row['f_fin'] : $row['f_ini'];
+                $fin = ($finReal < $fechaFin) ? $finReal : $fechaFin;
+                $detalle = trim(($row['codigo_ot'] ?: 'OT interna') . ($row['areas_calidad'] ? ' · ' . $row['areas_calidad'] : ''));
+                $titulo = "<i class='fas fa-clipboard-list'></i> <b>" . $escServ($row['codigo_ot'] ?: 'OT interna') . "</b><br>"
+                        . "Áreas: " . $escServ($row['areas_calidad'] ?: '-') . "<br>"
+                        . "Estatus: " . $escServ($row['estatus'] ?: '-') . "<br>"
+                        . "Del " . $escServ($row['f_ini']) . " al " . $escServ($finReal);
+                $partes = preg_split('/[,;\/&]| y /u', (string)$row['ingenieros']);
+                $vistos = [];
+                foreach ($partes as $p1) {
+                    $k = $norm($p1);
+                    if ($k === '' || !isset($nombreToId[$k])) continue;
+                    $idu = $nombreToId[$k];
+                    if (isset($vistos[$idu])) continue;   // no repetir si un nombre aparece 2 veces
+                    $vistos[$idu] = true;
+                    $d = $ini;
+                    while ($d <= $fin) {
+                        $setCelda($celdas, $idu, $d, 'otinterna', $detalle, 2, $titulo);
+                        $d = date('Y-m-d', strtotime($d . ' +1 day'));
+                    }
+                }
+            }
+            $stmt->close();
+        } catch (Throwable $e) {
+            // tabla ausente o error -> se omiten las OT internas del reporte
+        }
 
         // 4. Vacaciones / ausencias -> prioridad 3
         //    Cuenta desde que el empleado hace la solicitud; solo se EXCLUYE si fue RECHAZADA.
@@ -297,6 +374,31 @@ if ($accion == 'zonasLab') {
         while ($row = $result->fetch_assoc()) { $zonas[] = $row['zona']; }
     }
     echo json_encode(['status' => 'success', 'zonas' => $zonas]);
+}
+
+// Endpoint: departamentos de una zona (2º filtro en cascada; hoy lo usa "Lab Hugo").
+// Lista los DISTINCT departamento de los ING/JEFE activos de esa zona -> se DERIVA de la
+// población real, así que si el usuario re-etiqueta zonas o departamentos, el filtro se ajusta solo.
+if ($accion == 'departamentosZona') {
+    $zonaF = isset($_POST['zona']) ? trim($_POST['zona']) : '';
+    $labs = [];
+    if ($zonaF !== '') {
+        $sql = "SELECT DISTINCT u.departamento AS id, d.departamento AS nombre
+                FROM usuarios u
+                LEFT JOIN departamento d ON u.departamento = d.id
+                WHERE u.estatus = 1 AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')
+                  AND u.zona = ? AND u.departamento IS NOT NULL AND u.departamento <> 0
+                ORDER BY nombre";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('s', $zonaF);
+        $stmt->execute();
+        $res = $stmt->get_result();
+        while ($row = $res->fetch_assoc()) {
+            $labs[] = ['id' => $row['id'], 'nombre' => $row['nombre'] !== null ? $row['nombre'] : ('Depto ' . $row['id'])];
+        }
+        $stmt->close();
+    }
+    echo json_encode(['status' => 'success', 'departamentos' => $labs]);
 }
 
 

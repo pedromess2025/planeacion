@@ -34,6 +34,8 @@
         .asig-none { color: #adb5bd; background: #f1f3f5; font-style: italic; }
         .link-tablero { display: block; margin-top: 3px; font-size: 10px; line-height: 1.3; font-weight: 500; color: #0b5ed7; text-decoration: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .link-tablero:hover { text-decoration: underline; }
+        .lab-ing { display: block; margin-top: 3px; font-size: 10px; line-height: 1.3; font-weight: 500; color: #495057; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .lab-ing i { color: #6c757d; }
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
@@ -62,6 +64,13 @@
                             <select id="filtro-area" class="form-select">
                                 <option value="">Todas</option>
                             </select>
+                            <!-- 2º filtro en cascada: aparece solo al elegir un área con sub-departamentos (ej. "Lab Hugo") -->
+                            <div id="cont-departamento" class="mt-2" style="display:none;">
+                                <label for="filtro-departamento"><b>Departamento:</b></label>
+                                <select id="filtro-departamento" class="form-select">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-4">
                             <label for="filtro-ingeniero"><b>Ingeniero:</b></label>
@@ -74,6 +83,7 @@
                                 <option value="vacaciones">Vacaciones</option>
                                 <option value="capacitacion">Capacitación</option>
                                 <option value="enlaboratorio">En laboratorio</option>
+                                <option value="otinterna">OT interna</option>
                                 <option value="servicio">Servicio</option>
                             </select>
                         </div>
@@ -95,6 +105,7 @@
                         <span class="badge" style="background:#ffd8a8;color:#8a3b00;">Vacaciones</span>
                         <span class="badge" style="background:#fff3bf;color:#7a5b00;">Capacitación</span>
                         <span class="badge" style="background:#d0ebff;color:#0b4f8a;">En laboratorio</span>
+                        <span class="badge" style="background:#eddcf9;color:#6a1b9a;">OT interna</span>
                         <span class="badge" style="background:#e6d3c1;color:#5a3a1a;">Servicio</span>
                     </div>
 
@@ -132,6 +143,7 @@
             vacaciones:    { label: 'Vacaciones',     bg: '#ffd8a8', fg: '#8a3b00' },
             capacitacion:  { label: 'Capacitación',   bg: '#fff3bf', fg: '#7a5b00' },
             enlaboratorio: { label: 'En laboratorio', bg: '#d0ebff', fg: '#0b4f8a' },
+            otinterna:     { label: 'OT interna',     bg: '#eddcf9', fg: '#6a1b9a' },
             servicio:      { label: 'Servicio',       bg: '#e6d3c1', fg: '#5a3a1a' }
         };
 
@@ -146,10 +158,40 @@
             cargarDisponibilidad();
 
             // Refetch al cambiar filtros que afectan el conjunto de ingenieros / rango
-            $('#filtro-area, #filtro-ingeniero').on('change', cargarDisponibilidad);
+            $('#filtro-ingeniero, #filtro-departamento').on('change', cargarDisponibilidad);
+            // El filtro de Área además decide si aparece el 2º filtro (departamento) en cascada
+            $('#filtro-area').on('change', function() {
+                actualizarFiltroDepartamento();
+                cargarDisponibilidad();
+            });
             // El filtro de estatus solo re-renderiza (es por celda)
             $('#filtro-estatus').on('change', function() { renderizarGrid(ingenierosData, celdasData); });
         });
+
+        // Filtro en cascada: al elegir un área agrupadora (hoy "Lab Hugo") se muestra un 2º select
+        // con los departamentos de esa zona; en cualquier otra área se oculta y se limpia.
+        function actualizarFiltroDepartamento() {
+            var zona = $('#filtro-area').val() || '';
+            $('#filtro-departamento').val('');
+            if (zona.trim().toLowerCase() !== 'lab hugo') {
+                $('#cont-departamento').hide();
+                $('#filtro-departamento').html('<option value="">Todos</option>');
+                return;
+            }
+            $.ajax({
+                url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
+                data: { accion: 'departamentosZona', zona: zona },
+                success: function(data) {
+                    var sel = $('#filtro-departamento').html('<option value="">Todos</option>');
+                    if (data.status === 'success') {
+                        data.departamentos.forEach(function(d) {
+                            sel.append('<option value="' + d.id + '">' + d.nombre + '</option>');
+                        });
+                    }
+                    $('#cont-departamento').show();
+                }
+            });
+        }
 
         // ================ NAVEGACIÓN SEMANAL ================
         function getLunes(d) {
@@ -220,6 +262,7 @@
                     fechaInicio: fechaInicio,
                     fechaFin: fechaFin,
                     zona: $('#filtro-area').val() || '',
+                    departamento: $('#filtro-departamento').val() || '',
                     ingeniero: $('#filtro-ingeniero').val() || []
                 },
                 success: function(data) {
@@ -257,6 +300,13 @@
                    '" target="_blank" rel="noopener" title="Ver tablero de PowerBI"><i class="fas fa-chart-line"></i> Ver tablero</a>';
         }
 
+        // Lab (departamento) del ingeniero, bajo el nombre junto a "Ver tablero".
+        function labIng(lab) {
+            if (!lab) return '';
+            var txt = String(lab).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return '<small class="lab-ing" title="Laboratorio / departamento: ' + txt + '"><i class="fas fa-flask"></i> ' + txt + '</small>';
+        }
+
         // ================ RENDER ================
         function renderizarGrid(ingenieros, celdas) {
             if (!ingenieros || ingenieros.length === 0) {
@@ -285,12 +335,15 @@
             html += '</tr></thead><tbody>';
 
             ingenieros.forEach(function(ing) {
-                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_usuario) + '</td>';
+                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_usuario) + labIng(ing.lab) + '</td>';
                 var celdasIng = celdas[ing.id_usuario] || {};
                 fechas.forEach(function(f) {
-                    var info = celdasIng[f];
+                    // Fin de semana: SIEMPRE disponible, sin importar servicio/lab/vacaciones/base.
+                    var diaSem = new Date(f + 'T12:00:00').getDay(); // 0=dom, 6=sáb
+                    var esFinSemana = (diaSem === 0 || diaSem === 6);
+                    var info = esFinSemana ? null : celdasIng[f];
                     // Sin evento en la celda -> estatus BASE del ingeniero (según su Asignación); default 'disponible'
-                    var estatus = info ? info.estatus : (ing.base || 'disponible');
+                    var estatus = esFinSemana ? 'disponible' : (info ? info.estatus : (ing.base || 'disponible'));
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
                     var detalle = (info && info.detalle) ? info.detalle : '';

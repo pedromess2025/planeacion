@@ -73,11 +73,11 @@ function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
 
         // Estatus de disponibilidad (no es un servicio de campo): alta reducida en tabla aparte.
         // Solo se usan ingeniero(s) + área + fecha + estatus; una fila por ingeniero (upsert por ing+fecha).
-        if ($estatus === 'Enlaboratorio' || $estatus === 'Capacitacion') {
+        if ($estatus === 'Enlaboratorio' || $estatus === 'Capacitacion' || $estatus === 'OtInterna') {
             header('Content-Type: application/json');
             $fechaSolo = date('Y-m-d', strtotime($fechaPlaneada));
             if (!$fechaSolo || $fechaSolo === '1970-01-01') {
-                echo json_encode(['status' => 'error', 'message' => 'Fecha planeada inválida.']);
+                echo json_encode(['status' => 'error', 'message' => 'Fecha/hora compromiso inválida.']);
                 exit;
             }
             $responsables = array_filter([$responsable, $responsable2, $responsable3], function ($r) {

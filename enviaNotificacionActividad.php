@@ -110,7 +110,7 @@
         <b>Por favor ingresa al sistema de PLANEACION para darle seguimiento.</b><br>
         <br>
         OT: ' . $ot . '<br>
-        Fecha planeada: ' . $fechaPlaneada . '<br>
+        Fecha/hora compromiso: ' . $fechaPlaneada . '<br>
         Ciudad: ' . $ciudad . '<br>
         Cliente: ' . $cliente . '<br>
         <br>

@@ -97,6 +97,7 @@
                                                         <option value="Fechareservadasininformación">Fecha reservada sin información</option>
                                                         <option value="Enlaboratorio">En laboratorio</option>
                                                         <option value="Capacitacion">Capacitación</option>
+                                                        <option value="OtInterna">OT interna</option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -124,7 +125,7 @@
                                         </div>
                                         <div class="row">
                                             <div class="col-sm-4 mb-0">
-                                                <label for="datefechaCierre">Fecha planeada</label>
+                                                <label for="datefechaCierre">Fecha/hora compromiso</label>
                                                 <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
                                             </div>
                                             <div class="col-sm-2 mb-0">
@@ -418,7 +419,7 @@
                 // Campos que no pueden ser cadena vacía ("") o "0"
                 { valor: formData["slcAreas"],          mensaje: "Selecciona un área" },
                 { valor: formData["slcEstatus"],        mensaje: "Selecciona un estatus" },
-                { valor: formData["datefechaCierre"],   mensaje: "Selecciona una fecha planeada" },
+                { valor: formData["datefechaCierre"],   mensaje: "Selecciona la fecha/hora compromiso" },
             ];
             // Campos exclusivos de un servicio de campo (no aplican a disponibilidad)
             if (!esLab) {
@@ -637,7 +638,7 @@
 
         // Estatus de disponibilidad (no son un servicio de campo): solo requieren ing + área + fecha + estatus
         function esEstatusLab(estatus) {
-            return estatus === 'Enlaboratorio' || estatus === 'Capacitacion';
+            return estatus === 'Enlaboratorio' || estatus === 'Capacitacion' || estatus === 'OtInterna';
         }
 
         // Oculta/limpia los campos exclusivos de servicio cuando el estatus es de disponibilidad
@@ -684,6 +685,9 @@
                 divMensaje.show();
             } else if (estatus === 'Capacitacion') {
                 mensajeEstatus.text('Disponibilidad: el ingeniero estará en capacitación. Solo se requiere ingeniero, área y fecha.');
+                divMensaje.show();
+            } else if (estatus === 'OtInterna') {
+                mensajeEstatus.text('Disponibilidad: el ingeniero estará en una OT interna. Solo se requiere ingeniero, área y fecha.');
                 divMensaje.show();
             } else {
                 divMensaje.hide();

@@ -43,7 +43,7 @@
                                             <table id="TSolAbiertas" class="table table-hover">
                                                 <thead class="table-primary">
                                                     <tr>
-                                                        <th width="10%">Fecha Planeada</th>
+                                                        <th width="10%">Fecha/hora compromiso</th>
                                                         <th>Ingeniero</th>
                                                         <th>Área</th>                                                        
                                                         <th>Cliente</th>
@@ -142,7 +142,7 @@
 
                     data.forEach(function(item) {
                         table.row.add([
-                            '<b> ' + item.FechaPlaneadaInicioDate + ' </b>',
+                            '<b> ' + item.start_date + ' </b>',
                             item.nombre + "/" + item.nombre2 + "/" + item.nombre3,
                             item.area,                            
                             item.ds_cliente,

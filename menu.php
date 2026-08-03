@@ -32,7 +32,7 @@
         <span class="badge text-xl-white">Opciones</span>
     </div>
     <!-- Divider -->
-    <hr class="sidebar-divider my-2 alert-light">
+    <hr class="sidebar-divider my-0 alert-light">
     <!-- Nav Item - Pages Collapse Menu -->
 
     <!--
@@ -49,7 +49,7 @@
     <li class="nav-item">
         <a class="nav-link" href="seguimiento_actividades">
             <i class="fas fa-fw fa-list text-gray-400"></i>
-            <span>Seguimiento de actividades</span>
+            <span>Seg. de actividades</span>
         </a>
     </li>
 
@@ -70,28 +70,16 @@
     <li class="nav-item">
         <a class="nav-link" href="verActividadesPlaneadas">
             <i class="fas fa-fw fa-calendar text-gray-400"></i>
-            <span>Actividades planeadas</span>
+            <span>Act. planeadas</span>
         </a>
     </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="disponibilidadIngenieros">
-            <i class="fas fa-fw fa-user-clock text-warning"></i>
-            <span>Disponibilidad de Ingenieros</span>
-        </a>
-    </li>
 
-    <li class="nav-item">
-        <a class="nav-link" href="disponibilidadVehiculos">
-            <i class="fas fa-fw fa-car text-warning"></i>
-            <span>Disponibilidad de Vehículos</span>
-        </a>
-    </li>
 
     <li class="nav-item">
         <a class="nav-link" href="verActividades">
             <i class="fas fa-fw fa-calendar text-gray-400"></i>
-            <span>Actividades planeadas SCOT</span>
+            <span>Act. planeadas SCOT</span>
         </a>
     </li>
     <hr class="sidebar-divider my-0 alert-light">
@@ -101,15 +89,30 @@
             <span>Resumen por Área</span>
         </a>
     </li>
+    <?php
+    if($_COOKIE['noEmpleado'] == 521 || $_COOKIE['noEmpleado'] == 523 || $_COOKIE['noEmpleado'] == 183 || $_COOKIE['noEmpleado'] == 276) {
+        echo '
+            <li class="nav-item">
+                <a class="nav-link" href="disponibilidadIngenieros">
+                    <i class="fas fa-fw fa-user-clock text-warning"></i>
+                    <span>Dispo. de Ingenieros</span>
+                </a>
+            </li>
 
-    <hr class="sidebar-divider my-0 alert-light">
-    <li class="nav-item">
-        <a class="nav-link" href="Manual Planeacion.pdf" target="_blank">
-            <i class="fas fa-fw fa-book text-gray-400"></i>
-            <span>Manual de usuario</span>
-        </a>
-    </li>
-
+            <li class="nav-item">
+                <a class="nav-link" href="disponibilidadVehiculos">
+                    <i class="fas fa-fw fa-car text-warning"></i>
+                    <span>Dispo. de Vehículos</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="canva">
+                    <i class="fas fa-fw fa-file-upload text-gray-400"></i>
+                    <span>Canva</span>
+                </a>
+            </li>';
+    }
+    ?>
     <li class = "nav-item">
         <a class = "nav-link" href = "#" data-toggle = "modal" data-target = "#logoutModalN">
             <i class = "fas fa-sign-out-alt text-gray-100"></i>

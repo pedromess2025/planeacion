@@ -108,7 +108,7 @@
             <li class="nav-item">
                 <a class="nav-link" href="canva">
                     <i class="fas fa-fw fa-file-upload text-gray-400"></i>
-                    <span>Canva</span>
+                    <span>Seg. Entradas</span>
                 </a>
             </li>';
     }

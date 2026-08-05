@@ -96,4 +96,104 @@ if ($accion === 'obtener_laboratorios') {
     ]);
     exit;
 }
+
+if ($accion === 'obtener_detalle_rezagos') {
+    $fecha_inicio = $_POST['fecha_inicio'] ?? date('Y-m-d');
+    $laboratorio  = $_POST['laboratorio'] ?? 'TODOS';
+
+    // Consulta para obtener rezagados y pendientes de la semana
+    $sql = "SELECT 
+                folio_registro, 
+                orden_venta, 
+                ot, 
+                cliente, 
+                laboratorio, 
+                fecha_recepcion, 
+                fecha_transferencia,
+                fecha_asignacion_ot,
+                fecha_termino_ot,
+                fecha_limite_cierre_ot, 
+                status, 
+                valor_ov_usd,
+                DATEDIFF(NOW(), fecha_recepcion) as dias_transcurridos,
+                CASE 
+                    WHEN DATE(fecha_recepcion) < ? THEN 'REZAGADO'
+                    ELSE 'ACTUAL'
+                END as tipo_registro
+            FROM sabana_operativa
+            WHERE fecha_real_cierre_ot IS NULL 
+              AND fecha_termino_ot IS NULL
+              AND (
+                  DATE(fecha_recepcion) < ? 
+                  OR (fecha_limite_cierre_ot IS NOT NULL AND DATE(fecha_limite_cierre_ot) < CURDATE())
+              )";
+
+    if ($laboratorio !== 'TODOS') {
+        $sql .= " AND laboratorio = ?";
+    }
+
+    $sql .= " ORDER BY fecha_recepcion ASC";
+
+    $stmt = $conn->prepare($sql);
+
+    if ($laboratorio !== 'TODOS') {
+        $stmt->bind_param("sss", $fecha_inicio, $fecha_inicio, $laboratorio);
+    } else {
+        $stmt->bind_param("ss", $fecha_inicio, $fecha_inicio);
+    }
+
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    $registros = [];
+    while ($row = $result->fetch_assoc()) {
+        // Determinamos la etapa exacta en la que está atorado para las etiquetas visuales
+        if (!empty($row['fecha_asignacion_ot'])) {
+            $row['etapa_rezago'] = 'En Laboratorio';
+            $row['clase_badge'] = 'bg-warning text-dark';
+        } elseif (!empty($row['fecha_transferencia'])) {
+            $row['etapa_rezago'] = 'En Transferencia';
+            $row['clase_badge'] = 'bg-info text-dark';
+        } else {
+            $row['etapa_rezago'] = 'En Recepción';
+            $row['clase_badge'] = 'bg-danger';
+        }
+
+        $registros[] = $row;
+    }
+
+    echo json_encode([
+        "status" => "success",
+        "data"   => $registros
+    ]);
+    exit;
+}
+
+if ($accion === 'rastrear_equipo_re') {
+    $folio_re = trim($_POST['folio_re'] ?? '');
+
+    if ($folio_re === '') {
+        echo json_encode(["status" => "error", "message" => "Ingresa un folio válido."]);
+        exit;
+    }
+
+    $sql = "SELECT * FROM sabana_operativa WHERE folio_registro = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("s", $folio_re);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    if ($row = $result->fetch_assoc()) {
+        echo json_encode([
+            "status" => "success",
+            "data"   => $row
+        ]);
+    } else {
+        echo json_encode([
+            "status" => "error",
+            "message" => "No se encontró ningún registro con el folio: " . $folio_re
+        ]);
+    }
+    exit;
+}
 ?>

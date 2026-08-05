@@ -1,8 +1,9 @@
 <?php
     session_start();
     include 'conn.php';
-    if($_COOKIE['noEmpleado'] == '' || $_COOKIE['noEmpleado'] == null){
+    if(!isset($_COOKIE['noEmpleado']) || $_COOKIE['noEmpleado'] == ''){
         echo '<script>window.location.assign("index")</script>';
+        exit;   // sin exit la página se seguía enviando completa antes de que el navegador redirigiera
     }
 ?>
 <!DOCTYPE html>
@@ -32,6 +33,8 @@
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
+        /* Ícono de uso: quién trae el vehículo ese día (su responsable vs alguien más) */
+        .uso-icono { margin-right: 4px; opacity: .75; }
         .celda-muted { background: #f1f3f5 !important; color: #adb5bd !important; }
         .celda-hoy { box-shadow: inset 0 0 0 2px #4e73df; }
         .nav-semana { display: flex; align-items: center; gap: 10px; }
@@ -93,6 +96,10 @@
                         <span class="badge" style="background:#d0ebff;color:#0b4f8a;">En servicio</span>
                         <span class="badge" style="background:#ffd8a8;color:#8a3b00;">En préstamo</span>
                         <span class="badge" style="background:#d0bfff;color:#5f3dc4;">En mantenimiento</span>
+                        <span class="ms-3 text-muted">
+                            <i class="fas fa-user"></i> lo trae su responsable &nbsp;·&nbsp;
+                            <i class="fas fa-handshake"></i> lo trae alguien más (préstamo u otro ingeniero)
+                        </span>
                     </div>
 
                     <div id="contenedorGrid" style="overflow-x:auto;">
@@ -216,11 +223,17 @@
                 }
             });
         }
+        // Escapa texto que se inserta como HTML (los datos del endpoint ya vienen escapados;
+        // esto cubre los campos de inventario que se arman aquí: placa, marca, modelo, responsable).
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                                             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
         function poblarFiltroVehiculos(vehiculos, reemplazar) {
             var sel = $('#filtro-vehiculo');
             if (reemplazar) sel.empty();
             vehiculos.forEach(function(v) {
-                var etiqueta = (v.placa || 'S/P') + ' · ' + [v.marca, v.modelo].filter(Boolean).join(' ');
+                var etiqueta = esc((v.placa || 'S/P') + ' · ' + [v.marca, v.modelo].filter(Boolean).join(' '));
                 sel.append('<option value="' + v.id_vehiculo + '">' + etiqueta + '</option>');
             });
             sel.trigger('change.select2');
@@ -303,11 +316,11 @@
             html += '</tr></thead><tbody>';
 
             pageRows.forEach(function(veh) {
-                var titulo = (veh.placa || 'S/P') + ' — ' + [veh.marca, veh.modelo].filter(Boolean).join(' ');
-                var sub = [ [veh.marca, veh.modelo].filter(Boolean).join(' '), veh.usuario ].filter(Boolean).join(' · ');
+                var titulo = esc((veh.placa || 'S/P') + ' — ' + [veh.marca, veh.modelo].filter(Boolean).join(' '));
+                var sub = esc([ [veh.marca, veh.modelo].filter(Boolean).join(' '), veh.usuario ].filter(Boolean).join(' · '));
                 var esComodin = (veh.comodin == 1);
                 var badgeCom = esComodin ? ' <span class="badge-comodin">Comodín</span>' : '';
-                html += '<tr' + (esComodin ? ' class="fila-comodin"' : '') + '><td class="col-veh" title="' + titulo.replace(/"/g,'&quot;') + '">' + (veh.placa || 'S/P') + badgeCom +
+                html += '<tr' + (esComodin ? ' class="fila-comodin"' : '') + '><td class="col-veh" title="' + titulo + '">' + esc(veh.placa || 'S/P') + badgeCom +
                         '<small>' + sub + '</small></td>';
                 var celdasVeh = celdas[veh.id_vehiculo] || {};
                 fechas.forEach(function(f) {
@@ -325,7 +338,11 @@
                     var titulo = (info && info.titulo) ? info.titulo : detalle;
                     var det = detalle ? '<small>' + detalle + '</small>' : '';
                     var ttAttr = titulo ? ' data-toggle="tooltip" data-html="true" title="' + titulo.replace(/"/g,'&quot;') + '"' : '';
-                    html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + det + '</td>';
+                    // Ícono de uso: 👤 lo trae su responsable de inventario · 🤝 lo trae alguien más
+                    var uso = (info && info.uso) ? info.uso : '';
+                    var icono = uso === 'asignado' ? '<i class="fas fa-user uso-icono"></i>' :
+                                uso === 'otro'     ? '<i class="fas fa-handshake uso-icono"></i>' : '';
+                    html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + icono + meta.label + det + '</td>';
                 });
                 html += '</tr>';
             });

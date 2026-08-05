@@ -105,6 +105,13 @@
                     <span>Dispo. de Vehículos</span>
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link" href="carga_sabana">
+                    <i class="fas fa-fw fa-file-upload text-warning"></i>
+                    <span>Carga de archivos</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="canva">
                     <i class="fas fa-fw fa-file-upload text-gray-400"></i>

@@ -1,8 +1,9 @@
 <?php
     session_start();
     include 'conn.php';
-    if($_COOKIE['noEmpleado'] == '' || $_COOKIE['noEmpleado'] == null){
+    if(!isset($_COOKIE['noEmpleado']) || $_COOKIE['noEmpleado'] == ''){
         echo '<script>window.location.assign("index")</script>';
+        exit;   // sin exit la página se seguía enviando completa antes de que el navegador redirigiera
     }
 ?>
 <!DOCTYPE html>
@@ -39,6 +40,10 @@
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
+        /* Cuántos ingenieros están asignados al servicio de esa celda */
+        .ing-count { display:inline-block; margin-left:4px; padding:0 5px; border-radius:8px; font-size:10px;
+                     font-weight:700; background:rgba(0,0,0,.12); vertical-align:middle; }
+        .ing-count i { font-size:9px; margin-right:2px; opacity:.8; }
         .celda-muted { background: #f1f3f5 !important; color: #adb5bd !important; }
         .celda-hoy { box-shadow: inset 0 0 0 2px #4e73df; }
         .nav-semana { display: flex; align-items: center; gap: 10px; }
@@ -280,6 +285,13 @@
             });
         }
 
+        // Escapa texto que se inserta como HTML (los datos del endpoint ya vienen escapados;
+        // esto cubre los campos que se arman aquí, como el nombre del ingeniero).
+        function esc(s) {
+            return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
+                                             .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
         // Badge con la Asignación (fija) del ingeniero, bajo su nombre
         function badgeAsignacion(asig) {
             if (!asig) return '<small class="asig-badge asig-none"><i class="fas fa-tag"></i> Sin asignación</small>';
@@ -288,7 +300,7 @@
             else if (a.indexOf('laboratorio') !== -1)   clase = 'asig-laboratorio';
             else if (a.indexOf('jefatura') !== -1)      clase = 'asig-jefatura';
             else if (a.indexOf('administ') !== -1)       clase = 'asig-administracion';
-            var txt = asig.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var txt = esc(asig);
             return '<small class="asig-badge ' + clase + '" title="Asignación: ' + txt + '"><i class="fas fa-tag"></i> ' + txt + '</small>';
         }
 
@@ -303,7 +315,7 @@
         // Lab (departamento) del ingeniero, bajo el nombre junto a "Ver tablero".
         function labIng(lab) {
             if (!lab) return '';
-            var txt = String(lab).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            var txt = esc(lab);
             return '<small class="lab-ing" title="Laboratorio / departamento: ' + txt + '"><i class="fas fa-flask"></i> ' + txt + '</small>';
         }
 
@@ -335,15 +347,20 @@
             html += '</tr></thead><tbody>';
 
             ingenieros.forEach(function(ing) {
-                html += '<tr><td class="col-ing" title="' + ing.nombre + '">' + ing.nombre + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_usuario) + labIng(ing.lab) + '</td>';
+                var nom = esc(ing.nombre);
+                html += '<tr><td class="col-ing" title="' + nom + '">' + nom + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_real || ing.id_usuario) + labIng(ing.lab) + '</td>';
                 var celdasIng = celdas[ing.id_usuario] || {};
                 fechas.forEach(function(f) {
                     // Fin de semana: SIEMPRE disponible, sin importar servicio/lab/vacaciones/base.
                     var diaSem = new Date(f + 'T12:00:00').getDay(); // 0=dom, 6=sáb
                     var esFinSemana = (diaSem === 0 || diaSem === 6);
                     var info = esFinSemana ? null : celdasIng[f];
-                    // Sin evento en la celda -> estatus BASE del ingeniero (según su Asignación); default 'disponible'
-                    var estatus = esFinSemana ? 'disponible' : (info ? info.estatus : (ing.base || 'disponible'));
+                    // Sin evento en la celda -> 'En laboratorio' para TODOS (decisión del usuario 2026-08-05):
+                    // si un ingeniero no trae servicio, OT ni ausencia, se asume que está en su laboratorio.
+                    // Antes el default salía de la Asignación ('Servicio en sitio 100' -> disponible); ya no,
+                    // la Asignación se sigue mostrando como badge pero no decide el color de la celda.
+                    // El fin de semana sigue siendo 'disponible' (regla previa, no se tocó).
+                    var estatus = esFinSemana ? 'disponible' : (info ? info.estatus : 'enlaboratorio');
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
                     var detalle = (info && info.detalle) ? info.detalle : '';
@@ -356,7 +373,11 @@
                         // Con popup (servicio) -> tooltip Bootstrap HTML en la celda; sin popup -> title nativo en el detalle
                         var det = detalle ? '<small' + (titulo ? '' : ' title="' + detalle.replace(/"/g,'&quot;') + '"') + '>' + detalle + '</small>' : '';
                         var ttAttr = titulo ? ' data-toggle="tooltip" data-html="true" title="' + titulo.replace(/"/g,'&quot;') + '"' : '';
-                        html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + det + '</td>';
+                        // Cuántos ingenieros están asignados a ese servicio (el popup los lista por nombre)
+                        var nIngs = (info && info.ings) ? info.ings : 0;
+                        var badgeIngs = (estatus === 'servicio' && nIngs) ?
+                            ' <span class="ing-count"><i class="fas fa-users"></i>' + nIngs + '</span>' : '';
+                        html += '<td class="celda-disp' + claseHoy + '"' + ttAttr + ' style="background:' + meta.bg + ';color:' + meta.fg + ';">' + meta.label + badgeIngs + det + '</td>';
                     }
                 });
                 html += '</tr>';

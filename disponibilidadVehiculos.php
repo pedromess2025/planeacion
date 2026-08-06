@@ -133,8 +133,6 @@
         var celdasData = {};
         var todosVehiculos = [];            // lista maestra (para filtrar el dropdown por área)
         var vehiculosFiltroCargado = false; // el select de vehículo se puebla en la 1ª carga
-        var porPagina = 10;                 // registros por hoja
-        var paginaActual = 1;
 
         var ESTATUS_META = {
             disponible:    { label: 'Disponible',       bg: '#c6f6d5', fg: '#1b5e20' },
@@ -261,7 +259,6 @@
                     if (data.status === 'success') {
                         vehiculosData = data.vehiculos || [];
                         celdasData = data.celdas || {};
-                        paginaActual = 1; // nueva carga -> vuelve a la 1ª hoja
                         // La 1ª carga (sin filtros) define la lista maestra del dropdown de Vehículo
                         if (!vehiculosFiltroCargado) {
                             todosVehiculos = vehiculosData;
@@ -288,14 +285,6 @@
             celdas = celdas || {};
             var filtroEstatus = $('#filtro-estatus').val() || [];
 
-            // Paginación: 10 vehículos por hoja (respeta el orden comodines-primero del backend)
-            var totalReg = vehiculos.length;
-            var totalPag = Math.max(1, Math.ceil(totalReg / porPagina));
-            if (paginaActual > totalPag) paginaActual = totalPag;
-            if (paginaActual < 1) paginaActual = 1;
-            var iniIdx = (paginaActual - 1) * porPagina;
-            var pageRows = vehiculos.slice(iniIdx, iniIdx + porPagina);
-
             var hoy = formatFecha(new Date());
             var fechaInicioStr = formatFecha(fechaBaseSemana);
 
@@ -315,7 +304,7 @@
             });
             html += '</tr></thead><tbody>';
 
-            pageRows.forEach(function(veh) {
+            vehiculos.forEach(function(veh) {
                 var titulo = esc((veh.placa || 'S/P') + ' — ' + [veh.marca, veh.modelo].filter(Boolean).join(' '));
                 var sub = esc([ [veh.marca, veh.modelo].filter(Boolean).join(' '), veh.usuario ].filter(Boolean).join(' · '));
                 var esComodin = (veh.comodin == 1);
@@ -348,28 +337,12 @@
             });
 
             html += '</tbody></table>';
-
-            // Barra de paginación
-            var desde = totalReg === 0 ? 0 : (iniIdx + 1);
-            var hasta = Math.min(iniIdx + porPagina, totalReg);
-            html += '<div class="d-flex align-items-center justify-content-between mt-2 flex-wrap" style="font-size:13px; gap:8px;">' +
-                        '<span class="text-muted">Mostrando ' + desde + '&ndash;' + hasta + ' de ' + totalReg + ' veh&iacute;culos</span>' +
-                        '<div class="d-flex align-items-center">' +
-                            '<button class="btn btn-sm btn-outline-primary" onclick="cambiarPagina(-1)"' + (paginaActual <= 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i> Anterior</button>' +
-                            '<span class="mx-2">P&aacute;gina ' + paginaActual + ' de ' + totalPag + '</span>' +
-                            '<button class="btn btn-sm btn-outline-primary" onclick="cambiarPagina(1)"' + (paginaActual >= totalPag ? ' disabled' : '') + '>Siguiente <i class="fas fa-chevron-right"></i></button>' +
-                        '</div>' +
-                    '</div>';
+            html += '<p class="text-muted mt-2" style="font-size:13px;">' + vehiculos.length + ' veh&iacute;culos</p>';
 
             $('body > .tooltip').remove(); // limpia tooltips flotantes de un render anterior
             $('#contenedorGrid').html(html);
             // Tooltip estilo "Actividades planeadas" (Bootstrap, HTML) en las celdas con detalle
             $('#contenedorGrid [data-toggle="tooltip"]').tooltip({ html: true, placement: 'top', container: 'body', trigger: 'hover' });
-        }
-
-        function cambiarPagina(dir) {
-            paginaActual += dir;
-            renderizarGrid(vehiculosData, celdasData);
         }
     </script>
 </body>

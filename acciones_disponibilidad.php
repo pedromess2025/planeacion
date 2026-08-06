@@ -44,7 +44,7 @@ function conexionVehiculos() {
 
 // Endpoint: disponibilidad de ingenieros (cuadrícula de consulta)
 // Resuelve por ingeniero/día un estatus derivado de 3 fuentes + default 'disponible'.
-// Prioridad: vacaciones (3) > capacitacion/enlaboratorio (2) > servicio (1) > disponible (0).
+// Prioridad: servicio en sitio (4) > laboratorio/capacitación (3) > OT interna (2) > vacaciones (1) > disponible (0).
 if ($accion == 'disponibilidadIngenieros') {
     try {
         $fechaInicio    = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
@@ -56,11 +56,12 @@ if ($accion == 'disponibilidadIngenieros') {
         // Marca una celda solo si la nueva prioridad es mayor o igual a la existente.
         // $titulo (opcional) = HTML del popup (tooltip on-hover); $ings (opcional) = cuántos
         // ingenieros están asignados al servicio (badge en la celda).
-        // ESCALA DE PRIORIDAD (mayor gana):
-        //   4 vacaciones · 3 laboratorio/capacitación (manual y SCOT) · 2 servicio de campo ·
-        //   1 OT interna del reporte · 0 base (asignación) / disponible
-        // El servicio de campo le GANA a la OT interna del reporte: es un compromiso con cliente y
-        // no debe quedar oculto por una OT interna larga (la OT se menciona en el popup del servicio).
+        // ESCALA DE PRIORIDAD (mayor gana) — orden definido por el usuario el 2026-08-06:
+        //   4 servicio en sitio · 3 laboratorio/capacitación (manual y SCOT) · 2 OT interna ·
+        //   1 vacaciones/ausencias · 0 base (asignación) / disponible
+        // El SERVICIO EN SITIO manda sobre todo: es el compromiso con cliente y es lo que no puede
+        // quedar escondido en el tablero. Antes ganaba el laboratorio y los servicios del día
+        // desaparecían (caso Alexis Fundora: 3 servicios tapados en una sola semana).
         $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null, $ings = null) {
             if (!isset($celdas[$idu])) $celdas[$idu] = [];
             if (!isset($celdas[$idu][$fecha]) || $celdas[$idu][$fecha]['p'] < $p) {
@@ -185,7 +186,7 @@ if ($accion == 'disponibilidadIngenieros') {
             }
         }
 
-        // 2. Servicios planeados -> 'servicio' (prioridad 2)
+        // 2. Servicios planeados -> 'servicio' (prioridad 4, la MÁS ALTA: gana sobre todo lo demás)
         //    Incluye los CERRADOS (estatus 'Cerrada'): se muestran IGUAL que uno activo (mismo color café);
         //    el estatus real va en el popup. Solo se excluyen cancelados y el marcador de captura-Ventas.
         //    Un servicio puede llevar hasta 3 ingenieros (engineer/engineer2/engineer3): la celda muestra un
@@ -266,13 +267,13 @@ if ($accion == 'disponibilidadIngenieros') {
                             . ($nAcomp === 1 ? "Acompaña:" : "Acompañan (" . $nAcomp . "):") . "<br>";
                     foreach ($acomp as $nom) { $bloque .= '&nbsp;&nbsp;• ' . escTxt($nom) . '<br>'; }
                 }
-                $setCelda($celdas, $claveDe[$idu], $row['fecha'], 'servicio', $detalle, 2,
+                $setCelda($celdas, $claveDe[$idu], $row['fecha'], 'servicio', $detalle, 4,
                           $encabezado . $bloque . $pie, $nAcomp > 0 ? $nAcomp : null);
             }
         }
 
-        // 3. Lab / capacitación / OT interna capturadas a mano (tabla nueva) -> prioridad 3
-        //    Es captura explícita de un planeador, así que pesa más que lo derivado del reporte.
+        // 3. Lab / capacitación / OT interna capturadas a mano (tabla nueva)
+        //    La prioridad la da el ESTATUS, no el hecho de ser captura manual: lab/capacitación 3, OT interna 2.
         if ($hayIds) {
             $sqlMan = "SELECT id_usuario, fecha, estatus, area, comentario
                        FROM planeacion_disponibilidad_ingenieros
@@ -284,12 +285,14 @@ if ($accion == 'disponibilidadIngenieros') {
             $stmt->execute();
             $res = $stmt->get_result();
             while ($row = $res->fetch_assoc()) {
-                if (stripos($row['estatus'], 'capac') !== false)        $est = 'capacitacion';
-                elseif (stripos($row['estatus'], 'interna') !== false)  $est = 'otinterna';   // OT interna
-                else                                                    $est = 'enlaboratorio';
+                // La prioridad sigue a la del estatus, no a la de "captura manual": una OT interna
+                // capturada a mano pesa lo mismo que una del reporte (2), y lab/capacitación 3.
+                if (stripos($row['estatus'], 'capac') !== false)       { $est = 'capacitacion';  $pri = 3; }
+                elseif (stripos($row['estatus'], 'interna') !== false) { $est = 'otinterna';     $pri = 2; }  // OT interna
+                else                                                  { $est = 'enlaboratorio'; $pri = 3; }
                 $detalle = escTxt(trim(($row['area'] ?: '') . ($row['comentario'] ? ' · ' . $row['comentario'] : '')));
                 if (!isset($claveDe[$row['id_usuario']])) continue;
-                $setCelda($celdas, $claveDe[$row['id_usuario']], $row['fecha'], $est, $detalle, 3);
+                $setCelda($celdas, $claveDe[$row['id_usuario']], $row['fecha'], $est, $detalle, $pri);
             }
             $stmt->close();
         }
@@ -331,7 +334,7 @@ if ($accion == 'disponibilidadIngenieros') {
             $stmt->close();
         }
 
-        // 3c. OT internas (reporte cargado en `planeacion_ot_interna`) -> 'otinterna' (prioridad 1).
+        // 3c. OT internas (reporte cargado en `planeacion_ot_interna`) -> 'otinterna' (prioridad 2).
         //     La columna `Engineers` guarda NOMBRE(S) en texto (no id) -> se casa por nombre normalizado
         //     (sin acentos/mayúsculas, tolerando el orden "Apellido Nombre") contra los ingenieros del grid.
         //     Un registro puede listar varios ingenieros (separados por , ; / & o " y "). Status: TODAS.
@@ -416,7 +419,7 @@ if ($accion == 'disponibilidadIngenieros') {
                     $vistos[$idu] = true;
                     $d = $ini;
                     while ($d <= $fin) {
-                        $setCelda($celdas, $idu, $d, 'otinterna', $detalle, 1, $titulo);
+                        $setCelda($celdas, $idu, $d, 'otinterna', $detalle, 2, $titulo);
                         // Se registra aparte: si ese día gana el servicio de campo, la OT se anota en su popup
                         if (!isset($otEnCelda[$idu])) $otEnCelda[$idu] = [];
                         if (!isset($otEnCelda[$idu][$d])) $otEnCelda[$idu][$d] = $row['codigo_ot'] ?: 'OT interna';
@@ -429,7 +432,10 @@ if ($accion == 'disponibilidadIngenieros') {
             // tabla ausente o error -> se omiten las OT internas del reporte
         }
 
-        // 4. Vacaciones / ausencias -> prioridad 4 (la más alta: gana sobre todo lo demás)
+        // 4. Vacaciones / ausencias -> prioridad 1 (solo gana sobre el default 'disponible').
+        //    ⚠ Por el orden que definió el usuario (2026-08-06), un servicio, un trabajo de laboratorio o
+        //    una OT interna TAPAN la ausencia: si ese día el ingeniero tiene algo planeado, el tablero
+        //    muestra el trabajo, no las vacaciones. Subir este número vuelve a darle preferencia.
         //    Cuenta desde que el empleado hace la solicitud; solo se EXCLUYE si fue RECHAZADA.
         //    Rechazada = jefe (estatus = 3) O RRHH (autorizaRH = 3) — misma regla que la app `incidencias`
         //    (acciones_solicitudempleado.php: canceladas/rechazadas = estatus=3 OR autorizaRH=3).
@@ -458,7 +464,7 @@ if ($accion == 'disponibilidadIngenieros') {
                 $f   = ($row['feinicio'] > $fechaInicio) ? $row['feinicio'] : $fechaInicio;
                 $end = ($row['fefin'] < $fechaFin) ? $row['fefin'] : $fechaFin;
                 while ($f <= $end) {
-                    $setCelda($celdas, $idu, $f, 'vacaciones', $detalle, 4);
+                    $setCelda($celdas, $idu, $f, 'vacaciones', $detalle, 1);
                     $f = date('Y-m-d', strtotime($f . ' +1 day'));
                 }
             }

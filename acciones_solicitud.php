@@ -12,20 +12,8 @@ $estatus = isset($_POST['estatus']) && is_array($_POST['estatus']) ? $_POST['est
 $fechaHoy = date('Y-m-d');
 $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
 
-// Verifica si un empleado tiene un acceso especial activo (tabla accesos_especiales)
-function tieneAccesoEspecial($conn, $noEmpleado, $sistema, $opcion) {
-    $noEmpleado = intval($noEmpleado);
-    if ($noEmpleado <= 0) return false;
-    $stmt = $conn->prepare("SELECT COUNT(*) AS cuantos FROM accesos_especiales
-                            WHERE noEmpleado = ? AND sistema = ? AND opcion = ? AND estatus = 1");
-    if (!$stmt) return false;
-    $stmt->bind_param("iss", $noEmpleado, $sistema, $opcion);
-    $stmt->execute();
-    $res = $stmt->get_result();
-    $row = $res ? $res->fetch_assoc() : null;
-    $stmt->close();
-    return $row && intval($row['cuantos']) > 0;
-}
+// tieneAccesoEspecial() se movió a conn.php para que también la usen las vistas y los endpoints
+// que no incluyen este archivo (Disponibilidad, Carga de archivos, Seg. Entradas).
 
 //FUNCION PARA MOSTRAR LOS EMPLEADOS
     if ($opcion == "empleados") {

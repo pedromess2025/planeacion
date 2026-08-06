@@ -90,7 +90,12 @@
         </a>
     </li>
     <?php
-    if($_COOKIE['noEmpleado'] == 521 || $_COOKIE['noEmpleado'] == 523 || $_COOKIE['noEmpleado'] == 183 || $_COOKIE['noEmpleado'] == 276) {
+    // Accesos especiales (tabla accesos_especiales, se dan de alta desde loginMaster).
+    // Antes era un `if` con 4 noEmpleado escritos a mano aquí, y solo escondía el enlace:
+    // la URL directa la abría cualquiera con sesión. Ahora cada vista valida su opción por su
+    // cuenta, así que esconder el enlace ya es nada más comodidad.
+    $noEmpMenu = noEmpleadoSesion();
+    if ($noEmpMenu !== '' && tieneAccesoEspecial($conn, $noEmpMenu, 'planeacion', 'verDisponibilidad')) {
         echo '
             <li class="nav-item">
                 <a class="nav-link" href="disponibilidadIngenieros">
@@ -104,14 +109,19 @@
                     <i class="fas fa-fw fa-car text-warning"></i>
                     <span>Dispo. de Vehículos</span>
                 </a>
-            </li>
-
+            </li>';
+    }
+    if ($noEmpMenu !== '' && tieneAccesoEspecial($conn, $noEmpMenu, 'planeacion', 'verCargaArchivos')) {
+        echo '
             <li class="nav-item">
                 <a class="nav-link" href="carga_sabana">
                     <i class="fas fa-fw fa-file-upload text-warning"></i>
                     <span>Carga de archivos</span>
                 </a>
-            </li>
+            </li>';
+    }
+    if ($noEmpMenu !== '' && tieneAccesoEspecial($conn, $noEmpMenu, 'planeacion', 'verSegEntradas')) {
+        echo '
             <li class="nav-item">
                 <a class="nav-link" href="canva">
                     <i class="fas fa-fw fa-file-upload text-gray-400"></i>

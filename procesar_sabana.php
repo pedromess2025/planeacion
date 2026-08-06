@@ -2,6 +2,10 @@
 // Conexión a la BD
 include 'conn.php';
 
+// Acceso: mismo permiso que carga_sabana.php (planeacion/verCargaArchivos). Este endpoint no
+// pedía NADA — ni sesión — y su acción 'preparar' hace TRUNCATE de sabana_operativa.
+exigeAccesoEspecialJson($conn, 'planeacion', 'verCargaArchivos');
+
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 $dir_temp = 'uploads/';
 if (!is_dir($dir_temp)) mkdir($dir_temp, 0777, true);

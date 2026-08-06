@@ -5,15 +5,6 @@ header('Content-Type: application/json');
 // Conexión principal: mess_rrhh (para ingenieros/departamentos). Los endpoints de vehículos
 // abren su propia conexión a mess_control_vehicular ($connCV).
 
-// Acceso: exige sesión iniciada (cookie noEmpleado, igual que las vistas). Sin esto, la URL del
-// endpoint devolvía la plantilla completa de ingenieros, clientes, OTs y ausencias a cualquiera.
-$noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? trim($_COOKIE['noEmpleado']) : '';
-if ($noEmpleado_cookie === '' || !ctype_digit($noEmpleado_cookie)) {
-    http_response_code(401);
-    echo json_encode(['status' => 'error', 'message' => 'Sesión no válida. Vuelve a iniciar sesión.']);
-    exit;
-}
-
 try {
     include 'conn.php';
     mysqli_set_charset($conn, "utf8");
@@ -21,6 +12,11 @@ try {
     echo json_encode(['status' => 'error', 'message' => 'Error de conexión: ' . $e->getMessage()]);
     exit;
 }
+
+// Acceso: mismo permiso que las vistas (accesos_especiales, planeacion/verDisponibilidad).
+// Sin esto la URL del endpoint devolvía la plantilla completa de ingenieros, clientes, OTs y
+// ausencias a cualquiera con sesión, aunque no viera el módulo en el menú.
+exigeAccesoEspecialJson($conn, 'planeacion', 'verDisponibilidad');
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
 
 // Escapa texto que va a la respuesta y termina inyectado como HTML en la celda / el tooltip

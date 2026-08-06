@@ -3,17 +3,13 @@ header('Content-Type: application/json');
 // Recibe el reporte de OT internas subido desde la tarjeta de `carga_sabana.php` y lo importa.
 // La importación en sí vive en `lib_ot_interna.php`, la misma que usa el CLI `cargar_ot_interna.php`.
 
-// Acceso: exige sesión iniciada (cookie noEmpleado), igual que el resto del módulo.
-$noEmpleado_cookie = isset($_COOKIE['noEmpleado']) ? trim($_COOKIE['noEmpleado']) : '';
-if ($noEmpleado_cookie === '' || !ctype_digit($noEmpleado_cookie)) {
-    http_response_code(401);
-    echo json_encode(['status' => 'error', 'message' => 'Sesión no válida. Vuelve a iniciar sesión.']);
-    exit;
-}
-
 require __DIR__ . '/conn.php';
 require __DIR__ . '/lib_ot_interna.php';
 mysqli_set_charset($conn, 'utf8mb4');
+
+// Acceso: mismo permiso que la pantalla que lo llama (planeacion/verCargaArchivos). Reemplaza
+// el reporte completo de OT internas, así que no basta con tener sesión.
+exigeAccesoEspecialJson($conn, 'planeacion', 'verCargaArchivos');
 
 if (!isset($_FILES['archivo']) || $_FILES['archivo']['error'] !== UPLOAD_ERR_OK) {
     // El error más común aquí es que el archivo pase de upload_max_filesize/post_max_size del php.ini

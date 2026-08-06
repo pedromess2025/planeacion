@@ -1,10 +1,10 @@
 <?php
     session_start();
     include 'conn.php';
-    if(!isset($_COOKIE['noEmpleado']) || $_COOKIE['noEmpleado'] == ''){
-        echo '<script>window.location.assign("index")</script>';
-        exit;   // sin exit la página se seguía enviando completa antes de que el navegador redirigiera
-    }
+    // Acceso especial: no basta con tener sesión, hay que estar dado de alta en
+    // accesos_especiales (planeacion/verDisponibilidad). Corta con exit, si no la página se
+    // seguía enviando completa antes de que el navegador redirigiera.
+    exigeAccesoEspecial($conn, 'planeacion', 'verDisponibilidad');
 ?>
 <!DOCTYPE html>
 <html lang="en">

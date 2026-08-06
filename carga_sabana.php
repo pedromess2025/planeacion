@@ -1,10 +1,9 @@
 <?php
     session_start();
     include 'conn.php';
-    if(!isset($_COOKIE['noEmpleado']) || $_COOKIE['noEmpleado'] == ''){
-        echo '<script>window.location.assign("index")</script>';
-        exit;
-    }
+    // Acceso especial (accesos_especiales, planeacion/verCargaArchivos). Lista corta a propósito:
+    // esta pantalla hace TRUNCATE de la sábana operativa y reemplaza el reporte de OT internas.
+    exigeAccesoEspecial($conn, 'planeacion', 'verCargaArchivos');
 
     // Estado del reporte de OT internas, para que se vea de entrada si está al día.
     // El grid de Disponibilidad solo pinta las OT que estén en esta tabla: si nadie recarga el

@@ -1,3 +1,10 @@
+<?php
+    session_start();
+    include 'conn.php';
+    // Esta vista no tenía NINGÚN control: se abría con la URL aunque no hubiera sesión.
+    // Acceso especial (accesos_especiales, planeacion/verSegEntradas). Va antes de imprimir nada.
+    exigeAccesoEspecial($conn, 'planeacion', 'verSegEntradas');
+?>
 <!DOCTYPE html>
 <html lang="es">
 <head>

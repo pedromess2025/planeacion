@@ -1,7 +1,11 @@
 <?php
 header('Content-Type: application/json');
 
-include 'conn.php';  
+include 'conn.php';
+
+// Acceso: mismo permiso que canva.php (planeacion/verSegEntradas). Este endpoint no pedía ni
+// sesión: con la URL cualquiera sacaba el tablero completo de entradas a laboratorio.
+exigeAccesoEspecialJson($conn, 'planeacion', 'verSegEntradas');
 
 $accion = $_POST['accion'] ?? 'cargar_tablero';
 

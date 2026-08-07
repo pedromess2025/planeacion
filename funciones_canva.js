@@ -139,13 +139,16 @@ $(document).ready(function() {
 
 
     // Evento para abrir el modal de rezagados y detalle
+// Abrir modal de rezagados y detalle (Versión Blindada con Depuración)
     $('#btn-abrir-modal-rezago').click(function() {
-        // Obtenemos el lunes de la semana actual que ya calcula el tablero
-        let labSeleccionado = $('#filtro-laboratorio').val();
+        let labSeleccionado = $('#filtro-laboratorio').val() || 'TODOS';
         
-        // Calculamos la fecha de inicio actual basada en el título o la variable activa
-        // (O puedes reutilizar la variable de la semana que tengas en tu script)
-        let fechaInicioStr = $('#th-dia-0').attr('data-fecha') || new Date().toISOString().split('T')[0];
+        // Respaldo seguro: Si no existe #th-dia-0, toma la fecha actual de hoy (YYYY-MM-DD)
+        let fechaInicioStr = $('#th-dia-0').attr('data-fecha');
+        if (!fechaInicioStr) {
+            let hoy = new Date();
+            fechaInicioStr = hoy.toISOString().split('T')[0];
+        }
 
         $.ajax({
             url: 'acciones_canva.php',
@@ -162,12 +165,18 @@ $(document).ready(function() {
                     tbody.empty();
 
                     if (response.data.length === 0) {
-                        tbody.html('<tr><td colspan="8" class="text-center py-3 text-muted">No hay registros rezagados ni pendientes.</td></tr>');
+                        tbody.html('<tr><td colspan="8" class="text-center py-3 text-muted">No hay registros rezagados ni atrasados.</td></tr>');
                     } else {
                         response.data.forEach(item => {
-                            let badgeTipo = item.tipo_registro === 'REZAGADO' 
-                                ? '<span class="badge bg-danger">Rezagado</span>' 
-                                : '<span class="badge bg-success">Actual</span>';
+                            let badgeTipo = `<span class="badge ${item.clase_tipo}">${item.texto_tipo}</span>`;
+                            
+                            // Etiqueta adicional de Cuarentena si está activa
+                            let badgeCuarentena = item.es_cuarentena 
+                                ? '<span class="badge bg-secondary ml-1"><i class="fas fa-shield-alt"></i> Cuarentena</span>' 
+                                : '';
+
+                            // Etiqueta formal para los días transcurridos
+                            let badgeDias = `<span class="badge bg-light text-dark border mt-1"><i class="far fa-clock"></i> ${item.dias_transcurridos} días en empresa</span>`;
 
                             let tr = `<tr>
                                 <td><strong>${item.folio_registro}</strong><br>${badgeTipo}</td>
@@ -175,8 +184,9 @@ $(document).ready(function() {
                                 <td><span class="badge bg-info text-dark">${item.ot}</span></td>
                                 <td>${item.cliente || 'N/D'}<br><small class="text-muted">${item.laboratorio}</small></td>
                                 <td class="text-center">
-                                    <span class="badge ${item.clase_badge}">${item.etapa_rezago}</span><br>
-                                    <small class="text-muted">${item.dias_transcurridos} días en empresa</small>
+                                    <span class="badge ${item.clase_badge}">${item.etapa_rezago}</span>
+                                    ${badgeCuarentena}<br>
+                                    ${badgeDias}
                                 </td>
                                 <td>${item.fecha_recepcion || 'N/D'}</td>
                                 <td>${item.fecha_limite_cierre_ot || 'N/D'}</td>
@@ -187,9 +197,20 @@ $(document).ready(function() {
                     }
 
                     // Mostrar el modal usando Bootstrap nativo
-                    let modal = new bootstrap.Modal(document.getElementById('modalDetalleRezago'));
-                    modal.show();
+                    let modalElement = document.getElementById('modalDetalleRezago');
+                    if (modalElement) {
+                        let modal = new bootstrap.Modal(modalElement);
+                        modal.show();
+                    } else {
+                        console.error("No se encontró el elemento HTML con id 'modalDetalleRezago'");
+                    }
+                } else {
+                    console.error("El servidor respondió con error:", response);
                 }
+            },
+            error: function(xhr, status, error) {
+                console.error("Error en la petición AJAX de rezagados:", error);
+                console.log(xhr.responseText); // Esto te mostrará en la consola si PHP arrojó un error fatal o de sintaxis
             }
         });
     });

@@ -105,7 +105,6 @@ if ($accion === 'obtener_detalle_rezagos') {
     $fecha_inicio = $_POST['fecha_inicio'] ?? date('Y-m-d');
     $laboratorio  = $_POST['laboratorio'] ?? 'TODOS';
 
-    // Consulta para obtener rezagados y pendientes de la semana
     $sql = "SELECT 
                 folio_registro, 
                 orden_venta, 
@@ -118,18 +117,15 @@ if ($accion === 'obtener_detalle_rezagos') {
                 fecha_termino_ot,
                 fecha_limite_cierre_ot, 
                 status, 
+                estuvo_cuarentena,
                 valor_ov_usd,
-                DATEDIFF(NOW(), fecha_recepcion) as dias_transcurridos,
-                CASE 
-                    WHEN DATE(fecha_recepcion) < ? THEN 'REZAGADO'
-                    ELSE 'ACTUAL'
-                END as tipo_registro
+                DATEDIFF(NOW(), fecha_recepcion) as dias_transcurridos
             FROM sabana_operativa
             WHERE fecha_real_cierre_ot IS NULL 
               AND fecha_termino_ot IS NULL
               AND (
                   DATE(fecha_recepcion) < ? 
-                  OR (fecha_limite_cierre_ot IS NOT NULL AND DATE(fecha_limite_cierre_ot) < CURDATE())
+                  OR (fecha_limite_cierre_ot IS NOT NULL AND DATE(fecha_limite_cierre_ot) < ?)
               )";
 
     if ($laboratorio !== 'TODOS') {
@@ -151,7 +147,18 @@ if ($accion === 'obtener_detalle_rezagos') {
 
     $registros = [];
     while ($row = $result->fetch_assoc()) {
-        // Determinamos la etapa exacta en la que está atorado para las etiquetas visuales
+        $dias = intval($row['dias_transcurridos']);
+
+        // 1. Rezagado (> 3 días) vs Atrasado (<= 3 días)
+        if ($dias > 3) {
+            $row['texto_tipo'] = 'Rezagado';
+            $row['clase_tipo'] = 'bg-danger';
+        } else {
+            $row['texto_tipo'] = 'Atrasado';
+            $row['clase_tipo'] = 'bg-warning text-dark';
+        }
+
+        // 2. Etapa Actual independiente
         if (!empty($row['fecha_asignacion_ot'])) {
             $row['etapa_rezago'] = 'En Laboratorio';
             $row['clase_badge'] = 'bg-warning text-dark';
@@ -162,6 +169,9 @@ if ($accion === 'obtener_detalle_rezagos') {
             $row['etapa_rezago'] = 'En Recepción';
             $row['clase_badge'] = 'bg-danger';
         }
+
+        // 3. Bandera independiente para Cuarentena
+        $row['es_cuarentena'] = (strtoupper(trim($row['estuvo_cuarentena'] ?? '')) === 'SI');
 
         $registros[] = $row;
     }

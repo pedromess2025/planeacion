@@ -99,7 +99,7 @@ $chart_values = json_encode(array_column($top_10, 'total_usos'));
                 </div>
                 <?php if (!empty($area_filtro)): ?>
                     <div class="col-md-2 align-self-end">
-                        <a href="patrones_analisis.php" class="btn btn-outline-secondary w-100">Limpiar Filtro</a>
+                        <a href="patrones.php" class="btn btn-outline-secondary w-100">Limpiar Filtro</a>
                     </div>
                 <?php endif; ?>
             </form>

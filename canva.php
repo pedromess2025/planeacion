@@ -91,7 +91,7 @@
                                             <th style="width: 16.6%;">Día Recepción</th>
                                             <th style="width: 16.6%;">1. Recepción</th>
                                             <th style="width: 16.6%;">2. Transferido</th>
-                                            <th style="width: 16.6%;">3. Laboratorio</th>
+                                            <th style="width: 16.6%;">3. Lab asignada/trabajando</th>
                                             <th style="width: 16.6%;">4. Terminado</th>
                                             <th style="width: 16.6%;">5. Cerrado</th>
                                         </tr>

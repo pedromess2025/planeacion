@@ -13,7 +13,7 @@ if ($accion === 'cargar_tablero') {
     $fecha_inicio = $_POST['fecha_inicio'] ?? date('Y-m-d');
     $fecha_fin    = $_POST['fecha_fin'] ?? date('Y-m-d', strtotime('+6 days'));
     $laboratorio  = $_POST['laboratorio'] ?? 'TODOS';
-    // Filtramos por la fecha en la que ENTRÓ a la empresa (fecha_recepcion)
+
     $sql = "SELECT 
                 orden_venta, 
                 ot,
@@ -21,12 +21,14 @@ if ($accion === 'cargar_tablero') {
                 laboratorio, 
                 valor_ov_usd, 
                 DATE(fecha_recepcion) as fecha_entrada,
+                fprogramada,
                 fecha_transferencia,
                 fecha_asignacion_ot,
                 fecha_termino_ot,
                 fecha_real_cierre_ot
             FROM sabana_operativa
-            WHERE DATE(fecha_recepcion) BETWEEN ? AND ?";
+            WHERE (DATE(fecha_recepcion) BETWEEN ? AND ?) 
+               OR (fprogramada BETWEEN ? AND ?)";
 
     if ($laboratorio !== 'TODOS') {
         $sql .= " AND laboratorio = ?";
@@ -37,9 +39,9 @@ if ($accion === 'cargar_tablero') {
     $stmt = $conn->prepare($sql);
     
     if ($laboratorio !== 'TODOS') {
-        $stmt->bind_param("sss", $fecha_inicio, $fecha_fin, $laboratorio);
+        $stmt->bind_param("sssss", $fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin, $laboratorio);
     } else {
-        $stmt->bind_param("ss", $fecha_inicio, $fecha_fin);
+        $stmt->bind_param("ssss", $fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin);
     }
 
     $stmt->execute();
@@ -47,17 +49,18 @@ if ($accion === 'cargar_tablero') {
 
     $data_kanban = [];
 
-    while ($row = $result->fetch_assoc()) {
-        $fecha = $row['fecha_entrada'] ?: 'SIN_FECHA';
-        
+    // Función auxiliar para inicializar el día si no existe
+    $asegurarDia = function($fecha) use (&$data_kanban) {
         if (!isset($data_kanban[$fecha])) {
             $data_kanban[$fecha] = [
                 'fecha_recepcion' => $fecha,
                 'registros' => []
             ];
         }
+    };
 
-        // Determinar la etapa de vida del equipo evaluando sus fechas de fin a inicio
+    while ($row = $result->fetch_assoc()) {
+        // Determinar la etapa operativa actual
         $columna_destino = '';
         if (!empty($row['fecha_real_cierre_ot'])) {
             $columna_destino = 'CERRADO';
@@ -71,14 +74,40 @@ if ($accion === 'cargar_tablero') {
             $columna_destino = 'RECEPCION';
         }
 
-        $data_kanban[$fecha]['registros'][] = [
-            'folio'       => $row['folio_registro'],
-            'orden_venta' => $row['orden_venta'],
-            'ot'          => $row['ot'],
-            'laboratorio' => $row['laboratorio'],
-            'valor_usd'   => (float)$row['valor_ov_usd'],
-            'columna'     => $columna_destino
-        ];
+        // 1. Registro por su FECHA DE RECEPCIÓN (Etapa Real)
+        $fecha_rec = $row['fecha_entrada'] ?: '';
+        if ($fecha_rec >= $fecha_inicio && $fecha_rec <= $fecha_fin) {
+            $asegurarDia($fecha_rec);
+            $data_kanban[$fecha_rec]['registros'][] = [
+                'folio'                => $row['folio_registro'],
+                'orden_venta'          => $row['orden_venta'],
+                'ot'                   => $row['ot'],
+                'laboratorio'          => $row['laboratorio'],
+                'valor_usd'            => (float)$row['valor_ov_usd'],
+                'columna'              => $columna_destino,
+                'es_planeada_card'     => false,
+                'fprogramada'          => $row['fprogramada']
+            ];
+        }
+
+        // 2. Registro DUPLICADO por su FECHA PROGRAMADA (Para ver carga de trabajo de ing.)
+        $fecha_prog = $row['fprogramada'] ? date('Y-m-d', strtotime($row['fprogramada'])) : '';
+        if (!empty($fecha_prog) && $fecha_prog >= $fecha_inicio && $fecha_prog <= $fecha_fin) {
+            // Si no está terminada/cerrada, la duplicamos como tarjeta planeada
+            if (empty($row['fecha_termino_ot']) && empty($row['fecha_real_cierre_ot'])) {
+                $asegurarDia($fecha_prog);
+                $data_kanban[$fecha_prog]['registros'][] = [
+                    'folio'                => $row['folio_registro'],
+                    'orden_venta'          => $row['orden_venta'],
+                    'ot'                   => $row['ot'],
+                    'laboratorio'          => $row['laboratorio'],
+                    'valor_usd'            => (float)$row['valor_ov_usd'],
+                    'columna'              => $columna_destino, // Mantiene su columna actual o de asignación
+                    'es_planeada_card'     => true,             // Bandera para identificarla en JS
+                    'fprogramada'          => $row['fprogramada']
+                ];
+            }
+        }
     }
 
     echo json_encode(["status" => "success", "data" => array_values($data_kanban)]);

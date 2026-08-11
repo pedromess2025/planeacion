@@ -82,14 +82,13 @@ if ($accion === 'procesar') {
 
     $info_cache = json_decode(file_get_contents($dir_temp . 'info_cache.json'), true);
 
-    // Agregamos la columna 'ot' en el INSERT
     $sql = "INSERT INTO sabana_operativa (
         orden_venta, ot, valor_ov_usd, factura, status_ov, vendedor, cliente, region_cliente, 
         folio_registro, status, laboratorio, estuvo_cuarentena, 
-        fecha_recepcion, fecha_transferencia, dias_rece_transferencia, 
+        fecha_recepcion, fprogramada, fecha_transferencia, dias_rece_transferencia, 
         fecha_asignacion_ot, dias_tran_ot, fecha_termino_ot, termino_ot_cierre_ot, 
         fecha_limite_cierre_ot, fecha_real_cierre_ot, tranf_cierre_ot, dias_retraso_cierre_ot
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     $file = new SplFileObject($ruta_reot);
@@ -110,7 +109,6 @@ if ($accion === 'procesar') {
 
             $ov = trim($row_data['OV'] ?? '');
 
-            // Extraer del caché (INFO) incluyendo la OT
             $ot             = $info_cache[$ov]['ot'] ?? 'Sin registro';
             $valor_usd      = $info_cache[$ov]['valor_usd'] ?? null;
             $factura        = $info_cache[$ov]['factura'] ?? 'Sin registro';
@@ -125,10 +123,11 @@ if ($accion === 'procesar') {
             $cuarentena = (isset($row_data['cuarentena']) && $row_data['cuarentena'] == '1') ? 'Sí' : 'No';
 
             $f_rec = limpiarFecha($row_data['frecepcion'] ?? '');
+            $f_prog = limpiarFecha($row_data['fprogramada'] ?? '');
             $f_tra = limpiarFecha($row_data['ftranferencia'] ?? '');
             $f_asi = limpiarFecha($row_data['fasignacionot'] ?? '');
             $f_ter = limpiarFecha($row_data['fterminoot'] ?? '');
-            $f_lim = limpiarFecha($row_data['fprogramada'] ?? '');
+            $f_lim = limpiarFecha($row_data['fprogramada_limite'] ?? ''); 
             $f_cie = limpiarFecha($row_data['fcierre'] ?? '');
 
             $d_rec_tra = calcularDias($f_rec, $f_tra);
@@ -137,11 +136,14 @@ if ($accion === 'procesar') {
             $d_tra_cie = calcularDias($f_tra, $f_cie);
             $d_ret_cie = calcularDias($f_lim, $f_cie);
 
-            // Ajustamos el bind_param (23 letras)
-            $stmt->bind_param("sssdssssssssssdsdsdssdd",
+            // Cadena de tipos exacta de 24 elementos alineada 1 a 1:
+            // 1:$ov(s), 2:$ot(s), 3:$valor_usd(d), 4:$factura(s), 5:$status_ov(s), 6:$vendedor(s), 7:$cliente(s), 8:$region_cliente(s),
+            // 9:$folio(s), 10:$status(s), 11:$laboratorio(s), 12:$cuarentena(s), 13:$f_rec(s), 14:$f_prog(s), 15:$f_tra(s), 16:$d_rec_tra(d),
+            // 17:$f_asi(s), 18:$d_tra_ot(d), 19:$f_ter(s), 20:$d_ter_cie(d), 21:$f_lim(s), 22:$f_cie(s), 23:$d_tra_cie(d), 24:$d_ret_cie(d)
+            $stmt->bind_param("sssdssssssssssssdsdssddd",
                 $ov, $ot, $valor_usd, $factura, $status_ov, $vendedor, $cliente, $region_cliente,
                 $folio, $status, $laboratorio, $cuarentena,
-                $f_rec, $f_tra, $d_rec_tra,
+                $f_rec, $f_prog, $f_tra, $d_rec_tra,
                 $f_asi, $d_tra_ot, $f_ter, $d_ter_cie,
                 $f_lim, $f_cie, $d_tra_cie, $d_ret_cie
             );

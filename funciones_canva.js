@@ -102,28 +102,38 @@ $(document).ready(function() {
             let diaData = dataFechas.find(item => item.fecha_recepcion === fechaISO);
             
             if(diaData) {
-                diaData.registros.forEach(reg => {
-                    // Ahora la OV aparece como una etiqueta dentro de la tarjeta
-                    
-                let cardHtml = `
-                    <div style="background: #fff; border: 1px solid #d1d3e2; border-left: 3px solid #4e73df; padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 0.75rem; text-align: left;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                            <strong style="color: #3a3b45;">${reg.folio}</strong>                            
-                        </div>
-                        <div style="margin-bottom: 2px;">
-                            <span style="background: #f6c23e; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.orden_venta}</span>
-                        </div>
-                        <div style="margin-bottom: 2px;">
-                            <span style="background: #36b9cc; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.ot}</span>
-                        </div>
-                        <div style="color: #6c757d; font-size: 0.7rem; margin-bottom: 2px;"><i class="fas fa-flask"></i> ${reg.laboratorio}</div>
-                        <div style="color: #1cc88a; font-weight: bold; font-size: 0.75rem;">$${reg.valor_usd.toLocaleString('en-US', {minimumFractionDigits: 2})} USD</div>
-                    </div>
-                `;
-                    
-                    totales[reg.columna] += reg.valor_usd;
-                    tds[reg.columna].append(cardHtml);
-                });
+                // Dentro de tu recorrido en dibujarTablero:
+diaData.registros.forEach(reg => {
+    
+    // Si es la tarjeta duplicada de planeación, usamos un color azul más oscuro y elegante
+    let estiloBorde = reg.es_planeada_card 
+        ? 'border-left: 5px solid #1d3557; background-color: #e2eafc;' 
+        : 'border-left: 3px solid #4e73df;';
+        
+    let badgePlaneada = reg.es_planeada_card 
+        ? '<span style="background: #1d3557; color: #fff; padding: 1px 5px; border-radius: 3px; font-size: 0.65rem; margin-bottom: 2px; display: inline-block; font-weight: bold;"><i class="fas fa-calendar-check"></i> Carga Planeada</span><br>' 
+        : '';
+
+    let cardHtml = `
+        <div style="background: #fff; border: 1px solid #d1d3e2; ${estiloBorde} padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 0.75rem; text-align: left;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                <strong style="color: #3a3b45;">${reg.folio}</strong>                         
+            </div>
+            <div style="margin-bottom: 2px;">
+                ${badgePlaneada}
+                <span style="background: #f6c23e; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.orden_venta}</span>
+            </div>
+            <div style="margin-bottom: 2px;">
+                <span style="background: #36b9cc; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.ot}</span>
+            </div>
+            <div style="color: #6c757d; font-size: 0.7rem; margin-bottom: 2px;"><i class="fas fa-flask"></i> ${reg.laboratorio}</div>
+            <div style="color: #1cc88a; font-weight: bold; font-size: 0.75rem; margin-top: 2px;">$${reg.valor_usd.toLocaleString('en-US', {minimumFractionDigits: 2})} USD</div>
+        </div>
+    `;
+    
+    totales[reg.columna] += reg.valor_usd;
+    tds[reg.columna].append(cardHtml);
+});
             }
 
             tr.append(tds.RECEPCION, tds.TRANSFERENCIA, tds.LABORATORIO, tds.TERMINADO, tds.CERRADO);
@@ -139,11 +149,9 @@ $(document).ready(function() {
 
 
     // Evento para abrir el modal de rezagados y detalle
-// Abrir modal de rezagados y detalle (Versión Blindada con Depuración)
     $('#btn-abrir-modal-rezago').click(function() {
         let labSeleccionado = $('#filtro-laboratorio').val() || 'TODOS';
         
-        // Respaldo seguro: Si no existe #th-dia-0, toma la fecha actual de hoy (YYYY-MM-DD)
         let fechaInicioStr = $('#th-dia-0').attr('data-fecha');
         if (!fechaInicioStr) {
             let hoy = new Date();
@@ -170,12 +178,10 @@ $(document).ready(function() {
                         response.data.forEach(item => {
                             let badgeTipo = `<span class="badge ${item.clase_tipo}">${item.texto_tipo}</span>`;
                             
-                            // Etiqueta adicional de Cuarentena si está activa
                             let badgeCuarentena = item.es_cuarentena 
                                 ? '<span class="badge bg-secondary ml-1"><i class="fas fa-shield-alt"></i> Cuarentena</span>' 
                                 : '';
 
-                            // Etiqueta formal para los días transcurridos
                             let badgeDias = `<span class="badge bg-light text-dark border mt-1"><i class="far fa-clock"></i> ${item.dias_transcurridos} días en empresa</span>`;
 
                             let tr = `<tr>
@@ -196,7 +202,6 @@ $(document).ready(function() {
                         });
                     }
 
-                    // Mostrar el modal usando Bootstrap nativo
                     let modalElement = document.getElementById('modalDetalleRezago');
                     if (modalElement) {
                         let modal = new bootstrap.Modal(modalElement);
@@ -210,12 +215,12 @@ $(document).ready(function() {
             },
             error: function(xhr, status, error) {
                 console.error("Error en la petición AJAX de rezagados:", error);
-                console.log(xhr.responseText); // Esto te mostrará en la consola si PHP arrojó un error fatal o de sintaxis
+                console.log(xhr.responseText);
             }
         });
     });
 
-// Abrir modal de rastreo
+    // Abrir modal de rastreo
     $('#btn-abrir-modal-rastreo').click(function() {
         $('#input-buscar-re').val('');
         $('#resultado-rastreo').hide();
@@ -248,25 +253,19 @@ $(document).ready(function() {
                     $('#lbl-rastreo-cliente').text(d.cliente || 'N/D');
                     $('#lbl-rastreo-lab').text(d.laboratorio || 'N/D');
 
-                    // Construir la línea de tiempo (Timeline)
                     let timelineHtml = '';
 
-                    // Paso 1: Recepción
                     timelineHtml += crearPasoTimeline('1. Recepción en Empresa', d.fecha_recepcion, true, `Medio / Estatus: ${d.status}`);
 
-                    // Paso 2: Transferencia
                     let transCompletada = d.fecha_transferencia != null;
                     timelineHtml += crearPasoTimeline('2. Transferencia al Área', d.fecha_transferencia, transCompletada, transCompletada ? 'Transferido exitosamente' : 'Pendiente de transferir');
 
-                    // Paso 3: Laboratorio / Asignación OT
                     let labCompletado = d.fecha_asignacion_ot != null;
                     timelineHtml += crearPasoTimeline('3. Asignación a Laboratorio', d.fecha_asignacion_ot, labCompletado, `Laboratorio: ${d.laboratorio}`);
 
-                    // Paso 4: Término de OT
                     let terminoCompletado = d.fecha_termino_ot != null;
                     timelineHtml += crearPasoTimeline('4. Proceso Técnico Terminado', d.fecha_termino_ot, terminoCompletado, terminoCompletado ? 'Calibración/Servicio concluido' : 'En proceso en banco');
 
-                    // Paso 5: Cierre Real / Salida
                     let cierreCompletado = d.fecha_real_cierre_ot != null;
                     let descCierre = cierreCompletado ? `Cerrado y Facturado (Factura: ${d.factura})` : `Fecha estimada límite: ${d.fecha_limite_cierre_ot || 'N/D'}`;
                     timelineHtml += crearPasoTimeline('5. Cierre y Facturación', d.fecha_real_cierre_ot, cierreCompletado, descCierre);
@@ -282,11 +281,10 @@ $(document).ready(function() {
         });
     }
 
-function crearPasoTimeline(titulo, fecha, completado, descripcion) {
+    function crearPasoTimeline(titulo, fecha, completado, descripcion) {
         let colorClase = completado ? 'text-success' : 'text-muted';
         let icono = completado ? '<i class="fas fa-check-circle text-success"></i>' : '<i class="far fa-circle text-gray-300"></i>';
         let fechaTexto = fecha ? fecha : 'Pendiente';
-        let estiloLinea = completado ? 'border-success' : 'border-light';
 
         return `
             <div class="d-flex align-items-start mb-3 position-relative">
@@ -304,16 +302,14 @@ function crearPasoTimeline(titulo, fecha, completado, descripcion) {
         `;
     }
 
-// Forzar el cierre de cualquier modal al hacer clic en sus botones de cierre ("X" o botón Cerrar)
+    // Forzar el cierre de cualquier modal al hacer clic en sus botones de cierre
     $(document).on('click', '[data-bs-dismiss="modal"]', function() {
-        // Buscamos el contenedor del modal padre más cercano y lo cerramos manualmente
         let modalElement = $(this).closest('.modal');
         if (modalElement.length) {
             let modalInstance = bootstrap.Modal.getInstance(modalElement[0]);
             if (modalInstance) {
                 modalInstance.hide();
             } else {
-                // Fallback por si la instancia no se inicializó formalmente
                 modalElement.removeClass('show').css('display', 'none');
                 $('.modal-backdrop').remove();
                 $('body').removeClass('modal-open').css('overflow', '');
@@ -321,5 +317,4 @@ function crearPasoTimeline(titulo, fecha, completado, descripcion) {
         }
     });
 
-//fin document.ready
 });

@@ -27,6 +27,86 @@ function escTxt($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); 
 // ⚠ EDITAR AQUÍ si cambia la flota de carga. Placas: PH5707A,SX2202B,SV9452D,SU2914C,SV6353B,SV6343B,SX2244B,SV9819E
 $COMODINES_VEH = [13, 68, 8, 55, 58, 59, 80, 97];
 
+/* ------------------------------ GRUPOS DE ÁREA ------------------------------
+ * Áreas que COMPARTEN espacio/gente aunque el catálogo `departamento` las tenga separadas.
+ * Retro del 2026-08-17: en el tablero no se veía quién comparte área — Presión y Temperatura y
+ * Eléctrica son en los hechos la misma área, pero salían revueltos y el filtro obligaba a elegir uno.
+ * Se define por NOMBRE, no por id: los ids de `departamento` difieren entre LOCAL y PRODUCCIÓN.
+ * ⚠ EDITAR AQUÍ para juntar o separar áreas.
+ */
+$GRUPOS_AREA = [
+    'Presión, Temperatura y Eléctrica' => ['Presión y Temperatura', 'Eléctrica'],
+];
+
+// Normaliza el nombre de un departamento para comparar: sin espacios de sobra, minúsculas y sin acentos.
+// (strtr con mapa explícito; iconv //TRANSLIT depende del locale y en Windows no es confiable.)
+function normDepto($s) {
+    $s = trim(mb_strtolower((string)$s, 'UTF-8'));
+    $s = strtr($s, ['á'=>'a','é'=>'e','í'=>'i','ó'=>'o','ú'=>'u','ü'=>'u','ñ'=>'n']);
+    return preg_replace('/\s+/u', ' ', $s);
+}
+
+// Departamento -> etiqueta del área a la que pertenece (el grupo si está en $GRUPOS_AREA,
+// si no el propio nombre del departamento). Sin departamento -> 'Sin área' (se manda al final).
+function grupoDeDepto($nombreDepto) {
+    global $GRUPOS_AREA;
+    $nombreDepto = trim((string)$nombreDepto);
+    if ($nombreDepto === '') return 'Sin área';
+    $n = normDepto($nombreDepto);
+    foreach ($GRUPOS_AREA as $grupo => $miembros) {
+        foreach ($miembros as $m) {
+            if (normDepto($m) === $n) return $grupo;
+        }
+    }
+    return $nombreDepto;
+}
+
+// Etiqueta del renglón-encabezado en la cuadrícula. Si NO se filtró por zona se agrega la zona,
+// porque un mismo departamento (ej. CMM) existe en varias zonas y no son la misma área física.
+function etiquetaArea($area, $zona, $hayFiltroZona) {
+    if ($hayFiltroZona) return $area;
+    $zona = trim((string)$zona);
+    return $area . ' — ' . ($zona !== '' ? $zona : 'Sin zona');
+}
+
+// Lista de ids de departamento que llega de los filtros: acepta array o CSV ("52,14", de la opción
+// unida del select) y devuelve enteros únicos y válidos.
+function idsDepto($valor) {
+    if (!is_array($valor)) $valor = explode(',', (string)$valor);
+    $ids = [];
+    foreach ($valor as $v) {
+        $v = intval(trim((string)$v));
+        if ($v > 0 && !in_array($v, $ids, true)) $ids[] = $v;
+    }
+    return $ids;
+}
+
+// Colapsa una lista [{id, nombre}] de departamentos en opciones de ÁREA para los selects:
+// los del mismo grupo se funden en una sola opción con los ids unidos ("52,14").
+function agrupaOpcionesDepto($labs) {
+    $ops = [];
+    foreach ($labs as $lab) {
+        $area = grupoDeDepto($lab['nombre']);
+        if (!isset($ops[$area])) $ops[$area] = [];
+        $ops[$area][] = intval($lab['id']);
+    }
+    $salida = [];
+    foreach ($ops as $area => $ids) {
+        $salida[] = ['id' => implode(',', $ids), 'nombre' => $area];
+    }
+    usort($salida, function ($a, $b) { return strcasecmp($a['nombre'], $b['nombre']); });
+    return $salida;
+}
+
+// Comparador de las etiquetas de área para ordenar los bloques de la cuadrícula: alfabético,
+// con los "Sin área" (y "Sin área — ZONA") hasta el final.
+function cmpArea($areaA, $areaB) {
+    $sinA = (strpos($areaA, 'Sin área') === 0) ? 1 : 0;
+    $sinB = (strpos($areaB, 'Sin área') === 0) ? 1 : 0;
+    if ($sinA !== $sinB) return $sinA - $sinB;
+    return strcasecmp($areaA, $areaB);
+}
+
 // Conexión a la BD de vehículos (mess_control_vehicular). Devuelve mysqli o corta con JSON de error.
 function conexionVehiculos() {
     $c = new mysqli("localhost", "mess_incidencias", "Pipmytrade123", "mess_control_vehicular");
@@ -46,7 +126,9 @@ if ($accion == 'disponibilidadIngenieros') {
         $fechaInicio    = isset($_POST['fechaInicio']) ? $_POST['fechaInicio'] : date('Y-m-d');
         $fechaFin       = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
         $zonaF          = isset($_POST['zona']) ? trim($_POST['zona']) : '';
-        $deptoF         = isset($_POST['departamento']) ? trim($_POST['departamento']) : ''; // 2º filtro (cascada Lab Hugo)
+        // 2º filtro (cascada por zona). Puede traer VARIOS ids ("52,14") cuando la opción del select es
+        // un ÁREA agrupada (ver $GRUPOS_AREA); un id solo sigue funcionando igual.
+        $deptoF         = idsDepto(isset($_POST['departamento']) ? $_POST['departamento'] : '');
         $ingenieroF     = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
 
         // Marca una celda solo si la nueva prioridad es mayor o igual a la existente.
@@ -83,13 +165,18 @@ if ($accion == 'disponibilidadIngenieros') {
                            MAX(NULLIF(TRIM(u.id_usuario), '')) AS id_real,
                            MAX(u.noEmpleado) AS noEmpleado,
                            COALESCE(NULLIF(TRIM(CONCAT_WS(' ', MAX(u.nombres), MAX(u.apellidos))), ''), MAX(u.nombre)) AS nombre,
-                           MAX(d.departamento) AS lab
+                           MAX(d.departamento) AS lab,
+                           MAX(u.zona) AS zona
                     FROM usuarios u
                     LEFT JOIN departamento d ON u.departamento = d.id
                     WHERE u.estatus = 1 AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')";
         $params = []; $types = '';
         if ($zonaF !== '') { $sqlIngs .= " AND u.zona = ?"; $params[] = $zonaF; $types .= 's'; }
-        if ($deptoF !== '') { $sqlIngs .= " AND u.departamento = ?"; $params[] = intval($deptoF); $types .= 'i'; }
+        if (!empty($deptoF)) {
+            $phD = implode(',', array_fill(0, count($deptoF), '?'));
+            $sqlIngs .= " AND u.departamento IN ($phD)";
+            foreach ($deptoF as $v) { $params[] = $v; $types .= 'i'; }
+        }
         if (!empty($ingenieroF)) {
             $ph = implode(',', array_fill(0, count($ingenieroF), '?'));
             $sqlIngs .= " AND u.id_usuario IN ($ph)";
@@ -106,7 +193,10 @@ if ($accion == 'disponibilidadIngenieros') {
         $noEmpToId = [];  // noEmpleado -> clave del renglón
         while ($row = $res->fetch_assoc()) {
             $clave = $row['clave'];
-            $ingenieros[] = ['id_usuario' => $clave, 'id_real' => $row['id_real'], 'nombre' => $row['nombre'], 'lab' => $row['lab']];
+            // `area` = etiqueta del bloque en el grid (el grupo si su depto está en $GRUPOS_AREA).
+            $ingenieros[] = ['id_usuario' => $clave, 'id_real' => $row['id_real'], 'nombre' => $row['nombre'],
+                             'lab' => $row['lab'], 'zona' => $row['zona'],
+                             'area' => etiquetaArea(grupoDeDepto($row['lab']), $row['zona'], $zonaF !== '')];
             if ($row['id_real'] !== null && $row['id_real'] !== '') {
                 $idsIngs[] = $row['id_real'];
                 $claveDe[$row['id_real']] = $clave;
@@ -488,6 +578,13 @@ if ($accion == 'disponibilidadIngenieros') {
         }
         unset($ing);
 
+        // Orden final: por ÁREA y dentro de cada área por nombre. El front pinta los renglones-encabezado
+        // en una sola pasada (cuando cambia `area`), así que las filas deben llegar ya agrupadas.
+        usort($ingenieros, function ($a, $b) {
+            $c = cmpArea($a['area'], $b['area']);
+            return $c !== 0 ? $c : strcasecmp($a['nombre'], $b['nombre']);
+        });
+
         echo json_encode(['status' => 'success', 'ingenieros' => $ingenieros, 'celdas' => empty($celdas) ? (object)[] : $celdas]);
 
     } catch (Exception $e) {
@@ -511,9 +608,10 @@ if ($accion == 'zonasLab') {
     echo json_encode(['status' => 'success', 'zonas' => $zonas]);
 }
 
-// Endpoint: departamentos de una zona (2º filtro en cascada; hoy lo usa "Lab Hugo").
+// Endpoint: departamentos de una zona (2º filtro en cascada).
 // Lista los DISTINCT departamento de los ING/JEFE activos de esa zona -> se DERIVA de la
 // población real, así que si el usuario re-etiqueta zonas o departamentos, el filtro se ajusta solo.
+// Los departamentos del mismo grupo ($GRUPOS_AREA) se funden en UNA opción con los ids unidos ("52,14").
 if ($accion == 'departamentosZona') {
     $zonaF = isset($_POST['zona']) ? trim($_POST['zona']) : '';
     $labs = [];
@@ -533,7 +631,7 @@ if ($accion == 'departamentosZona') {
         }
         $stmt->close();
     }
-    echo json_encode(['status' => 'success', 'departamentos' => $labs]);
+    echo json_encode(['status' => 'success', 'departamentos' => agrupaOpcionesDepto($labs)]);
 }
 
 
@@ -546,7 +644,9 @@ if ($accion == 'disponibilidadVehiculos') {
         $fechaFin    = isset($_POST['fechaFin']) ? $_POST['fechaFin'] : date('Y-m-d', strtotime($fechaInicio . ' +6 days'));
         $zonaF       = isset($_POST['zona']) ? trim($_POST['zona']) : '';
         $vehiculoF   = isset($_POST['vehiculo']) && is_array($_POST['vehiculo']) ? $_POST['vehiculo'] : [];
-        $deptoF      = isset($_POST['departamento']) && is_array($_POST['departamento']) ? $_POST['departamento'] : [];
+        // 2º filtro (cascada por zona). Igual que en ingenieros: acepta array o CSV ("52,14") cuando la
+        // opción del select es un ÁREA agrupada (ver $GRUPOS_AREA).
+        $deptoF      = idsDepto(isset($_POST['departamento']) ? $_POST['departamento'] : '');
         $ingenieroF  = isset($_POST['ingeniero']) && is_array($_POST['ingeniero']) ? $_POST['ingeniero'] : [];
 
         // Conexión dedicada a la BD de vehículos (para no pisar $conn = mess_rrhh)
@@ -571,10 +671,14 @@ if ($accion == 'disponibilidadVehiculos') {
         //    comodín no tiene usuario. Filtros opcionales. Los comodines se marcan y se ordenan primero.
         // DISTINCT: un id_usuario puede casar con >1 fila en usuarios (duplicados) y multiplicar el vehículo;
         // como solo seleccionamos columnas de inventario, DISTINCT colapsa esos duplicados sin riesgo.
-        $sqlVeh = "SELECT DISTINCT inv.id_vehiculo, inv.placa, inv.marca, inv.modelo, inv.usuario, inv.area, inv.id_usuario, u.zona,
+        // `inv.area` (área del inventario) se renombra a area_inv: `area` se usa para la ÁREA DEL INGENIERO
+        // responsable (su departamento, agrupado con $GRUPOS_AREA), que es la que agrupa las filas del grid.
+        $sqlVeh = "SELECT DISTINCT inv.id_vehiculo, inv.placa, inv.marca, inv.modelo, inv.usuario, inv.area AS area_inv,
+                          inv.id_usuario, u.zona, u.departamento AS depto_id, d.departamento AS lab,
                           (inv.id_vehiculo IN ($comodinList)) AS comodin
                    FROM inventario inv
                    LEFT JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
+                   LEFT JOIN mess_rrhh.departamento d ON u.departamento = d.id
                    WHERE inv.estatus = 'Activo'
                      AND (u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB') OR inv.id_vehiculo IN ($comodinList))";
         $params = []; $types = '';
@@ -583,7 +687,7 @@ if ($accion == 'disponibilidadVehiculos') {
         if (!empty($deptoF)) {
             $phD = implode(',', array_fill(0, count($deptoF), '?'));
             $sqlVeh .= " AND u.departamento IN ($phD)";
-            foreach ($deptoF as $v) { $params[] = intval($v); $types .= 'i'; }
+            foreach ($deptoF as $v) { $params[] = $v; $types .= 'i'; }
         }
         if (!empty($ingenieroF)) {
             $phI = implode(',', array_fill(0, count($ingenieroF), '?'));
@@ -603,6 +707,11 @@ if ($accion == 'disponibilidadVehiculos') {
         $vehiculos = [];
         $idsVeh = [];
         while ($row = $res->fetch_assoc()) {
+            // Bloque al que pertenece la fila en el grid: los comodines son su propia sección (van primero,
+            // no son de nadie); los demás, el área del ingeniero responsable.
+            $row['area'] = ($row['comodin'] == 1)
+                ? 'Comodines'
+                : etiquetaArea(grupoDeDepto($row['lab']), $row['zona'], $zonaF !== '');
             $vehiculos[] = $row;
             $idsVeh[] = $row['id_vehiculo'];
         }
@@ -722,6 +831,19 @@ if ($accion == 'disponibilidadVehiculos') {
         }
 
         $connCV->close();
+
+        // Orden final: comodines primero (su propio bloque), luego por ÁREA del ingeniero responsable y
+        // dentro del área por ingeniero/placa. El front pinta los encabezados cuando cambia `area`.
+        usort($vehiculos, function ($a, $b) {
+            $comA = ($a['comodin'] == 1) ? 0 : 1;
+            $comB = ($b['comodin'] == 1) ? 0 : 1;
+            if ($comA !== $comB) return $comA - $comB;
+            $c = cmpArea($a['area'], $b['area']);
+            if ($c !== 0) return $c;
+            $c = strcasecmp((string)$a['usuario'], (string)$b['usuario']);
+            return $c !== 0 ? $c : strcasecmp((string)$a['placa'], (string)$b['placa']);
+        });
+
         echo json_encode(['status' => 'success', 'vehiculos' => $vehiculos, 'celdas' => empty($celdas) ? (object)[] : $celdas]);
 
     } catch (Exception $e) {
@@ -754,23 +876,32 @@ if ($accion == 'zonasVehiculos') {
 // Endpoint: laboratorios/departamentos de vehículos (para el filtro del módulo de vehículos).
 // Se DERIVA de la población real (departamento de los ingenieros con vehículo), no de una lista
 // hardcodeada -> env-independiente y siempre consistente con el grid.
+// Con `zona` acota a esa zona: así alimenta el 2º filtro en cascada de la vista de vehículos, igual que
+// `departamentosZona` en la de ingenieros. Los departamentos del mismo grupo ($GRUPOS_AREA) se funden en
+// UNA opción con los ids unidos ("52,14").
 if ($accion == 'laboratoriosVehiculos') {
     try {
+        $zonaF = isset($_POST['zona']) ? trim($_POST['zona']) : '';
         $connCV = conexionVehiculos();
         $sql = "SELECT DISTINCT u.departamento AS id, d.departamento AS nombre
                 FROM inventario inv
                 JOIN mess_rrhh.usuarios u ON inv.id_usuario = u.id_usuario
                 LEFT JOIN mess_rrhh.departamento d ON u.departamento = d.id
                 WHERE inv.estatus = 'Activo' AND u.tipo_usr IN ('ING','JEFE_ENCARGADO','JEFE_LAB')
-                  AND u.departamento IS NOT NULL AND u.departamento <> 0
-                ORDER BY nombre";
-        $res = $connCV->query($sql);
+                  AND u.departamento IS NOT NULL AND u.departamento <> 0";
+        if ($zonaF !== '') $sql .= " AND u.zona = ?";
+        $sql .= " ORDER BY nombre";
+        $stmt = $connCV->prepare($sql);
+        if ($zonaF !== '') $stmt->bind_param('s', $zonaF);
+        $stmt->execute();
+        $res = $stmt->get_result();
         $labs = [];
         while ($row = $res->fetch_assoc()) {
             $labs[] = ['id' => $row['id'], 'nombre' => $row['nombre'] !== null ? $row['nombre'] : ('Depto ' . $row['id'])];
         }
+        $stmt->close();
         $connCV->close();
-        echo json_encode(['status' => 'success', 'laboratorios' => $labs]);
+        echo json_encode(['status' => 'success', 'laboratorios' => agrupaOpcionesDepto($labs)]);
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => 'Error: ' . $e->getMessage()]);
     }

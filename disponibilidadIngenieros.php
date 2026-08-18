@@ -38,6 +38,13 @@
         .lab-ing { display: block; margin-top: 3px; font-size: 10px; line-height: 1.3; font-weight: 500; color: #495057; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .lab-ing i { color: #6c757d; }
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
+        /* Renglón-encabezado de ÁREA: agrupa a los ingenieros que comparten área (clic = colapsar) */
+        .fila-grupo td { background: #e9ecef !important; text-align: left !important; font-size: 12px;
+                         font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #343a40;
+                         cursor: pointer; user-select: none; }
+        .fila-grupo td:hover { background: #dee2e6 !important; }
+        .fila-grupo .grupo-count { font-weight: 500; text-transform: none; color: #6c757d; margin-left: 6px; }
+        .fila-grupo i { width: 12px; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
         /* Cuántos ingenieros están asignados al servicio de esa celda */
@@ -142,6 +149,9 @@
         // Datos de la última consulta (para re-render al cambiar el filtro de estatus sin refetch)
         var ingenierosData = [];
         var celdasData = {};
+        // Bloques de área colapsados (etiqueta -> true). Vive fuera del render para que colapsar/expandir
+        // sobreviva al re-render que dispara el filtro de Estatus.
+        var gruposColapsados = {};
 
         var ESTATUS_META = {
             disponible:    { label: 'Disponible',     bg: '#c6f6d5', fg: '#1b5e20' },
@@ -173,12 +183,15 @@
             $('#filtro-estatus').on('change', function() { renderizarGrid(ingenierosData, celdasData); });
         });
 
-        // Filtro en cascada: al elegir un área agrupadora (hoy "Lab Hugo") se muestra un 2º select
-        // con los departamentos de esa zona; en cualquier otra área se oculta y se limpia.
+        // Filtro en cascada: al elegir una zona con varias áreas se muestra un 2º select con esas áreas.
+        // Antes solo aparecía en "Lab Hugo" (hardcodeado); ahora se decide por la población real: sale
+        // cuando la zona tiene MÁS DE UN área, así también aplica a NORTE / OCCIDENTE / SLP.
+        // Las opciones vienen ya agrupadas del endpoint: "Presión, Temperatura y Eléctrica" trae los ids
+        // de los dos departamentos ("14,52") en un solo value.
         function actualizarFiltroDepartamento() {
             var zona = $('#filtro-area').val() || '';
             $('#filtro-departamento').val('');
-            if (zona.trim().toLowerCase() !== 'lab hugo') {
+            if (zona.trim() === '') {
                 $('#cont-departamento').hide();
                 $('#filtro-departamento').html('<option value="">Todos</option>');
                 return;
@@ -188,12 +201,13 @@
                 data: { accion: 'departamentosZona', zona: zona },
                 success: function(data) {
                     var sel = $('#filtro-departamento').html('<option value="">Todos</option>');
-                    if (data.status === 'success') {
-                        data.departamentos.forEach(function(d) {
-                            sel.append('<option value="' + d.id + '">' + d.nombre + '</option>');
-                        });
-                    }
-                    $('#cont-departamento').show();
+                    var deptos = (data.status === 'success') ? data.departamentos : [];
+                    deptos.forEach(function(d) {
+                        sel.append('<option value="' + esc(d.id) + '">' + esc(d.nombre) + '</option>');
+                    });
+                    // Con una sola área el filtro no aporta nada (sería igual que "Todos")
+                    if (deptos.length > 1) { $('#cont-departamento').show(); }
+                    else { $('#cont-departamento').hide(); }
                 }
             });
         }
@@ -346,9 +360,32 @@
             });
             html += '</tr></thead><tbody>';
 
+            // Cuántos ingenieros trae cada área (va en el encabezado del bloque)
+            var conteoArea = {};
             ingenieros.forEach(function(ing) {
+                var a = ing.area || 'Sin área';
+                conteoArea[a] = (conteoArea[a] || 0) + 1;
+            });
+            var areaActual = null;
+            var totalCols = fechas.length + 1;
+            // Los encabezados de área solo aportan cuando hay VARIOS bloques en pantalla: si el filtro ya
+            // dejó una sola área, repetirían lo que dice el select -> la tabla sale plana, como antes.
+            var agrupar = Object.keys(conteoArea).length > 1;
+
+            ingenieros.forEach(function(ing) {
+                // Las filas llegan del endpoint ya ordenadas por área: cada vez que cambia, se abre bloque.
+                var area = ing.area || 'Sin área';
+                if (agrupar && area !== areaActual) {
+                    areaActual = area;
+                    var colapsado = !!gruposColapsados[area];
+                    html += '<tr class="fila-grupo" data-grupo="' + esc(area) + '"><td colspan="' + totalCols + '">' +
+                            '<i class="fas fa-chevron-' + (colapsado ? 'right' : 'down') + '"></i> ' + esc(area) +
+                            '<span class="grupo-count">(' + conteoArea[area] + ')</span></td></tr>';
+                }
+                // Sin encabezado no hay cómo volver a expandir: las filas siempre se ven.
+                var oculta = (agrupar && gruposColapsados[area]) ? ' style="display:none;"' : '';
                 var nom = esc(ing.nombre);
-                html += '<tr><td class="col-ing" title="' + nom + '">' + nom + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_real || ing.id_usuario) + labIng(ing.lab) + '</td>';
+                html += '<tr data-grupo-fila="' + esc(area) + '"' + oculta + '><td class="col-ing" title="' + nom + '">' + nom + badgeAsignacion(ing.asignacion) + linkTablero(ing.enlace, ing.id_real || ing.id_usuario) + labIng(ing.lab) + '</td>';
                 var celdasIng = celdas[ing.id_usuario] || {};
                 fechas.forEach(function(f) {
                     // Fin de semana: SIEMPRE disponible, sin importar servicio/lab/vacaciones/base.
@@ -388,6 +425,16 @@
             $('#contenedorGrid').html(html);
             // Popup (tooltip Bootstrap HTML on-hover) en las celdas de servicio, estilo Disponibilidad de Vehículos
             $('#contenedorGrid [data-toggle="tooltip"]').tooltip({ html: true, placement: 'top', container: 'body', trigger: 'hover' });
+            // Colapsar / expandir un bloque de área. Se comparan atributos en vez de armar un selector
+            // con la etiqueta (trae comas, acentos y guiones que romperían el selector).
+            $('#contenedorGrid .fila-grupo').on('click', function() {
+                var g = $(this).attr('data-grupo');
+                gruposColapsados[g] = !gruposColapsados[g];
+                $(this).find('i').toggleClass('fa-chevron-down fa-chevron-right');
+                $('#contenedorGrid tbody tr').filter(function() {
+                    return $(this).attr('data-grupo-fila') === g;
+                }).toggle(!gruposColapsados[g]);
+            });
         }
     </script>
 </body>

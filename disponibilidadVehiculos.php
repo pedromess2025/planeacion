@@ -31,6 +31,13 @@
         .grid-disp td.col-veh .badge-comodin { display:inline-block; font-size: 9px; font-weight: 700; background:#495057; color:#fff; border-radius:6px; padding:1px 6px; margin-left:4px; vertical-align:middle; }
         .grid-disp tr.fila-comodin td.col-veh { border-left: 4px solid #495057; background:#eef1f4; }
         .grid-disp tbody tr { border-bottom: 2px solid #dee2e6; }
+        /* Renglón-encabezado de ÁREA (la del ingeniero responsable); clic = colapsar. Igual que en Ingenieros. */
+        .fila-grupo td { background: #e9ecef !important; text-align: left !important; font-size: 12px;
+                         font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: #343a40;
+                         cursor: pointer; user-select: none; }
+        .fila-grupo td:hover { background: #dee2e6 !important; }
+        .fila-grupo .grupo-count { font-weight: 500; text-transform: none; color: #6c757d; margin-left: 6px; }
+        .fila-grupo i { width: 12px; }
         .celda-disp { min-height: 46px; line-height: 1.25; font-size: 11px; font-weight: 600; }
         .celda-disp small { display:block; font-weight: 400; font-size: 10px; opacity: 0.85; }
         /* Ícono de uso: quién trae el vehículo ese día (su responsable vs alguien más) */
@@ -60,6 +67,13 @@
                             <select id="filtro-area" class="form-select">
                                 <option value="">Todas</option>
                             </select>
+                            <!-- 2º filtro en cascada: aparece solo al elegir una zona con varias áreas -->
+                            <div id="cont-departamento" class="mt-2" style="display:none;">
+                                <label for="filtro-departamento"><b>Departamento:</b></label>
+                                <select id="filtro-departamento" class="form-select">
+                                    <option value="">Todos</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="col-md-3">
                             <label for="filtro-ingeniero"><b>Ingeniero:</b></label>
@@ -133,6 +147,9 @@
         var celdasData = {};
         var todosVehiculos = [];            // lista maestra (para filtrar el dropdown por área)
         var vehiculosFiltroCargado = false; // el select de vehículo se puebla en la 1ª carga
+        // Bloques de área colapsados (etiqueta -> true). Vive fuera del render para que colapsar/expandir
+        // sobreviva al re-render que dispara el filtro de Estatus.
+        var gruposColapsados = {};
 
         var ESTATUS_META = {
             disponible:    { label: 'Disponible',       bg: '#c6f6d5', fg: '#1b5e20' },
@@ -152,18 +169,47 @@
             cargarZonas();
             cargarDisponibilidad();
 
-            // Al cambiar el Área/Zona: filtrar el dropdown de Vehículo a esa zona (y recargar el grid)
+            // Al cambiar el Área/Zona: filtrar el dropdown de Vehículo a esa zona, refrescar el 2º filtro
+            // (departamento, en cascada) y recargar el grid
             $('#filtro-area').on('change', function() {
                 var zona = $('#filtro-area').val() || '';
                 var lista = zona ? todosVehiculos.filter(function(v){ return v.zona === zona; }) : todosVehiculos;
                 $('#filtro-vehiculo').val(null);
                 poblarFiltroVehiculos(lista, true);
+                actualizarFiltroDepartamento();
                 cargarDisponibilidad();
             });
-            // Vehículo / Ingeniero recargan el grid; Estatus solo re-renderiza (es por celda)
-            $('#filtro-vehiculo, #filtro-ingeniero').on('change', cargarDisponibilidad);
+            // Vehículo / Ingeniero / Departamento recargan el grid; Estatus solo re-renderiza (es por celda)
+            $('#filtro-vehiculo, #filtro-ingeniero, #filtro-departamento').on('change', cargarDisponibilidad);
             $('#filtro-estatus').on('change', function() { renderizarGrid(vehiculosData, celdasData); });
         });
+
+        // Filtro en cascada: al elegir una zona con varias áreas se muestra un 2º select con esas áreas
+        // (mismo comportamiento que Disponibilidad de Ingenieros). Las opciones vienen ya agrupadas del
+        // endpoint: "Presión, Temperatura y Eléctrica" trae los ids de los dos departamentos en un value.
+        function actualizarFiltroDepartamento() {
+            var zona = $('#filtro-area').val() || '';
+            $('#filtro-departamento').val('');
+            if (zona.trim() === '') {
+                $('#cont-departamento').hide();
+                $('#filtro-departamento').html('<option value="">Todos</option>');
+                return;
+            }
+            $.ajax({
+                url: 'acciones_disponibilidad.php', method: 'POST', dataType: 'json',
+                data: { accion: 'laboratoriosVehiculos', zona: zona },
+                success: function(data) {
+                    var sel = $('#filtro-departamento').html('<option value="">Todos</option>');
+                    var labs = (data.status === 'success') ? data.laboratorios : [];
+                    labs.forEach(function(d) {
+                        sel.append('<option value="' + esc(d.id) + '">' + esc(d.nombre) + '</option>');
+                    });
+                    // Con una sola área el filtro no aporta nada (sería igual que "Todos")
+                    if (labs.length > 1) { $('#cont-departamento').show(); }
+                    else { $('#cont-departamento').hide(); }
+                }
+            });
+        }
 
         // ================ NAVEGACIÓN SEMANAL ================
         function getLunes(d) {
@@ -252,6 +298,7 @@
                     fechaInicio: fechaInicio,
                     fechaFin: fechaFin,
                     zona: $('#filtro-area').val() || '',
+                    departamento: $('#filtro-departamento').val() || '',
                     ingeniero: $('#filtro-ingeniero').val() || [],
                     vehiculo: $('#filtro-vehiculo').val() || []
                 },
@@ -304,12 +351,36 @@
             });
             html += '</tr></thead><tbody>';
 
+            // Cuántos vehículos trae cada área (va en el encabezado del bloque)
+            var conteoArea = {};
             vehiculos.forEach(function(veh) {
+                var a = veh.area || 'Sin área';
+                conteoArea[a] = (conteoArea[a] || 0) + 1;
+            });
+            var areaActual = null;
+            var totalCols = fechas.length + 1;
+            // Los encabezados de área solo aportan cuando hay VARIOS bloques en pantalla: si el filtro ya
+            // dejó una sola área, repetirían lo que dice el select -> la tabla sale plana, como antes.
+            var agrupar = Object.keys(conteoArea).length > 1;
+
+            vehiculos.forEach(function(veh) {
+                // Las filas llegan del endpoint ya ordenadas por área (comodines primero, en su propio
+                // bloque): cada vez que cambia el área se abre un bloque nuevo.
+                var area = veh.area || 'Sin área';
+                if (agrupar && area !== areaActual) {
+                    areaActual = area;
+                    var colapsado = !!gruposColapsados[area];
+                    html += '<tr class="fila-grupo" data-grupo="' + esc(area) + '"><td colspan="' + totalCols + '">' +
+                            '<i class="fas fa-chevron-' + (colapsado ? 'right' : 'down') + '"></i> ' + esc(area) +
+                            '<span class="grupo-count">(' + conteoArea[area] + ')</span></td></tr>';
+                }
+                // Sin encabezado no hay cómo volver a expandir: las filas siempre se ven.
+                var oculta = (agrupar && gruposColapsados[area]) ? ' style="display:none;"' : '';
                 var titulo = esc((veh.placa || 'S/P') + ' — ' + [veh.marca, veh.modelo].filter(Boolean).join(' '));
                 var sub = esc([ [veh.marca, veh.modelo].filter(Boolean).join(' '), veh.usuario ].filter(Boolean).join(' · '));
                 var esComodin = (veh.comodin == 1);
                 var badgeCom = esComodin ? ' <span class="badge-comodin">Comodín</span>' : '';
-                html += '<tr' + (esComodin ? ' class="fila-comodin"' : '') + '><td class="col-veh" title="' + titulo + '">' + esc(veh.placa || 'S/P') + badgeCom +
+                html += '<tr data-grupo-fila="' + esc(area) + '"' + (esComodin ? ' class="fila-comodin"' : '') + oculta + '><td class="col-veh" title="' + titulo + '">' + esc(veh.placa || 'S/P') + badgeCom +
                         '<small>' + sub + '</small></td>';
                 var celdasVeh = celdas[veh.id_vehiculo] || {};
                 fechas.forEach(function(f) {
@@ -343,6 +414,16 @@
             $('#contenedorGrid').html(html);
             // Tooltip estilo "Actividades planeadas" (Bootstrap, HTML) en las celdas con detalle
             $('#contenedorGrid [data-toggle="tooltip"]').tooltip({ html: true, placement: 'top', container: 'body', trigger: 'hover' });
+            // Colapsar / expandir un bloque de área. Se comparan atributos en vez de armar un selector
+            // con la etiqueta (trae comas, acentos y guiones que romperían el selector).
+            $('#contenedorGrid .fila-grupo').on('click', function() {
+                var g = $(this).attr('data-grupo');
+                gruposColapsados[g] = !gruposColapsados[g];
+                $(this).find('i').toggleClass('fa-chevron-down fa-chevron-right');
+                $('#contenedorGrid tbody tr').filter(function() {
+                    return $(this).attr('data-grupo-fila') === g;
+                }).toggle(!gruposColapsados[g]);
+            });
         }
     </script>
 </body>

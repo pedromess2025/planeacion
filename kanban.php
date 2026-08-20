@@ -58,12 +58,12 @@
                             </select>
                         </div>
 
-                        <!-- Centro: Navegación por Semana -->
+                        <!-- Centro: Navegación por Día -->
                         <div class="col-md-4 text-center">
                             <div class="btn-group shadow-sm" role="group">
-                                <button class="btn btn-sm btn-outline-primary" id="btn-semana-anterior" title="Recepciones Pasadas"><i class="fas fa-chevron-left"></i></button>
-                                <button class="btn btn-sm btn-outline-secondary px-3" id="btn-semana-actual">Semana Actual</button>
-                                <button class="btn btn-sm btn-outline-primary" id="btn-semana-siguiente" title="Recepciones Siguientes"><i class="fas fa-chevron-right"></i></button>
+                                <button class="btn btn-sm btn-outline-primary" id="btn-dia-anterior" title="Día Anterior"><i class="fas fa-chevron-left"></i></button>
+                                <button class="btn btn-sm btn-outline-secondary px-3" id="btn-dia-actual">Hoy</button>
+                                <button class="btn btn-sm btn-outline-primary" id="btn-dia-siguiente" title="Día Siguiente"><i class="fas fa-chevron-right"></i></button>
                             </div>
                         </div>
 

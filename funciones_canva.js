@@ -2,28 +2,28 @@ $(document).ready(function() {
     let fechaActualPivot = new Date();
     
     cargarLaboratorios();
-    cargarTableroSemana(fechaActualPivot);
+    cargarTableroDia(fechaActualPivot);
 
-    $('#btn-semana-anterior').click(function() {
-        fechaActualPivot.setDate(fechaActualPivot.getDate() - 7);
-        cargarTableroSemana(fechaActualPivot);
+    // Navegación diaria
+    $('#btn-dia-anterior').click(function() {
+        fechaActualPivot.setDate(fechaActualPivot.getDate() - 1);
+        cargarTableroDia(fechaActualPivot);
     });
 
-    $('#btn-semana-actual').click(function() {
+    $('#btn-dia-actual').click(function() {
         fechaActualPivot = new Date();
-        cargarTableroSemana(fechaActualPivot);
+        cargarTableroDia(fechaActualPivot);
     });
 
-    $('#btn-semana-siguiente').click(function() {
-        fechaActualPivot.setDate(fechaActualPivot.getDate() + 7);
-        cargarTableroSemana(fechaActualPivot);
+    $('#btn-dia-siguiente').click(function() {
+        fechaActualPivot.setDate(fechaActualPivot.getDate() + 1);
+        cargarTableroDia(fechaActualPivot);
     });
 
     $('#filtro-laboratorio').change(function() {
-        cargarTableroSemana(fechaActualPivot);
+        cargarTableroDia(fechaActualPivot);
     });
 
-    // Función para poblar el select del DOM
     function cargarLaboratorios() {
         $.ajax({
             url: 'acciones_canva.php',
@@ -33,9 +33,7 @@ $(document).ready(function() {
             success: function(response) {
                 if (response.status === 'success') {
                     let select = $('#filtro-laboratorio');
-                    // Mantenemos la opción por defecto y limpiamos el resto
                     select.html('<option value="TODOS">Todos los Laboratorios</option>');
-                    
                     response.data.forEach(lab => {
                         select.append(`<option value="${lab}">${lab}</option>`);
                     });
@@ -44,22 +42,16 @@ $(document).ready(function() {
         });
     }
 
-
-    function cargarTableroSemana(pivotDate) {
-        let diaDeLaSemana = pivotDate.getDay();
-        let diferenciaAlLunes = pivotDate.getDate() - diaDeLaSemana + (diaDeLaSemana === 0 ? -6 : 1);
-        let lunes = new Date(pivotDate.setDate(diferenciaAlLunes));
+    function cargarTableroDia(pivotDate) {
+        let anio = pivotDate.getFullYear();
+        let mes = ('0' + (pivotDate.getMonth() + 1)).slice(-2);
+        let dia = ('0' + pivotDate.getDate()).slice(-2);
+        let fechaFormat = `${anio}-${mes}-${dia}`;
         
-        let fechasSemana = [];
-        for (let i = 0; i < 7; i++) {
-            let d = new Date(lunes);
-            d.setDate(lunes.getDate() + i);
-            fechasSemana.push(d.toISOString().split('T')[0]);
-        }
+        let opcionesFormato = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        let nombreDiaLargo = pivotDate.toLocaleDateString('es-ES', opcionesFormato);
 
-        let fechaInicioStr = fechasSemana[0];
-        let fechaFinStr = fechasSemana[6];
-        $('#rango-semana-titulo').text(`Equipos recibidos entre el ${fechaInicioStr} y el ${fechaFinStr}`);
+        $('#rango-semana-titulo').text(`Operación del día: ${nombreDiaLargo.charAt(0).toUpperCase() + nombreDiaLargo.slice(1)}`);
 
         let labSeleccionado = $('#filtro-laboratorio').val();
 
@@ -67,78 +59,84 @@ $(document).ready(function() {
             url: 'acciones_canva.php',
             type: 'POST',
             dataType: 'json',
-            data: { accion: 'cargar_tablero', fecha_inicio: fechaInicioStr, fecha_fin: fechaFinStr, laboratorio: labSeleccionado },
+            data: { accion: 'cargar_tablero', fecha_pivot: fechaFormat, laboratorio: labSeleccionado },
             success: function(response) {
-                if (response.status === 'success') dibujarTablero(response.data, fechasSemana);
+                if (response.status === 'success') dibujarTableroDia(response.data, fechaFormat, nombreDiaLargo);
             }
         });
     }
 
-    function dibujarTablero(dataFechas, fechasSemana) {
+    function dibujarTableroDia(registros, fechaActualStr, nombreDia) {
         let tbody = $('#kanban-tbody');
         tbody.empty();
 
         let totales = { RECEPCION: 0, TRANSFERENCIA: 0, LABORATORIO: 0, TERMINADO: 0, CERRADO: 0 };
-        let nombresDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
-
-        fechasSemana.forEach((fechaISO, index) => {
-            let tr = $('<tr></tr>');
-            
-            // Fila: Día de la semana de entrada
-            tr.append(`<td class="align-middle text-center bg-light">
-                <strong class="text-dark d-block">${nombresDias[index]}</strong>
-                <small class="text-muted">${fechaISO}</small>
-            </td>`);
-
-            let tds = {
-                RECEPCION: $('<td></td>'),
-                TRANSFERENCIA: $('<td></td>'),
-                LABORATORIO: $('<td></td>'),
-                TERMINADO: $('<td></td>'),
-                CERRADO: $('<td></td>')
-            };
-
-            // Buscar si hay equipos que entraron ese día
-            let diaData = dataFechas.find(item => item.fecha_recepcion === fechaISO);
-            
-            if(diaData) {
-                // Dentro de tu recorrido en dibujarTablero:
-diaData.registros.forEach(reg => {
-    
-    // Si es la tarjeta duplicada de planeación, usamos un color azul más oscuro y elegante
-    let estiloBorde = reg.es_planeada_card 
-        ? 'border-left: 5px solid #1d3557; background-color: #e2eafc;' 
-        : 'border-left: 3px solid #4e73df;';
+        let tr = $('<tr></tr>');
         
-    let badgePlaneada = reg.es_planeada_card 
-        ? '<span style="background: #1d3557; color: #fff; padding: 1px 5px; border-radius: 3px; font-size: 0.65rem; margin-bottom: 2px; display: inline-block; font-weight: bold;"><i class="fas fa-calendar-check"></i> Carga Planeada</span><br>' 
-        : '';
+        tr.append(`<td class="align-middle text-center bg-light">
+            <strong class="text-dark d-block text-capitalize">${nombreDia.split(',')[0]}</strong>
+            <small class="text-muted">${fechaActualStr}</small>
+        </td>`);
 
-    let cardHtml = `
-        <div style="background: #fff; border: 1px solid #d1d3e2; ${estiloBorde} padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 0.75rem; text-align: left;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
-                <strong style="color: #3a3b45;">${reg.folio}</strong>                         
-            </div>
-            <div style="margin-bottom: 2px;">
-                ${badgePlaneada}
-                <span style="background: #f6c23e; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.orden_venta}</span>
-            </div>
-            <div style="margin-bottom: 2px;">
-                <span style="background: #36b9cc; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.ot}</span>
-            </div>
-            <div style="color: #6c757d; font-size: 0.7rem; margin-bottom: 2px;"><i class="fas fa-flask"></i> ${reg.laboratorio}</div>
-            <div style="color: #1cc88a; font-weight: bold; font-size: 0.75rem; margin-top: 2px;">$${reg.valor_usd.toLocaleString('en-US', {minimumFractionDigits: 2})} USD</div>
-        </div>
-    `;
-    
-    totales[reg.columna] += reg.valor_usd;
-    tds[reg.columna].append(cardHtml);
-});
+        let tds = {
+            RECEPCION: $('<td style="vertical-align: top;"></td>'),
+            TRANSFERENCIA: $('<td style="vertical-align: top;"></td>'),
+            LABORATORIO: $('<td style="vertical-align: top;"></td>'),
+            TERMINADO: $('<td style="vertical-align: top;"></td>'),
+            CERRADO: $('<td style="vertical-align: top;"></td>')
+        };
+
+        let currentTimestamp = new Date(fechaActualStr + "T00:00:00").getTime();
+
+        registros.forEach(reg => {
+            let esRezagado = false;
+            let diasRetraso = 0;
+            
+            if (reg.fecha_origen && reg.fecha_origen < fechaActualStr) {
+                esRezagado = true;
+                let regTimestamp = new Date(reg.fecha_origen + "T00:00:00").getTime();
+                diasRetraso = Math.floor((currentTimestamp - regTimestamp) / (1000 * 60 * 60 * 24));
             }
 
-            tr.append(tds.RECEPCION, tds.TRANSFERENCIA, tds.LABORATORIO, tds.TERMINADO, tds.CERRADO);
-            tbody.append(tr);
+            let estiloBorde = reg.es_planeada_card 
+                ? (esRezagado ? 'border-left: 5px solid #e74a3b; background-color: #fdf3f2;' : 'border-left: 5px solid #1d3557; background-color: #e2eafc;') 
+                : (esRezagado ? 'border-left: 4px solid #e74a3b;' : 'border-left: 3px solid #4e73df;');
+                
+            let badgePlaneada = reg.es_planeada_card 
+                ? '<span style="background: #1d3557; color: #fff; padding: 1px 5px; border-radius: 3px; font-size: 0.65rem; margin-bottom: 2px; display: inline-block; font-weight: bold;"><i class="fas fa-calendar-check"></i> Carga Planeada</span><br>' 
+                : '';
+                
+            let alertaRezagoHtml = esRezagado 
+                ? `<div class="text-danger mb-1" style="font-size: 0.65rem; text-transform: uppercase;">
+                       <strong style="display:block;"><i class="fas fa-exclamation-triangle"></i> Rezagado (${diasRetraso} día${diasRetraso > 1 ? 's' : ''})</strong>
+                       <span style="font-size: 0.6rem; color: #858796;">En etapa desde: <b>${reg.fecha_etapa_actual}</b></span>
+                   </div>`
+                : '';
+
+            let cardHtml = `
+                <div style="background: #fff; border: 1px solid #d1d3e2; ${estiloBorde} padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 0.75rem; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                    ${alertaRezagoHtml}
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
+                        <strong style="color: #3a3b45;">${reg.folio}</strong>                         
+                    </div>
+                    <div style="margin-bottom: 2px;">
+                        ${badgePlaneada}
+                        <span style="background: #f6c23e; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.orden_venta}</span>
+                    </div>
+                    <div style="margin-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="background: #36b9cc; color: #fff; padding: 1px 4px; border-radius: 3px; font-size: 0.65rem;">${reg.ot}</span>                        
+                    </div>
+                    <div style="color: #6c757d; font-size: 0.7rem; margin-bottom: 2px;"><i class="fas fa-flask"></i> ${reg.laboratorio}</div>
+                    <div style="color: #1cc88a; font-weight: bold; font-size: 0.75rem; margin-top: 2px;">$${reg.valor_usd.toLocaleString('en-US', {minimumFractionDigits: 2})} USD</div>
+                </div>
+            `;
+            
+            totales[reg.columna] += reg.valor_usd;
+            tds[reg.columna].append(cardHtml);
         });
+
+        tr.append(tds.RECEPCION, tds.TRANSFERENCIA, tds.LABORATORIO, tds.TERMINADO, tds.CERRADO);
+        tbody.append(tr);
 
         $('#tot-recepcion').text(`$${totales.RECEPCION.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
         $('#tot-transferencia').text(`$${totales.TRANSFERENCIA.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
@@ -147,16 +145,10 @@ diaData.registros.forEach(reg => {
         $('#tot-cerrado').text(`$${totales.CERRADO.toLocaleString('en-US', {minimumFractionDigits: 2})}`);
     }
 
-
-    // Evento para abrir el modal de rezagados y detalle
+    // Modal Rezagados
     $('#btn-abrir-modal-rezago').click(function() {
         let labSeleccionado = $('#filtro-laboratorio').val() || 'TODOS';
-        
-        let fechaInicioStr = $('#th-dia-0').attr('data-fecha');
-        if (!fechaInicioStr) {
-            let hoy = new Date();
-            fechaInicioStr = hoy.toISOString().split('T')[0];
-        }
+        let fechaInicioStr = new Date().toISOString().split('T')[0];
 
         $.ajax({
             url: 'acciones_canva.php',
@@ -171,17 +163,12 @@ diaData.registros.forEach(reg => {
                 if (response.status === 'success') {
                     let tbody = $('#tbody-modal-detalle');
                     tbody.empty();
-
                     if (response.data.length === 0) {
                         tbody.html('<tr><td colspan="8" class="text-center py-3 text-muted">No hay registros rezagados ni atrasados.</td></tr>');
                     } else {
                         response.data.forEach(item => {
                             let badgeTipo = `<span class="badge ${item.clase_tipo}">${item.texto_tipo}</span>`;
-                            
-                            let badgeCuarentena = item.es_cuarentena 
-                                ? '<span class="badge bg-secondary ml-1"><i class="fas fa-shield-alt"></i> Cuarentena</span>' 
-                                : '';
-
+                            let badgeCuarentena = item.es_cuarentena ? '<span class="badge bg-secondary ml-1"><i class="fas fa-shield-alt"></i> Cuarentena</span>' : '';
                             let badgeDias = `<span class="badge bg-light text-dark border mt-1"><i class="far fa-clock"></i> ${item.dias_transcurridos} días en empresa</span>`;
 
                             let tr = `<tr>
@@ -191,8 +178,7 @@ diaData.registros.forEach(reg => {
                                 <td>${item.cliente || 'N/D'}<br><small class="text-muted">${item.laboratorio}</small></td>
                                 <td class="text-center">
                                     <span class="badge ${item.clase_badge}">${item.etapa_rezago}</span>
-                                    ${badgeCuarentena}<br>
-                                    ${badgeDias}
+                                    ${badgeCuarentena}<br>${badgeDias}
                                 </td>
                                 <td>${item.fecha_recepcion || 'N/D'}</td>
                                 <td>${item.fecha_limite_cierre_ot || 'N/D'}</td>
@@ -201,39 +187,22 @@ diaData.registros.forEach(reg => {
                             tbody.append(tr);
                         });
                     }
-
-                    let modalElement = document.getElementById('modalDetalleRezago');
-                    if (modalElement) {
-                        let modal = new bootstrap.Modal(modalElement);
-                        modal.show();
-                    } else {
-                        console.error("No se encontró el elemento HTML con id 'modalDetalleRezago'");
-                    }
-                } else {
-                    console.error("El servidor respondió con error:", response);
+                    new bootstrap.Modal(document.getElementById('modalDetalleRezago')).show();
                 }
-            },
-            error: function(xhr, status, error) {
-                console.error("Error en la petición AJAX de rezagados:", error);
-                console.log(xhr.responseText);
             }
         });
     });
 
-    // Abrir modal de rastreo
+    // Rastreo
     $('#btn-abrir-modal-rastreo').click(function() {
         $('#input-buscar-re').val('');
         $('#resultado-rastreo').hide();
         $('#mensaje-busqueda').show().text('Ingresa un folio de recepción para ver su historial completo.');
-        let modal = new bootstrap.Modal(document.getElementById('modalRastreoRE'));
-        modal.show();
+        new bootstrap.Modal(document.getElementById('modalRastreoRE')).show();
     });
 
-    // Ejecutar búsqueda al dar clic o presionar Enter
     $('#btn-ejecutar-rastreo').click(ejecutarBusquedaRastreo);
-    $('#input-buscar-re').keypress(function(e) {
-        if (e.which === 13) { ejecutarBusquedaRastreo(); }
-    });
+    $('#input-buscar-re').keypress(function(e) { if (e.which === 13) ejecutarBusquedaRastreo(); });
 
     function ejecutarBusquedaRastreo() {
         let folio = $('#input-buscar-re').val().trim();
@@ -254,9 +223,8 @@ diaData.registros.forEach(reg => {
                     $('#lbl-rastreo-lab').text(d.laboratorio || 'N/D');
 
                     let timelineHtml = '';
-
                     timelineHtml += crearPasoTimeline('1. Recepción en Empresa', d.fecha_recepcion, true, `Medio / Estatus: ${d.status}`);
-
+                    
                     let transCompletada = d.fecha_transferencia != null;
                     timelineHtml += crearPasoTimeline('2. Transferencia al Área', d.fecha_transferencia, transCompletada, transCompletada ? 'Transferido exitosamente' : 'Pendiente de transferir');
 
@@ -288,9 +256,7 @@ diaData.registros.forEach(reg => {
 
         return `
             <div class="d-flex align-items-start mb-3 position-relative">
-                <div class="me-3 fs-5" style="width: 25px; text-align: center;">
-                    ${icono}
-                </div>
+                <div class="me-3 fs-5" style="width: 25px; text-align: center;">${icono}</div>
                 <div class="flex-grow-1 border-bottom pb-2">
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="font-weight-bold ${colorClase}" style="font-size: 0.85rem;">${titulo}</span>
@@ -298,11 +264,9 @@ diaData.registros.forEach(reg => {
                     </div>
                     <small class="text-muted d-block" style="font-size: 0.75rem;">${descripcion}</small>
                 </div>
-            </div>
-        `;
+            </div>`;
     }
 
-    // Forzar el cierre de cualquier modal al hacer clic en sus botones de cierre
     $(document).on('click', '[data-bs-dismiss="modal"]', function() {
         let modalElement = $(this).closest('.modal');
         if (modalElement.length) {
@@ -316,5 +280,4 @@ diaData.registros.forEach(reg => {
             }
         }
     });
-
 });

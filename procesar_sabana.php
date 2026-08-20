@@ -2,8 +2,6 @@
 // Conexión a la BD
 include 'conn.php';
 
-// Acceso: mismo permiso que carga_sabana.php (planeacion/verCargaArchivos). Este endpoint no
-// pedía NADA — ni sesión — y su acción 'preparar' hace TRUNCATE de sabana_operativa.
 exigeAccesoEspecialJson($conn, 'planeacion', 'verCargaArchivos');
 
 $accion = isset($_POST['accion']) ? $_POST['accion'] : '';
@@ -18,8 +16,33 @@ function calcularDias($fecha_inicio, $fecha_fin) {
     return ($ts_fin - $ts_inicio) / 86400; 
 }
 
-function limpiarFecha($fecha) {
-    return (empty($fecha) || $fecha == "'-" || $fecha == 'nan') ? null : date('Y-m-d H:i:s', strtotime($fecha));
+// Función robusta para limpiar y formatear fechas de forma segura
+function limpiarFechaSegura($valor) {
+    $valor = trim($valor ?? '');
+    
+    if ($valor === '' || $valor === '-' || $valor === '0000-00-00 00:00:00' || strtolower($valor) === 'null') {
+        return null;
+    }
+    if (preg_match('/^\d{4}-\d{2}-\d{2}/', $valor)) {
+        return $valor;
+    }
+    if (preg_match('/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?:\s+(\d{1,2}):(\d{1,2})(?::(\d{1,2}))?)?/', $valor, $matches)) {
+        $dia  = $matches[1];
+        $mes  = $matches[2];
+        $anio = $matches[3];
+        $hora = $matches[4] ?? '00';
+        $min  = $matches[5] ?? '00';
+        $seg  = $matches[6] ?? '00';
+        
+        if (checkdate((int)$mes, (int)$dia, (int)$anio)) {
+            return sprintf('%04d-%02d-%02d %02d:%02d:%02d', $anio, $mes, $dia, $hora, $min, $seg);
+        }
+    }
+    $timestamp = strtotime($valor);
+    if ($timestamp !== false && $timestamp > 0) {
+        return date('Y-m-d H:i:s', $timestamp);
+    }
+    return null;
 }
 
 // ==========================================
@@ -48,12 +71,12 @@ if ($accion === 'preparar') {
                 $ov = trim($row_data['OV'] ?? '');
                 if ($ov !== '') {
                     $info_cache[$ov] = [
-                        'ot'             => $row_data['OT'] ?? 'Sin registro', // <--- ATRAPAMOS LA OT
                         'valor_usd'      => $row_data['TOTAL_USD'] ?? null,
                         'factura'        => $row_data['invoice'] ?? 'Sin registro',
                         'estatus_ov'     => $row_data['estatusOV'] ?? 'Sin registro',
                         'cliente_real'   => $row_data['cliente'] ?? 'Sin registro',
-                        'region_cliente' => $row_data['regionCliente'] ?? 'Sin registro'
+                        'region_cliente' => $row_data['regionCliente'] ?? 'Sin registro',
+                        'status_ot'      => $row_data['status'] ?? 'Sin registro'
                     ];
                 }
             }
@@ -84,11 +107,11 @@ if ($accion === 'procesar') {
 
     $sql = "INSERT INTO sabana_operativa (
         orden_venta, ot, valor_ov_usd, factura, status_ov, vendedor, cliente, region_cliente, 
-        folio_registro, status, laboratorio, estuvo_cuarentena, 
+        folio_registro, status, status_ot, laboratorio, estuvo_cuarentena, 
         fecha_recepcion, fprogramada, fecha_transferencia, dias_rece_transferencia, 
         fecha_asignacion_ot, dias_tran_ot, fecha_termino_ot, termino_ot_cierre_ot, 
         fecha_limite_cierre_ot, fecha_real_cierre_ot, tranf_cierre_ot, dias_retraso_cierre_ot
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
 
     $file = new SplFileObject($ruta_reot);
@@ -109,12 +132,14 @@ if ($accion === 'procesar') {
 
             $ov = trim($row_data['OV'] ?? '');
 
-            $ot             = $info_cache[$ov]['ot'] ?? 'Sin registro';
+            // LA OT SE LEE DIRECTO DEL REOT PARA MANTENER LA RELACIÓN 1:N
+            $ot             = !empty($row_data['ot']) ? trim($row_data['ot']) : 'Sin registro';
             $valor_usd      = $info_cache[$ov]['valor_usd'] ?? null;
             $factura        = $info_cache[$ov]['factura'] ?? 'Sin registro';
             $status_ov      = $info_cache[$ov]['estatus_ov'] ?? 'Sin registro';
             $cliente        = $info_cache[$ov]['cliente_real'] ?? 'Sin registro';
             $region_cliente = $info_cache[$ov]['region_cliente'] ?? 'Sin registro';
+            $status_ot      = $info_cache[$ov]['status_ot'] ?? 'Sin registro';
 
             $vendedor = $row_data['asesor'] ?? '';
             $folio = $row_data['RE'] ?? '';
@@ -122,13 +147,14 @@ if ($accion === 'procesar') {
             $laboratorio = $row_data['area'] ?? '';
             $cuarentena = (isset($row_data['cuarentena']) && $row_data['cuarentena'] == '1') ? 'Sí' : 'No';
 
-            $f_rec = limpiarFecha($row_data['frecepcion'] ?? '');
-            $f_prog = limpiarFecha($row_data['fprogramada'] ?? '');
-            $f_tra = limpiarFecha($row_data['ftranferencia'] ?? '');
-            $f_asi = limpiarFecha($row_data['fasignacionot'] ?? '');
-            $f_ter = limpiarFecha($row_data['fterminoot'] ?? '');
-            $f_lim = limpiarFecha($row_data['fprogramada_limite'] ?? ''); 
-            $f_cie = limpiarFecha($row_data['fcierre'] ?? '');
+            // TODAS LAS FECHAS PASAN POR LA FUNCIÓN SEGURA
+            $f_rec = limpiarFechaSegura($row_data['frecepcion'] ?? '');
+            $f_prog = limpiarFechaSegura($row_data['fprogramada'] ?? '');
+            $f_tra = limpiarFechaSegura($row_data['ftranferencia'] ?? '');
+            $f_asi = limpiarFechaSegura($row_data['fasignacionot'] ?? '');
+            $f_ter = limpiarFechaSegura($row_data['fterminoot'] ?? '');
+            $f_lim = limpiarFechaSegura($row_data['fprogramada_limite'] ?? ''); 
+            $f_cie = limpiarFechaSegura($row_data['fcierre'] ?? '');
 
             $d_rec_tra = calcularDias($f_rec, $f_tra);
             $d_tra_ot  = calcularDias($f_tra, $f_asi);
@@ -136,13 +162,10 @@ if ($accion === 'procesar') {
             $d_tra_cie = calcularDias($f_tra, $f_cie);
             $d_ret_cie = calcularDias($f_lim, $f_cie);
 
-            // Cadena de tipos exacta de 24 elementos alineada 1 a 1:
-            // 1:$ov(s), 2:$ot(s), 3:$valor_usd(d), 4:$factura(s), 5:$status_ov(s), 6:$vendedor(s), 7:$cliente(s), 8:$region_cliente(s),
-            // 9:$folio(s), 10:$status(s), 11:$laboratorio(s), 12:$cuarentena(s), 13:$f_rec(s), 14:$f_prog(s), 15:$f_tra(s), 16:$d_rec_tra(d),
-            // 17:$f_asi(s), 18:$d_tra_ot(d), 19:$f_ter(s), 20:$d_ter_cie(d), 21:$f_lim(s), 22:$f_cie(s), 23:$d_tra_cie(d), 24:$d_ret_cie(d)
-            $stmt->bind_param("sssdssssssssssssdsdssddd",
+            // BIND PARAM CORREGIDO Y CON LA LETRA 'S' EXTRA PARA EL STATUS_OT
+            $stmt->bind_param("ssdsssssssssssssdsdsdssdd",
                 $ov, $ot, $valor_usd, $factura, $status_ov, $vendedor, $cliente, $region_cliente,
-                $folio, $status, $laboratorio, $cuarentena,
+                $folio, $status, $status_ot, $laboratorio, $cuarentena,
                 $f_rec, $f_prog, $f_tra, $d_rec_tra,
                 $f_asi, $d_tra_ot, $f_ter, $d_ter_cie,
                 $f_lim, $f_cie, $d_tra_cie, $d_ret_cie

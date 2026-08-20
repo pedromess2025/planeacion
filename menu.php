@@ -123,7 +123,7 @@
     if ($noEmpMenu !== '' && tieneAccesoEspecial($conn, $noEmpMenu, 'planeacion', 'verSegEntradas')) {
         echo '
             <li class="nav-item">
-                <a class="nav-link" href="canva">
+                <a class="nav-link" href="kanban">
                     <i class="fas fa-fw fa-file-upload text-gray-400"></i>
                     <span>Seg. Entradas</span>
                 </a>

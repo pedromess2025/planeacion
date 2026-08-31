@@ -66,6 +66,8 @@
             <span>Solicitudes Logística</span>
         </a>
     </li>
+
+    <!--
     <hr class="sidebar-divider my-0 alert-light">
     <li class="nav-item">
         <a class="nav-link" href="verActividadesPlaneadas">
@@ -74,7 +76,7 @@
         </a>
     </li>
 
-
+-->
 
     <li class="nav-item">
         <a class="nav-link" href="verActividades">
@@ -82,6 +84,7 @@
             <span>Act. planeadas SCOT</span>
         </a>
     </li>
+
     <hr class="sidebar-divider my-0 alert-light">
     <li class="nav-item">
         <a class="nav-link" href="grafica_planeacion">

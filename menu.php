@@ -67,7 +67,7 @@
         </a>
     </li>
 
-    <!--
+
     <hr class="sidebar-divider my-0 alert-light">
     <li class="nav-item">
         <a class="nav-link" href="verActividadesPlaneadas">
@@ -76,7 +76,7 @@
         </a>
     </li>
 
--->
+
 
     <li class="nav-item">
         <a class="nav-link" href="verActividades">

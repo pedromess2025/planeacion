@@ -19,7 +19,7 @@ if ($accion === 'cargar_tablero') {
                     fecha_transferencia, fecha_asignacion_ot, fecha_termino_ot, fecha_real_cierre_ot
                 FROM sabana_operativa
                 WHERE (DATE(fecha_recepcion) = ? OR DATE(fprogramada) = ?)
-                  AND (status_ot IS NULL OR status_ot != 'CANCELLED')";
+                  AND (status_ot IS NULL OR status_ot != 'Cancelada')";
         
         if ($laboratorio !== 'TODOS') {
             $sql .= " AND laboratorio = ?";
@@ -44,7 +44,7 @@ if ($accion === 'cargar_tablero') {
                      OR (DATE(fprogramada) = ?)
                      OR (DATE(fprogramada) < ? AND fecha_termino_ot IS NULL AND fecha_real_cierre_ot IS NULL)
                 )
-                AND (status_ot IS NULL OR status_ot != 'CANCELLED')";
+                AND (status_ot IS NULL OR status_ot != 'Cancelada')";
         
         if ($laboratorio !== 'TODOS') {
             $sql .= " AND laboratorio = ?";

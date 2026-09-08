@@ -54,14 +54,18 @@
                                     
                                     <form id="form-sabana" enctype="multipart/form-data">
                                         <div class="row mb-3">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label font-weight-bold text-primary">1. Archivo Maestro (REOT)</label>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label font-weight-bold text-primary">1. REOT</label>
                                                 <input class="form-control" type="file" id="archivo_reot" name="archivo_reot" accept=".csv" required>
                                             </div>
                                             
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label font-weight-bold text-info">2. Archivo Financiero (INFOOTOVFACT)</label>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label font-weight-bold text-info">2. INFOOTOVFACT</label>
                                                 <input class="form-control" type="file" id="archivo_info" name="archivo_info" accept=".csv" required>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label font-weight-bold text-success">3. Detalle OTs</label>
+                                                <input class="form-control" type="file" id="archivo_forecast" name="archivo_forecast" accept=".csv" required>
                                             </div>
                                         </div>
                                         

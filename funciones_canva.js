@@ -115,7 +115,7 @@ $(document).ready(function() {
 
             let cardHtml = `
                 <div style="background: #fff; border: 1px solid #d1d3e2; ${estiloBorde} padding: 6px; margin-bottom: 6px; border-radius: 4px; font-size: 0.75rem; text-align: left; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-                    ${alertaRezagoHtml}
+                    ${alertaRezagoHtml}  ${reg.status_ot}
                     <div style="display: flex; justify-content: space-between; margin-bottom: 2px;">
                         <strong style="color: #3a3b45;">${reg.folio}</strong>                         
                     </div>

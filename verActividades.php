@@ -348,7 +348,7 @@
                             // Definir color según el estatus
                             var colorEvento = '';
                             // Extraer el área de order_code usando substring antes del primer '-'                            
-                            areaOT = actividad.order_code.substring(0, actividad.order_code.indexOf('-')).replace('25', '');
+                            areaOT = actividad.order_code.substring(0, actividad.order_code.indexOf('-')).replace('26', '');
 
                             switch (areaOT) {
                                 case 'MMZ': colorEvento = '#b08805'; break;    // Amarillo (oscurecido)

@@ -2,8 +2,8 @@
 // Configuración de base de datos
 $host    = 'localhost';
 $db      = 'mess_rrhh';
-$user    = 'root';
-$pass    = '';
+$user    = 'mess_incidencias';
+$pass    = 'Pipmytrade123';
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);

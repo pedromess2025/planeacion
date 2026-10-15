@@ -246,7 +246,7 @@ function renderizarTabla(selectorTabla, data) {
         var noEmpleado = getCookie('noEmpleado');
         var departamento = getCookie('departamento');
         if (solicitud.capturo === 'SI' || solicitud.depto === departamento) {
-
+            
             accion = `
                     <div class="btn-group" role="group">       
                         <button type="button" class="btn btn-outline-secondary" onclick="mostrarComentarios('${solicitud.order_code}','${comentarioLimpio}')">

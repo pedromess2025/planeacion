@@ -131,6 +131,13 @@
                     <span>Seg. Entradas</span>
                 </a>
             </li>';
+        echo '
+            <li class="nav-item">
+                <a class="nav-link" href="seguimiento-ots">
+                    <i class="fas fa-fw fa-file-upload text-gray-400"></i>
+                    <span>Seg. OTs</span>
+                </a>
+            </li>';            
     }
     ?>
     <li class = "nav-item">

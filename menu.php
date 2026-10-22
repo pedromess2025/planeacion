@@ -92,6 +92,15 @@
             <span>Resumen por Área</span>
         </a>
     </li>
+
+    
+    <li class="nav-item">
+        <a class="nav-link" href="seguimiento-ots">
+            <i class="fas fa-fw fa-file-upload text-gray-400"></i>
+            <span>Seguimiento OTs</span>
+        </a>
+    </li> 
+    
     <?php
     // Accesos especiales (tabla accesos_especiales, se dan de alta desde loginMaster).
     // Antes era un `if` con 4 noEmpleado escritos a mano aquí, y solo escondía el enlace:
@@ -130,14 +139,7 @@
                     <i class="fas fa-fw fa-file-upload text-gray-400"></i>
                     <span>Seg. Entradas</span>
                 </a>
-            </li>';
-        echo '
-            <li class="nav-item">
-                <a class="nav-link" href="seguimiento-ots">
-                    <i class="fas fa-fw fa-file-upload text-gray-400"></i>
-                    <span>Seg. OTs</span>
-                </a>
-            </li>';            
+            </li>';                  
     }
     ?>
     <li class = "nav-item">

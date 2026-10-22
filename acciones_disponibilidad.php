@@ -140,10 +140,13 @@ if ($accion == 'disponibilidadIngenieros') {
         // El SERVICIO EN SITIO manda sobre todo: es el compromiso con cliente y es lo que no puede
         // quedar escondido en el tablero. Antes ganaba el laboratorio y los servicios del día
         // desaparecían (caso Alexis Fundora: 3 servicios tapados en una sola semana).
-        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null, $ings = null) {
+        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null, $ings = null, $estatusServicio = null) {
             if (!isset($celdas[$idu])) $celdas[$idu] = [];
             if (!isset($celdas[$idu][$fecha]) || $celdas[$idu][$fecha]['p'] < $p) {
                 $celdas[$idu][$fecha] = ['estatus' => $estatus, 'detalle' => $detalle, 'titulo' => $titulo, 'ings' => $ings, 'p' => $p];
+                if ($estatusServicio !== null) {
+                    $celdas[$idu][$fecha]['estatusServiciio'] = $estatusServicio;
+                }
             }
         };
 
@@ -354,7 +357,7 @@ if ($accion == 'disponibilidadIngenieros') {
                     foreach ($acomp as $nom) { $bloque .= '&nbsp;&nbsp;• ' . escTxt($nom) . '<br>'; }
                 }
                 $setCelda($celdas, $claveDe[$idu], $row['fecha'], 'servicio', $detalle, 4,
-                          $encabezado . $bloque . $pie, $nAcomp > 0 ? $nAcomp : null);
+                          $encabezado . $bloque . $pie, $nAcomp > 0 ? $nAcomp : null, $row['estatus']);
             }
         }
 

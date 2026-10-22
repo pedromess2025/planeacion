@@ -1,140 +1,9 @@
 <?php
-// Configuración de base de datos
-$host    = 'localhost';
-$db      = 'mess_rrhh';
-$user    = 'mess_incidencias';
-$pass    = 'Pipmytrade123';
-
-try {
-    $pdo = new PDO("mysql:host=$host;dbname=$db;charset=utf8mb4", $user, $pass);
-    $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-} catch (PDOException $e) {
-    die("Error de conexión: " . $e->getMessage());
-}
-
-// 1. Manejo de Fechas (Semanas: Lunes a Domingo)
-$fecha_get = isset($_GET['semana']) ? $_GET['semana'] : date('Y-m-d');
-$filtro_ingeniero = isset($_GET['ingeniero']) ? trim($_GET['ingeniero']) : '';
-
-// Forzar a que la fecha de inicio siempre sea el Lunes de esa semana
-$dia_semana = date('N', strtotime($fecha_get)); // 1 (Lunes) a 7 (Domingo)
-if ($dia_semana == 1) {
-    $fecha_inicio = date('Y-m-d', strtotime($fecha_get));
-} else {
-    $fecha_inicio = date('Y-m-d', strtotime($fecha_get . ' - ' . ($dia_semana - 1) . ' days'));
-}
-$fecha_fin = date('Y-m-d', strtotime($fecha_inicio . ' + 6 days'));
+require_once 'acciones_seguimiento-ots.php';
 
 $fecha_prev = date('Y-m-d', strtotime($fecha_inicio . ' - 1 week'));
 $fecha_next = date('Y-m-d', strtotime($fecha_inicio . ' + 1 week'));
-
 $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date('d/m/Y', strtotime($fecha_fin));
-
-// 2. Obtener lista de ingenieros para el Select2
-$sql_lista_ing = "SELECT DISTINCT tecnicos FROM seguimiento_ots WHERE tecnicos IS NOT NULL AND tecnicos != '' ORDER BY tecnicos";
-$lista_ingenieros = $pdo->query($sql_lista_ing)->fetchAll(PDO::FETCH_COLUMN);
-
-// 3. Consulta Principal: Estrictamente acotada a la semana consultada
-$where_detalles = "WHERE tecnicos IS NOT NULL AND tecnicos != '' AND ((DATE(end_date) BETWEEN :inicio AND :fin) OR (DATE(start_date) BETWEEN :inicio AND :fin))";
-$params_detalles = [':inicio' => $fecha_inicio, ':fin' => $fecha_fin];
-
-if ($filtro_ingeniero !== '') {
-    $where_detalles .= " AND tecnicos = :ingeniero";
-    $params_detalles[':ingeniero'] = $filtro_ingeniero;
-}
-
-$sql_detalles = "
-    SELECT 
-        tecnicos AS ingeniero,
-        OT,
-        start_date,
-        end_date,
-        CASE 
-            WHEN DATE(end_date) BETWEEN :inicio AND :fin THEN 'Terminada'
-            ELSE 'En Proceso'
-        END as estado_calculado
-    FROM seguimiento_ots
-    $where_detalles
-    ORDER BY ingeniero, estado_calculado DESC, start_date ASC
-";
-$stmt_det = $pdo->prepare($sql_detalles);
-$stmt_det->execute($params_detalles);
-$filas_detalles = $stmt_det->fetchAll(PDO::FETCH_ASSOC);
-
-// Agrupar los datos en PHP
-$datos_ingenieros = [];
-$total_terminadas_sem = 0;
-$total_proceso_sem = 0;
-
-foreach ($filas_detalles as $row) {
-    $ing = $row['ingeniero'];
-    if (!isset($datos_ingenieros[$ing])) {
-        $datos_ingenieros[$ing] = ['terminadas' => 0, 'en_proceso' => 0, 'detalles' => []];
-    }
-    
-    if ($row['estado_calculado'] === 'Terminada') {
-        $datos_ingenieros[$ing]['terminadas']++;
-        $total_terminadas_sem++;
-    } else {
-        $datos_ingenieros[$ing]['en_proceso']++;
-        $total_proceso_sem++;
-    }
-    $datos_ingenieros[$ing]['detalles'][] = $row;
-}
-
-$labels_ing = [];
-$data_terminadas = [];
-$data_proceso = [];
-
-foreach ($datos_ingenieros as $ing => $datos) {
-    $labels_ing[] = $ing;
-    $data_terminadas[] = $datos['terminadas'];
-    $data_proceso[] = $datos['en_proceso'];
-}
-
-$total_asignadas_sem = $total_terminadas_sem + $total_proceso_sem;
-$cumplimiento_sem = ($total_asignadas_sem > 0) ? round(($total_terminadas_sem / $total_asignadas_sem) * 100) : 0;
-
-// 4. Consulta: Resumen diario de los 7 días de la semana (Sintaxis corregida y segura)
-$params_semana = [':inicio' => $fecha_inicio];
-$filtro_ing_sql = "";
-
-if ($filtro_ingeniero !== '') {
-    $filtro_ing_sql = " AND t.tecnicos = :ingeniero";
-    $params_semana[':ingeniero'] = $filtro_ingeniero;
-}
-
-$sql_semana_dias = "
-    SELECT 
-        fechas.fecha,
-        COALESCE(SUM(CASE WHEN DATE(t.end_date) = fechas.fecha THEN 1 ELSE 0 END), 0) AS terminadas,
-        COALESCE(SUM(CASE WHEN DATE(t.start_date) = fechas.fecha THEN 1 ELSE 0 END), 0) AS en_proceso
-    FROM (
-        SELECT :inicio AS fecha UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 1 DAY) UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 2 DAY) UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 3 DAY) UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 4 DAY) UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 5 DAY) UNION ALL
-        SELECT DATE_ADD(:inicio, INTERVAL 6 DAY)
-    ) AS fechas
-    LEFT JOIN seguimiento_ots t ON (DATE(t.start_date) = fechas.fecha OR DATE(t.end_date) = fechas.fecha) $filtro_ing_sql
-    GROUP BY fechas.fecha
-    ORDER BY fechas.fecha
-";
-$stmt_sem = $pdo->prepare($sql_semana_dias);
-$stmt_sem->execute($params_semana);
-$datos_semana = $stmt_sem->fetchAll(PDO::FETCH_ASSOC);
-
-$labels_dias = [];
-$data_dias_terminadas = [];
-$dias_nombres = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
-
-foreach ($datos_semana as $dia) {
-    $num_dia = date('w', strtotime($dia['fecha']));
-    $labels_dias[] = $dias_nombres[$num_dia] . ' ' . date('d/m', strtotime($dia['fecha']));
-    $data_dias_terminadas[] = $dia['terminadas'];
-}
 ?>
 
 <!DOCTYPE html>
@@ -197,25 +66,37 @@ foreach ($datos_semana as $dia) {
                                         </div>
 
                                         <!-- Formulario de Filtro -->
-                                        <form method="GET" class="d-flex align-items-center gap-2">
-                                            <input type="hidden" name="semana" value="<?= $fecha_inicio ?>">
-                                            <label class="fw-bold mb-0 text-nowrap">Filtrar Ingeniero:</label>
-                                            <select name="ingeniero" class="form-select select2" style="min-width: 250px;">
-                                                <option value="">-- Todos los ingenieros --</option>
-                                                <?php foreach($lista_ingenieros as $ing_opt): ?>
-                                                    <option value="<?= htmlspecialchars($ing_opt) ?>" <?= ($filtro_ingeniero === $ing_opt) ? 'selected' : '' ?>>
-                                                        <?= htmlspecialchars($ing_opt) ?>
-                                                    </option>
-                                                <?php endforeach; ?>
-                                            </select>
-                                            <button type="submit" class="btn btn-secondary text-nowrap">Filtrar</button>
-                                        </form>
+<form method="GET" class="d-flex align-items-center gap-2 flex-nowrap w-100" style="overflow-x: auto; padding-bottom: 4px;">
+    <input type="hidden" name="semana" value="<?= $fecha_inicio ?>">
+    
+    <label class="text-muted small mb-0 text-nowrap">Área:</label>
+    <select id="filtroArea" name="area" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 160px;">
+        <option value="">-- Todas las áreas --</option>
+        <?php foreach($lista_areas as $area_opt): ?>
+            <option value="<?= htmlspecialchars($area_opt) ?>" <?= ($filtro_area === $area_opt) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($descripciones_areas[$area_opt] ?? $area_opt) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <label class="text-muted small mb-0 text-nowrap ms-2">Ingeniero:</label>
+    <select name="ingeniero" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 200px;">
+        <option value="">-- Todos los ingenieros --</option>
+        <?php foreach($lista_ingenieros as $ing_opt): ?>
+            <option value="<?= htmlspecialchars($ing_opt) ?>" <?= ($filtro_ingeniero === $ing_opt) ? 'selected' : '' ?>>
+                <?= htmlspecialchars($ing_opt) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+
+    <button type="submit" class="btn btn-dark btn-sm px-3 shadow-none text-nowrap ms-2">Filtrar</button>
+</form>
 
                                         <!-- Botones de semana -->
                                         <div class="btn-group" role="group">
-                                            <a href="?semana=<?= $fecha_prev ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>" class="btn btn-outline-primary">« Anterior</a>
-                                            <a href="?semana=<?= $fecha_next ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>" class="btn btn-outline-primary">Siguiente »</a>
-                                            <a href="?semana=<?= date('Y-m-d') ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>" class="btn btn-outline-secondary ms-2 rounded">Hoy</a>
+                                            <a href="?semana=<?= $fecha_prev ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-primary">« Anterior</a>
+                                            <a href="?semana=<?= $fecha_next ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-primary">Siguiente »</a>
+                                            <a href="?semana=<?= date('Y-m-d') ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-secondary ms-2 rounded">Hoy</a>
                                         </div>
                                     </div>
 
@@ -401,8 +282,12 @@ foreach ($datos_semana as $dia) {
         $(document).ready(function() {
             // Inicializar Select2
             $('.select2').select2({
-                placeholder: "Selecciona un ingeniero",
+                placeholder: "Selecciona una opción",
                 allowClear: true
+            });
+
+            $('#filtroArea').on('change', function() {
+                $(this).closest('form').trigger('submit');
             });
 
             // Control manual del acordeón

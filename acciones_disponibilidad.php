@@ -140,13 +140,24 @@ if ($accion == 'disponibilidadIngenieros') {
         // El SERVICIO EN SITIO manda sobre todo: es el compromiso con cliente y es lo que no puede
         // quedar escondido en el tablero. Antes ganaba el laboratorio y los servicios del día
         // desaparecían (caso Alexis Fundora: 3 servicios tapados en una sola semana).
-        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null, $ings = null, $estatusServicio = null) {
+        $setCelda = function (&$celdas, $idu, $fecha, $estatus, $detalle, $p, $titulo = null, $ings = null, $estatusServicio = null, $equipos = null) {
             if (!isset($celdas[$idu])) $celdas[$idu] = [];
             if (!isset($celdas[$idu][$fecha]) || $celdas[$idu][$fecha]['p'] < $p) {
                 $celdas[$idu][$fecha] = ['estatus' => $estatus, 'detalle' => $detalle, 'titulo' => $titulo, 'ings' => $ings, 'p' => $p];
                 if ($estatusServicio !== null) {
                     $celdas[$idu][$fecha]['estatusServiciio'] = $estatusServicio;
                 }
+                if ($equipos !== null) {
+                    $celdas[$idu][$fecha]['equipos'] = $equipos;
+                }
+            } elseif (
+                $estatus === 'servicio'
+                && $celdas[$idu][$fecha]['estatus'] === 'servicio'
+                && $celdas[$idu][$fecha]['p'] === $p
+                && trim((string)($celdas[$idu][$fecha]['equipos'] ?? '')) === ''
+                && trim((string)$equipos) !== ''
+            ) {
+                $celdas[$idu][$fecha]['equipos'] = $equipos;
             }
         };
 
@@ -284,7 +295,7 @@ if ($accion == 'disponibilidadIngenieros') {
         $serviciosRows = [];
         $idsNombre = [];
         if ($hayIds) {
-            $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, order_code, estatus,
+            $sqlServ = "SELECT engineer, engineer2, engineer3, ds_cliente, city, area, order_code, estatus, equipos,
                                DATE(start_date) AS fecha, TIME(start_date) AS hora
                         FROM servicios_planeados_mess
                         WHERE (engineer IN ($ph) OR engineer2 IN ($ph) OR engineer3 IN ($ph))
@@ -357,7 +368,7 @@ if ($accion == 'disponibilidadIngenieros') {
                     foreach ($acomp as $nom) { $bloque .= '&nbsp;&nbsp;• ' . escTxt($nom) . '<br>'; }
                 }
                 $setCelda($celdas, $claveDe[$idu], $row['fecha'], 'servicio', $detalle, 4,
-                          $encabezado . $bloque . $pie, $nAcomp > 0 ? $nAcomp : null, $row['estatus']);
+                          $encabezado . $bloque . $pie, $nAcomp > 0 ? $nAcomp : null, $row['estatus'], $row['equipos']);
             }
         }
 

@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $bom = fread($handle, 3);
                 if ($bom !== b"\xEF\xBB\xBF") { rewind($handle); }
 
-                $headers = fgetcsv($handle, 10000, $sep);
+                $headers = fgetcsv($handle, 10000, $sep, '"', '\\');
                 // Limpiar espacios y pasar a mayúsculas para búsqueda exacta
                 $headersUpper = array_map(function($h){ return strtoupper(trim($h, " \t\n\r\0\x0B\xEF\xBB\xBF")); }, $headers);
                 
@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $logs[] = "❌ ERROR: No se encontró la columna 'ORDER_CODE' en el archivo.";
                 }
 
-                while (($row = fgetcsv($handle, 10000, $sep)) !== FALSE) {
+                while (($row = fgetcsv($handle, 10000, $sep, '"', '\\')) !== FALSE) {
                     
                     // Función para obtener la columna sin importar posición
                     $getCol = function($nombreColumna) use ($headersUpper, $row) {

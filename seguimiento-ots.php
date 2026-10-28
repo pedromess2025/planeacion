@@ -66,31 +66,31 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                                         </div>
 
                                         <!-- Formulario de Filtro -->
-<form method="GET" class="d-flex align-items-center gap-2 flex-nowrap w-100" style="overflow-x: auto; padding-bottom: 4px;">
-    <input type="hidden" name="semana" value="<?= $fecha_inicio ?>">
-    
-    <label class="text-muted small mb-0 text-nowrap">Área:</label>
-    <select id="filtroArea" name="area" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 160px;">
-        <option value="">-- Todas las áreas --</option>
-        <?php foreach($lista_areas as $area_opt): ?>
-            <option value="<?= htmlspecialchars($area_opt) ?>" <?= ($filtro_area === $area_opt) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($descripciones_areas[$area_opt] ?? $area_opt) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+                                        <form method="GET" class="d-flex align-items-center gap-2 flex-nowrap w-100" style="overflow-x: auto; padding-bottom: 4px;">
+                                            <input type="hidden" name="semana" value="<?= $fecha_inicio ?>">
+                                            
+                                            <label class="text-muted small mb-0 text-nowrap">Área:</label>
+                                            <select id="filtroArea" name="area" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 160px;">
+                                                <option value="">-- Todas las áreas --</option>
+                                                <?php foreach($lista_areas as $area_opt): ?>
+                                                    <option value="<?= htmlspecialchars($area_opt) ?>" <?= ($filtro_area === $area_opt) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($descripciones_areas[$area_opt] ?? $area_opt) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
 
-    <label class="text-muted small mb-0 text-nowrap ms-2">Ingeniero:</label>
-    <select name="ingeniero" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 200px;">
-        <option value="">-- Todos los ingenieros --</option>
-        <?php foreach($lista_ingenieros as $ing_opt): ?>
-            <option value="<?= htmlspecialchars($ing_opt) ?>" <?= ($filtro_ingeniero === $ing_opt) ? 'selected' : '' ?>>
-                <?= htmlspecialchars($ing_opt) ?>
-            </option>
-        <?php endforeach; ?>
-    </select>
+                                            <label class="text-muted small mb-0 text-nowrap ms-2">Ingeniero:</label>
+                                            <select name="ingeniero" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 200px;">
+                                                <option value="">-- Todos los ingenieros --</option>
+                                                <?php foreach($lista_ingenieros as $ing_opt): ?>
+                                                    <option value="<?= htmlspecialchars($ing_opt) ?>" <?= ($filtro_ingeniero === $ing_opt) ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($ing_opt) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
 
-    <button type="submit" class="btn btn-dark btn-sm px-3 shadow-none text-nowrap ms-2">Filtrar</button>
-</form>
+                                            <button type="submit" class="btn btn-dark btn-sm px-3 shadow-none text-nowrap ms-2">Filtrar</button>
+                                        </form>
 
                                         <!-- Botones de semana -->
                                         <div class="btn-group" role="group">

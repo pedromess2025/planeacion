@@ -59,137 +59,151 @@
                                             </center>
                                         </div>
                                     </div>
-                                    <form id="formPlaneacion" name="formPlaneacion">
-                                        <div class="row">
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="slcRespoonsable">Ingeniero</label>
-                                                <div id="Divsolicita" name="Divsolicita">
-                                                    <select id="slcRespoonsable" name="slcRespoonsable">
-                                                        <option value="0">Selecciona...</option>
-                                                    </select>                                                    
-                                                </div>
-                                                <div id="Divsolicita2" name="Divsolicita2" style="display: none;">
-                                                    <select id="slcRespoonsable2" name="slcRespoonsable2">
-                                                        <option value="0">Selecciona...</option>
-                                                    </select>
-                                                </div>
-                                                <div id="Divsolicita3" name="Divsolicita3" style="display: none;">
-                                                    <select id="slcRespoonsable3" name="slcRespoonsable3">
-                                                        <option value="0">Selecciona...</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="btnAgregar">+ Ing.</label>
-                                                <div class="input-group">
-                                                    <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')"><i class="fas fa-plus"></i></button>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning" onclick="divsIng('elimina')"><i class="fas fa-minus"></i></button>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="slcEstatus">Estatus</label>
-                                                <div id="DivEstatus" name="DivEstatus">
-                                                    <select id="slcEstatus" name="slcEstatus" class="form-select" onChange="mostrarMensajeEstatus()">
-                                                        <option value="">Selecciona...</option>
-                                                        <option value="Pendientedeinformacion">Pendiente de información</option>
-                                                        <option value="Programadasinconfirmar">Programada sin confirmar</option>
-                                                        <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
-                                                        <option value="Fechareservadasininformación">Fecha reservada sin información</option>
-                                                        <option value="Enlaboratorio">En laboratorio</option>
-                                                        <option value="Capacitacion">Capacitación</option>
-                                                        <option value="OtInterna">OT interna</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    <form id="formPlaneacion" name="formPlaneacion" class="p-0">
+    <!-- Fila 1 -->
+    <div class="form-row mb-1">
+        <div class="col-md-4 mb-1">
+            <label for="slcRespoonsable" class="small font-weight-bold text-gray-700 mb-0">Ingeniero</label>
+            <div id="Divsolicita" name="Divsolicita">
+                <select id="slcRespoonsable" name="slcRespoonsable" class="form-control form-control-sm">
+                    <option value="0">Selecciona...</option>
+                </select>
+            </div>
+            <div id="Divsolicita2" name="Divsolicita2" style="display: none;" class="mt-1">
+                <select id="slcRespoonsable2" name="slcRespoonsable2" class="form-control form-control-sm">
+                    <option value="0">Selecciona...</option>
+                </select>
+            </div>
+            <div id="Divsolicita3" name="Divsolicita3" style="display: none;" class="mt-1">
+                <select id="slcRespoonsable3" name="slcRespoonsable3" class="form-control form-control-sm">
+                    <option value="0">Selecciona...</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-2 mb-1 d-flex align-items-end">
+            <!-- Alineado abajo con los inputs -->
+            <div class="input-group input-group-sm mb-0">
+                <button id="btnAgregar" type="button" class="btn btn-sm btn-outline-success" onclick="divsIng('agrega')">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-warning ml-1" onclick="divsIng('elimina')">
+                    <i class="fas fa-minus"></i>
+                </button>
+            </div>
+        </div>
+        <div class="col-md-6 mb-1">
+            <label for="slcEstatus" class="small font-weight-bold text-gray-700 mb-0">Estatus</label>
+            <div id="DivEstatus" name="DivEstatus">
+                <select id="slcEstatus" name="slcEstatus" class="form-control form-control-sm" onChange="mostrarMensajeEstatus()">
+                    <option value="">Selecciona...</option>
+                    <option value="Pendientedeinformacion">Pendiente de información</option>
+                    <option value="Programadasinconfirmar">Programada sin confirmar</option>
+                    <option value="Servicioconfirmadoparasuejecucion">Servicio confirmado para su ejecución</option>
+                    <option value="Fechareservadasininformación">Fecha reservada sin información</option>
+                    <option value="Enlaboratorio">En laboratorio</option>
+                    <option value="Capacitacion">Capacitación</option>
+                    <option value="OtInterna">OT interna</option>
+                </select>
+            </div>
+            <div class="alert alert-info py-1 px-2 mt-1 mb-0 border-left-info shadow-none" role="alert" id="DivMensajeInfoEstatus" style="display: none;">
+                <p class="mb-0" style="font-size: 0.75rem;" id="mensajeInfoEstatus"></p>
+            </div>
+        </div>
+    </div>
 
-                                        <div class="row">
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="txtCliente">Cliente</label>
-                                                <div id="DivCliente" name="DivCliente">
-                                                    <input type="text" class="form-control form-control-sm" oninput="convertirTexto(this)" id="txtCliente" name="txtCliente" placeholder="Cliente">
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="txtCiudad">Ciudad</label>
-                                                <div id="DivCiudad" name="DivCiudad">
-                                                    <select id="txtCiudad" name="txtCiudad">
-                                                        <option value="">Selecciona...</option>
-                                                    </select>                                                    
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="txtOT">OT</label>
-                                                <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" oninput="convertirTexto(this)" placeholder="Ej. EL25-01E-1">
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-sm-4 mb-0">
-                                                <label for="datefechaCierre">Fecha/hora compromiso</label>
-                                                <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
-                                            </div>
-                                            <div class="col-sm-2 mb-0">
-                                                <label for="txtDuracion">Dur. Estimada</label>
-                                                <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="Horas servicio">
-                                            </div>
-                                            <div class="col-sm-2 mb-0">
-                                                <label for="txtDuracionViaje">Dur. Estimada Viaje</label>
-                                                <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="Horas viaje">
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <label for="slcAutomovil">Automóvil</label>
-                                                <div id="DivAutomovil" name="DivAutomovil">
-                                                    <select id="slcAutomovil" name="slcAutomovil" class="form-select">
-                                                        <option value="">Selecciona...</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                        </div>
+    <!-- Fila 2 -->
+    <div class="form-row mb-1">
+        <div class="col-md-4 mb-1">
+            <label for="txtCliente" class="small font-weight-bold text-gray-700 mb-0">Cliente</label>
+            <div id="DivCliente" name="DivCliente">
+                <input type="text" class="form-control form-control-sm" oninput="convertirTexto(this)" id="txtCliente" name="txtCliente" placeholder="Cliente">
+            </div>
+        </div>
+        <div class="col-md-4 mb-1">
+            <label for="txtCiudad" class="small font-weight-bold text-gray-700 mb-0">Ciudad</label>
+            <div id="DivCiudad" name="DivCiudad">
+                <select id="txtCiudad" name="txtCiudad" class="form-control form-control-sm">
+                    <option value="">Selecciona...</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-4 mb-1">
+            <label for="txtOT" class="small font-weight-bold text-gray-700 mb-0">OT</label>
+            <input type="text" class="form-control form-control-sm" id="txtOT" name="txtOT" oninput="convertirTexto(this)" placeholder="Ej. EL25-01E-1">
+        </div>
+    </div>
 
-                                        <div class="row mb-3">
-                                            <div class="col-md-4 mb-0">
-                                                <label for="slcAreas">Área:</label>
-                                                <select  name="slcAreas" id="slcAreas" class="form-select mr-5">
-                                                    <option value="">Todas las áreas</option>
-                                                    <option value="ALTA EXACITUD">Servicios Alta Exactitud</option>
-                                                    <option value="CALIBRACIONES">Servicios Calibraciones</option>
-                                                    <option value="DIMENSIONAL">Servicios Dimensional</option>
-                                                    <option value="SFG">Servicios SFG</option>
-                                                    <option value="MITUTOYO">Servicios Mitutoyo</option>
-                                                    <option value="DUREZA">Servicios Dureza</option>
-                                                    <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
-                                                    <option value="ELECTRICA">Servicios Eléctrica</option>
-                                                    <option value="TEMPERATURA">Servicios Temperatura</option>
-                                                    <option value="PRESION">Servicios Presión</option>
-                                                    <option value="APLICACIONES">Servicios APP Aplicaciones</option>
-                                                    <option value="MT">Servicios MT</option>
-                                                    <option value="MTS">Servicios MTS</option>
-                                                    <option value="ZEISS">Servicios Zeiss</option>
-                                                    <option value="MASA">Servicios Masa</option>
-                                                    <option value="FUERZA">Servicios Fuerza</option>
-                                                    <option value="PAR TORSIONAL">Servicios Par Torsional</option>
-                                                </select>
-                                            </div>
-                                            <div class="col-sm-4 mt-4">
-                                                <div class="alert alert-primary" role="alert" id="DivMensajeInfoEstatus" style="display: none;">
-                                                    <p class="mb-0" id="mensajeInfoEstatus" style="font-size: 14px;"></p>
-                                                </div>
-                                            </div>
-                                            <div class="col-sm-4">
-                                                <label for="txtComentarios">Comentario</label>
-                                                <textarea name="txtComentarios" id="txtComentarios" class="form-control" rows="2"></textarea>
-                                            </div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="col-xl-3"></div>
-                                            <div class="col-xl-6 mb-1">
-                                                <center>
-                                                    <button id="btnSolicitar" type="button" class="btn btn-success" onclick="generarSolicitud()">Registrar</button><br>
-                                                    <p id="mensaje" class="badge text-bg-primary"></p>
-                                                </center>
-                                            </div>
-                                        </div>
-                                    </form>
+    <!-- Fila 3 -->
+    <div class="form-row mb-1">
+        <div class="col-md-4 mb-1">
+            <label for="datefechaCierre" class="small font-weight-bold text-gray-700 mb-0">Fecha/hora compromiso</label>
+            <input type="datetime-local" class="form-control form-control-sm" id="datefechaCierre" name="datefechaCierre">
+        </div>
+        <div class="col-md-2 mb-1">
+            <label for="txtDuracion" class="small font-weight-bold text-gray-700 mb-0">Dur. (Hr)</label>
+            <input type="number" class="form-control form-control-sm" id="txtDuracion" name="txtDuracion" placeholder="0">
+        </div>
+        <div class="col-md-2 mb-1">
+            <label for="txtDuracionViaje" class="small font-weight-bold text-gray-700 mb-0">Viaje (Hr)</label>
+            <input type="number" class="form-control form-control-sm" id="txtDuracionViaje" name="txtDuracionViaje" placeholder="0">
+        </div>
+        <div class="col-md-4 mb-1">
+            <label for="slcAutomovil" class="small font-weight-bold text-gray-700 mb-0">Automóvil</label>
+            <div id="DivAutomovil" name="DivAutomovil">
+                <select id="slcAutomovil" name="slcAutomovil" class="form-control form-control-sm">
+                    <option value="">Selecciona...</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fila 4 -->
+    <div class="form-row mb-1">
+        <div class="col-md-4 mb-1">
+            <label for="slcAreas" class="small font-weight-bold text-gray-700 mb-0">Área</label>
+            <select name="slcAreas" id="slcAreas" class="form-control form-control-sm">
+                <option value="">Todas las áreas</option>
+                <option value="ALTA EXACITUD">Servicios Alta Exactitud</option>
+                <option value="CALIBRACIONES">Servicios Calibraciones</option>
+                <option value="DIMENSIONAL">Servicios Dimensional</option>
+                <option value="SFG">Servicios SFG</option>
+                <option value="MITUTOYO">Servicios Mitutoyo</option>
+                <option value="DUREZA">Servicios Dureza</option>
+                <option value="MANTENIMIENTO">Servicios Mantenimiento</option>
+                <option value="ELECTRICA">Servicios Eléctrica</option>
+                <option value="TEMPERATURA">Servicios Temperatura</option>
+                <option value="PRESION">Servicios Presión</option>
+                <option value="APLICACIONES">Servicios APP Aplicaciones</option>
+                <option value="MT">Servicios MT</option>
+                <option value="MTS">Servicios MTS</option>
+                <option value="ZEISS">Servicios Zeiss</option>
+                <option value="MASA">Servicios Masa</option>
+                <option value="FUERZA">Servicios Fuerza</option>
+                <option value="PAR TORSIONAL">Servicios Par Torsional</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-1">
+            <label for="txtEquipos" class="small font-weight-bold text-gray-700 mb-0">Equipos a calibrar</label>
+            <textarea name="txtEquipos" id="txtEquipos" class="form-control form-control-sm" rows="1" placeholder="Describa equipos..."></textarea>
+        </div>
+        <div class="col-md-4 mb-1">
+            <label for="txtComentarios" class="small font-weight-bold text-gray-700 mb-0">Comentario</label>
+            <textarea name="txtComentarios" id="txtComentarios" class="form-control form-control-sm" rows="1" placeholder="Opcional"></textarea>
+        </div>
+    </div>
+
+    <!-- Fila 5 -->
+    <div class="form-row mt-2">
+        <div class="col-12 text-center">
+            <button id="btnSolicitar" type="button" class="btn btn-sm btn-success px-4" onclick="generarSolicitud()">
+                <i class="fas fa-check mr-1"></i> Registrar
+            </button>
+            <div class="mt-1">
+                <span id="mensaje" class="badge badge-primary"></span>
+            </div>
+        </div>
+    </div>
+</form>
                                 </div>
                                 <div class="card-footer">
                                     <div class="row">
@@ -344,6 +358,7 @@
             var automovil = formData["slcAutomovil"];
             var estatus = formData["slcEstatus"];
             var comentarios = formData["txtComentarios"];
+            var equipos = formData["txtEquipos"];
             
             if (!validarFormularioConsolidado(formData)) {
                 // La función ya mostró la alerta con todos los errores.
@@ -368,7 +383,8 @@
                     duracionViaje: duracionViaje,
                     automovil: automovil,
                     estatus: estatus,
-                    comentarios: comentarios
+                    comentarios: comentarios,
+                    equipos: equipos
                 },
                 success: function(data) {
                     if (data.status === 'success') {

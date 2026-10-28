@@ -56,6 +56,7 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
         $automovil = $_POST["automovil"];
         $estatus = $_POST["estatus"];
         $comentarios = $_POST["comentarios"];
+        $equipos = $_POST["equipos"]; 
         $fecha = date('Y-m-d H:i:s');
         $noEmpleado = $noEmpleado_cookie;
 
@@ -100,8 +101,8 @@ $fechaInicio = date('Y-m-d', strtotime($fechaHoy . ' -50 days'));
             exit;
         }
 
-        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment, reprogramado)
-                        VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0)";
+        $sqlInsert = "INSERT INTO servicios_planeados_mess(service_order_id, order_code, engineer, start_date, durationhr, city, area, ds_cliente, estatus, vehiculo, fecha_captura,  capturado_por, travelhr, engineer2, engineer3, comment, reprogramado, equipos)
+                        VALUES ('$ot', '$ot', '$responsable', '$fechaPlaneada', '$duracion', '$ciudad', '$area', '$cliente', '$estatus', '$automovil', '$fecha', '$noEmpleado', '$duracionViaje', '$responsable2', '$responsable3', '$comentarios', 0, '$equipos')";
         //echo $sqlInsert;
         if ($conn->query($sqlInsert) === TRUE) {
             $idActividad = $conn->insert_id;

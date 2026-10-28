@@ -161,6 +161,12 @@
             otinterna:     { label: 'OT interna',     bg: '#eddcf9', fg: '#6a1b9a' },
             servicio:      { label: 'Servicio',       bg: '#e6d3c1', fg: '#5a3a1a' }
         };
+        var ESTATUS_SERVICIO_META = {
+            Servicioconfirmadoparasuejecucion: { bg: '#c6f6d5', fg: '#1b5e20' },
+            Programadasinconfirmar:            { bg: '#ffd8a8', fg: '#8a3b00' },
+            Pendientedeinformacion:            { bg: '#f8d7da', fg: '#842029' },
+            Fechareservadasininformación:      { bg: '#d0ebff', fg: '#0b4f8a' }
+        };
 
         $(document).ready(function() {
             actualizarTituloSemana();
@@ -399,9 +405,17 @@
                     // El fin de semana sigue siendo 'disponible' (regla previa, no se tocó).
                     var estatus = esFinSemana ? 'disponible' : (info ? info.estatus : 'enlaboratorio');
                     var meta = ESTATUS_META[estatus] || ESTATUS_META.disponible;
+                    var metaServicio = info && ESTATUS_SERVICIO_META[info.estatusServiciio];
+                    if (estatus === 'servicio' && metaServicio) {
+                        meta = { label: meta.label, bg: metaServicio.bg, fg: metaServicio.fg };
+                    }
                     var claseHoy = (f === hoy) ? ' celda-hoy' : '';
                     var detalle = (info && info.detalle) ? info.detalle : '';
                     var titulo = (info && info.titulo) ? info.titulo : '';
+                    var equipos = info && info.equipos != null ? String(info.equipos).trim() : '';
+                    if (estatus === 'servicio' && equipos !== '') {
+                        titulo += '<br>Equipos: ' + esc(equipos);
+                    }
 
                     var visible = (filtroEstatus.length === 0) || (filtroEstatus.indexOf(estatus) !== -1);
                     if (!visible) {

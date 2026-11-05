@@ -14,6 +14,40 @@ $fecha_inicio = clone $fecha;
 $fecha_inicio->modify('monday this week');
 $fecha_inicio = $fecha_inicio->format('Y-m-d');
 $fecha_fin = date('Y-m-d', strtotime($fecha_inicio . ' + 6 days'));
+$dias_solicitados = $_GET['dias'] ?? (isset($_GET['dia']) ? [$_GET['dia']] : []);
+if (!is_array($dias_solicitados)) {
+    http_response_code(400);
+    exit('La selección de días no es válida.');
+}
+$fecha_minima_dias = date('Y-m-d', strtotime($fecha_inicio . ' -14 days'));
+$filtro_dias = [];
+foreach ($dias_solicitados as $dia_solicitado) {
+    if (!is_string($dia_solicitado)) {
+        http_response_code(400);
+        exit('La fecha de uno de los días no es válida.');
+    }
+
+    $fecha_dia = DateTime::createFromFormat('!Y-m-d', $dia_solicitado);
+    $erroresDia = DateTime::getLastErrors();
+    if (
+        !$fecha_dia ||
+        ($erroresDia !== false && ($erroresDia['warning_count'] > 0 || $erroresDia['error_count'] > 0)) ||
+        $fecha_dia->format('Y-m-d') !== $dia_solicitado ||
+        $dia_solicitado < $fecha_minima_dias ||
+        $dia_solicitado > $fecha_fin
+    ) {
+        http_response_code(400);
+        exit('La fecha de uno de los días no es válida.');
+    }
+    $filtro_dias[] = $dia_solicitado;
+}
+$filtro_dias = array_values(array_unique($filtro_dias));
+$fechas_consulta = $filtro_dias;
+if (empty($fechas_consulta)) {
+    for ($offset_dia = 0; $offset_dia < 7; $offset_dia++) {
+        $fechas_consulta[] = date('Y-m-d', strtotime($fecha_inicio . " +{$offset_dia} days"));
+    }
+}
 $filtro_ingeniero = isset($_GET['ingeniero']) && is_string($_GET['ingeniero'])
     ? trim($_GET['ingeniero'])
     : '';
@@ -94,15 +128,16 @@ $descripciones_areas = [
     'VS' => 'VISION',
 ];
 
+$placeholders_fechas = implode(', ', array_fill(0, count($fechas_consulta), '?'));
 $sql_detalles = "
     SELECT tecnicos AS ingeniero, OT, start_date, end_date,
-           CASE WHEN DATE(end_date) BETWEEN ? AND ? THEN 'Terminada' ELSE 'En Proceso' END AS estado_calculado
+           CASE WHEN DATE(end_date) IN ($placeholders_fechas) THEN 'Terminada' ELSE 'En Proceso' END AS estado_calculado
     FROM seguimiento_ots
     WHERE tecnicos IS NOT NULL AND tecnicos != ''
-      AND ((DATE(end_date) BETWEEN ? AND ?) OR (DATE(start_date) BETWEEN ? AND ?))
+      AND (DATE(end_date) IN ($placeholders_fechas) OR DATE(start_date) IN ($placeholders_fechas))
 ";
-$tipos_detalles = 'ssssss';
-$params_detalles = [$fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin, $fecha_inicio, $fecha_fin];
+$tipos_detalles = str_repeat('s', count($fechas_consulta) * 3);
+$params_detalles = array_merge($fechas_consulta, $fechas_consulta, $fechas_consulta);
 if ($filtro_ingeniero !== '') {
     $sql_detalles .= ' AND tecnicos = ?';
     $tipos_detalles .= 's';
@@ -163,11 +198,9 @@ $cumplimiento_sem = $total_asignadas_sem > 0
 
 $fechas_semana = [];
 $params_semana = [];
-for ($dia = 0; $dia < 7; $dia++) {
-    $fechas_semana[] = $dia === 0
-        ? 'SELECT ? AS fecha'
-        : 'SELECT DATE_ADD(?, INTERVAL ' . $dia . ' DAY)';
-    $params_semana[] = $fecha_inicio;
+foreach ($fechas_consulta as $fecha_consulta) {
+    $fechas_semana[] = 'SELECT ? AS fecha';
+    $params_semana[] = $fecha_consulta;
 }
 
 $sql_semana_dias = "
@@ -178,7 +211,7 @@ $sql_semana_dias = "
     LEFT JOIN seguimiento_ots t
       ON (DATE(t.start_date) = fechas.fecha OR DATE(t.end_date) = fechas.fecha)
 ";
-$tipos_semana = str_repeat('s', 7);
+$tipos_semana = str_repeat('s', count($fechas_consulta));
 if ($filtro_ingeniero !== '') {
     $sql_semana_dias .= ' AND t.tecnicos = ?';
     $tipos_semana .= 's';
@@ -206,9 +239,11 @@ $stmt_sem->close();
 
 $labels_dias = [];
 $data_dias_terminadas = [];
+$data_dias_proceso = [];
 $dias_nombres = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 foreach ($datos_semana as $dia) {
     $num_dia = date('w', strtotime($dia['fecha']));
     $labels_dias[] = $dias_nombres[$num_dia] . ' ' . date('d/m', strtotime($dia['fecha']));
     $data_dias_terminadas[] = $dia['terminadas'];
+    $data_dias_proceso[] = $dia['en_proceso'];
 }

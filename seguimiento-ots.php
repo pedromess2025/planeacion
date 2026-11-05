@@ -4,6 +4,17 @@ require_once 'acciones_seguimiento-ots.php';
 $fecha_prev = date('Y-m-d', strtotime($fecha_inicio . ' - 1 week'));
 $fecha_next = date('Y-m-d', strtotime($fecha_inicio . ' + 1 week'));
 $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date('d/m/Y', strtotime($fecha_fin));
+$filtros_url = ['ingeniero' => $filtro_ingeniero, 'area' => $filtro_area];
+$filtros_prev = $filtro_dias
+    ? ['dias' => array_map(function ($dia) { return date('Y-m-d', strtotime($dia . ' -1 week')); }, $filtro_dias)]
+    : [];
+$filtros_next = $filtro_dias
+    ? ['dias' => array_map(function ($dia) { return date('Y-m-d', strtotime($dia . ' +1 week')); }, $filtro_dias)]
+    : [];
+$url_prev = '?' . http_build_query(array_merge(['semana' => $fecha_prev], $filtros_prev, $filtros_url));
+$url_next = '?' . http_build_query(array_merge(['semana' => $fecha_next], $filtros_next, $filtros_url));
+$filtros_hoy = $filtro_dias ? ['dias' => [date('Y-m-d')]] : [];
+$url_hoy = '?' . http_build_query(array_merge(['semana' => date('Y-m-d')], $filtros_hoy, $filtros_url));
 ?>
 
 <!DOCTYPE html>
@@ -63,12 +74,31 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                                         <div>
                                             <h4 class="mb-0 text-secondary fw-bold">Seguimiento Semanal de OTs</h4>
                                             <span class="badge bg-primary fs-6 mt-1"><?= $texto_semana ?></span>
+                                            <?php if ($filtro_dias): ?>
+                                                <span class="badge bg-info text-dark fs-6 mt-1">
+                                                    <?= count($filtro_dias) ?> día(s) seleccionado(s)
+                                                </span>
+                                            <?php endif; ?>
                                         </div>
 
                                         <!-- Formulario de Filtro -->
-                                        <form method="GET" class="d-flex align-items-center gap-2 flex-nowrap w-100" style="overflow-x: auto; padding-bottom: 4px;">
+                                        <form method="GET" class="d-flex align-items-center gap-2 flex-wrap w-100 mb-3">
                                             <input type="hidden" name="semana" value="<?= $fecha_inicio ?>">
                                             
+                                            <label for="filtroDias" class="text-muted small mb-0 text-nowrap">Filtrar por día(s):</label>
+                                            <select id="filtroDias" name="dias[]" class="form-select form-select-sm shadow-none border-secondary-subtle" multiple style="width: 260px;">
+                                                <?php
+                                                $nombres_dias = ['', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'];
+                                                for ($offset_dia = 0; $offset_dia < 21; $offset_dia++):
+                                                    $fecha_opcion = date('Y-m-d', strtotime($fecha_inicio . " -14 days +{$offset_dia} days"));
+                                                    $nombre_dia = $nombres_dias[(int)date('N', strtotime($fecha_opcion))];
+                                                ?>
+                                                    <option value="<?= $fecha_opcion ?>" <?= in_array($fecha_opcion, $filtro_dias, true) ? 'selected' : '' ?>>
+                                                        <?= $nombre_dia . ' ' . date('d/m/Y', strtotime($fecha_opcion)) ?>
+                                                    </option>
+                                                <?php endfor; ?>
+                                            </select>
+
                                             <label class="text-muted small mb-0 text-nowrap">Área:</label>
                                             <select id="filtroArea" name="area" class="form-select form-select-sm shadow-none border-secondary-subtle select2" style="width: auto; min-width: 160px;">
                                                 <option value="">-- Todas las áreas --</option>
@@ -94,9 +124,9 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
 
                                         <!-- Botones de semana -->
                                         <div class="btn-group" role="group">
-                                            <a href="?semana=<?= $fecha_prev ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-primary">« Anterior</a>
-                                            <a href="?semana=<?= $fecha_next ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-primary">Siguiente »</a>
-                                            <a href="?semana=<?= date('Y-m-d') ?>&ingeniero=<?= urlencode($filtro_ingeniero) ?>&area=<?= urlencode($filtro_area) ?>" class="btn btn-outline-secondary ms-2 rounded">Hoy</a>
+                                            <a href="<?= htmlspecialchars($url_prev, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-outline-primary">« Anterior</a>
+                                            <a href="<?= htmlspecialchars($url_next, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-outline-primary">Siguiente »</a>
+                                            <a href="<?= htmlspecialchars($url_hoy, ENT_QUOTES, 'UTF-8') ?>" class="btn btn-outline-secondary ms-2 rounded">Hoy</a>
                                         </div>
                                     </div>
 
@@ -190,7 +220,7 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                                                                 <?php endforeach; ?>
 
                                                                 <?php if(empty($datos_ingenieros)): ?>
-                                                                <tr><td colspan="4" class="py-3">No hay datos en esta semana.</td></tr>
+                                                                <tr><td colspan="4" class="py-3">No hay datos en <?= $filtro_dias ? 'los días seleccionados' : 'esta semana' ?>.</td></tr>
                                                                 <?php endif; ?>
                                                             </tbody>
                                                             <tfoot class="table-light fw-bold border-top">
@@ -210,7 +240,7 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                                         <!-- SECCIÓN DERECHA: DESGLOSE DIARIO -->
                                         <div class="col-lg-6 mb-4">
                                             <div class="card border">
-                                                <div class="card-header bg-light fw-bold text-primary">Desglose diario (Lunes a Domingo)</div>
+                                                <div class="card-header bg-light fw-bold text-primary"><?= $filtro_dias ? 'Desglose de días seleccionados' : 'Desglose diario (Lunes a Domingo)' ?></div>
                                                 <div class="card-body">
                                                     <div style="height: 250px; width: 100%;">
                                                         <canvas id="chartDias"></canvas>
@@ -286,6 +316,12 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                 allowClear: true
             });
 
+            $('#filtroDias').select2({
+                placeholder: "Selecciona uno o varios días",
+                closeOnSelect: false,
+                width: "260px"
+            });
+
             $('#filtroArea').on('change', function() {
                 $(this).closest('form').trigger('submit');
             });
@@ -334,23 +370,35 @@ $texto_semana = "Del " . date('d/m/Y', strtotime($fecha_inicio)) . " al " . date
                 }
             });
 
-            // Gráfica: OT Terminadas por Día
+            // Gráfica: OTs por Día
             const ctxDias = document.getElementById('chartDias').getContext('2d');
             new Chart(ctxDias, {
                 type: 'bar',
                 data: {
                     labels: <?= json_encode($labels_dias) ?>,
-                    datasets: [{
-                        label: 'Terminadas',
-                        data: <?= json_encode($data_dias_terminadas) ?>,
-                        backgroundColor: '#1b4f72'
-                    }]
+                    datasets: [
+                        {
+                            label: 'Terminadas',
+                            data: <?= json_encode($data_dias_terminadas) ?>,
+                            backgroundColor: '#1b4f72',
+                            stack: 'ots'
+                        },
+                        {
+                            label: 'En Proceso',
+                            data: <?= json_encode($data_dias_proceso) ?>,
+                            backgroundColor: '#ffc107',
+                            stack: 'ots'
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } },
-                    plugins: { legend: { display: false } }
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } }
+                    },
+                    plugins: { legend: { position: 'bottom' } }
                 }
             });
         });

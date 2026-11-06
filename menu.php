@@ -94,12 +94,6 @@
     </li>
 
     <li class="nav-item">
-        <a class="nav-link" href="seguimiento-ots">
-            <i class="fas fa-fw fa-file-upload text-gray-400"></i>
-            <span>Seguimiento OTs</span>
-        </a>
-    </li> 
-    <li class="nav-item">
         <a class="nav-link" href="disponibilidadIngenieros">
             <i class="fas fa-fw fa-user-clock text-warning"></i>
             <span>Dispo. de Ingenieros</span>
@@ -113,6 +107,12 @@
     $noEmpMenu = noEmpleadoSesion();
     if ($noEmpMenu !== '' && tieneAccesoEspecial($conn, $noEmpMenu, 'planeacion', 'verDisponibilidad')) {
         echo '
+            <li class="nav-item">
+                <a class="nav-link" href="seguimiento-ots">
+                    <i class="fas fa-fw fa-file-upload text-gray-400"></i>
+                    <span>Seguimiento OTs</span>
+                </a>
+            </li>
             <li class="nav-item">
                 <a class="nav-link" href="disponibilidadVehiculos">
                     <i class="fas fa-fw fa-car text-warning"></i>

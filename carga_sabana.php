@@ -44,13 +44,13 @@
                 
                 <div class="container-fluid">
                     <div class="row justify-content-center">
-                        <div class="col-xl-10">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
+                        <div class="col-xl-12">
+                            <div class="card shadow mb-3">
+                                <div class="card-header py-2">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-upload"></i> Generador de Sábana Operativa (2 Archivos)</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-4">Sube los archivos maestros para cruzar la información y actualizar la base de datos.</p>
+                                    <p class="text-muted mb-2">Sube los 3 archivos maestros para generar la sábana.</p>
                                     
                                     <form id="form-sabana" enctype="multipart/form-data">
                                         <div class="row mb-3">
@@ -69,15 +69,15 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="text-center mt-4">
-                                            <button type="submit" id="btn-procesar" class="btn btn-primary btn-lg px-5">
+                                        <div class="text-center mt-3">
+                                            <button type="submit" id="btn-procesar" class="btn btn-primary btn-md px-4">
                                                 <i class="fas fa-cogs"></i> Procesar y Generar Sábana
                                             </button>
                                         </div>
                                     </form>
 
                                     <!-- Contenedor de la Barra de Progreso -->
-                                    <div id="contenedor-progreso" class="mt-5 text-center" style="display: none;">
+                                    <div id="contenedor-progreso" class="mt-3 text-center" style="display: none;">
                                         <h5 id="texto-progreso" class="font-weight-bold text-start text-dark">Preparando archivos en el servidor... <span class="float-end">0%</span></h5>
                                         <div class="progress mb-2" style="height: 25px;">
                                             <div id="barra-progreso" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; font-size: 1rem;"></div>
@@ -87,21 +87,19 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3">
+                                <div class="col-xl-6">
                             <!-- ============ REPORTE DE OT INTERNAS (SERV INTERNOS) ============ -->
                             <!-- Proceso independiente del de la sábana: otro archivo, otra tabla y otro
                                  destino. Alimenta las celdas moradas "OT interna" del tablero de
                                  Disponibilidad de Ingenieros. Recargar NO duplica (UPSERT por orderCode). -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <div class="card shadow mb-3">
+                                <div class="card-header py-2 d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list"></i> Reporte de OT internas (Servicios internos)</h6>
                                     <a href="disponibilidadIngenieros" class="small"><i class="fas fa-user-clock"></i> Ver tablero</a>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-3">
-                                        Es lo que pinta las celdas moradas <b>"OT interna"</b> en Disponibilidad de Ingenieros.
-                                        Sube el CSV tal cual sale del sistema de OTs; volver a cargarlo <b>no duplica</b>:
-                                        actualiza las que ya existen y agrega las nuevas.
-                                    </p>
+                                    <p class="text-muted mb-2">Pinta las celdas moradas <b>"OT interna"</b> en Disponibilidad de Ingenieros. Volver a cargarlo <b>no duplica</b> (UPSERT por orderCode).</p>
 
                                     <?php
                                         $claseOt = 'border-left: 4px solid #4e73df; background:#f8f9fc;';
@@ -131,12 +129,12 @@
 
                                     <form id="form-ot" enctype="multipart/form-data">
                                         <div class="row align-items-end">
-                                            <div class="col-md-8 mb-3">
+                                            <div class="col-12 mb-2">
                                                 <label class="form-label font-weight-bold text-primary">Archivo de OT internas (SERV INTERNOS)</label>
                                                 <input class="form-control" type="file" id="archivo_ot" name="archivo" accept=".csv" required>
                                                 <small class="text-muted">Encabezados en inglés: <code>orderCode</code>, <code>status</code>, <code>Engineers</code>, <code>startDate</code>, <code>dueDate</code>…</small>
                                             </div>
-                                            <div class="col-md-4 mb-3">
+                                            <div class="col-12 mb-2">
                                                 <button type="submit" id="btn-ot" class="btn btn-primary w-100">
                                                     <i class="fas fa-cloud-upload-alt"></i> Cargar OT internas
                                                 </button>
@@ -145,6 +143,39 @@
                                     </form>
 
                                     <div id="resultado-ot" class="mt-2" style="display:none;"></div>
+                                </div>
+                            </div>
+                                </div>
+                                <div class="col-xl-6">
+                            <!-- ============ ANÁLISIS DE SERVICIOS IA ============ -->
+                            <!-- Se guarda en ../Analisis BI/ (carpeta hermana del repo) con el
+                                 nombre del archivo subido. Solo .xls, .csv y .html (50 MB).
+                                 Se permiten los scripts internos del reporte (filtros y
+                                 gráficas); el HTML con código peligroso se RECHAZA, no se guarda.
+                                 Sin historial: si el nombre ya existe, se reemplaza. -->
+                            <div class="card shadow mb-3 h-100">
+                                <div class="card-header py-2">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-robot"></i> Análisis de servicios IA</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-2">Se guarda en la carpeta Analisis BI, fuera del repo. Solo .xls, .csv y .html (50 MB). Se permiten los scripts internos del reporte; el código peligroso se rechaza.</p>
+                                    <form id="form-analisis-ia" enctype="multipart/form-data">
+                                        <div class="row align-items-end">
+                                            <div class="col-12 mb-2">
+                                                <label class="form-label font-weight-bold text-primary">Archivo para análisis</label>
+                                                <input class="form-control" type="file" id="archivo_analisis_ia" name="archivo_analisis_ia" accept=".xls,.csv,.html" required>
+                                            </div>
+                                            <div class="col-12 mb-2">
+                                                <button type="submit" id="btn-analisis-ia" class="btn btn-primary w-100">
+                                                    <i class="fas fa-cloud-upload-alt"></i> Subir archivo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+
+                                    <div id="resultado-analisis-ia" class="mt-2" style="display:none;"></div>
+                                </div>
+                            </div>
                                 </div>
                             </div>
 
@@ -264,6 +295,47 @@
                 },
                 complete: function() {
                     $('#btn-ot').prop('disabled', false).html('<i class="fas fa-cloud-upload-alt"></i> Cargar OT internas');
+                }
+            });
+        });
+
+        // ============ ANÁLISIS DE SERVICIOS IA ============
+        // Sube un solo archivo (.xls/.csv/.html) a procesar_analisis_ia.php,
+        // que lo guarda en ../Analisis BI/ con su nombre. Los scripts internos
+        // del reporte sí pasan; si el HTML trae código peligroso el endpoint
+        // lo rechaza y no guarda nada.
+        $('#form-analisis-ia').on('submit', function(e) {
+            e.preventDefault();
+            var btn = $('#btn-analisis-ia').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Subiendo...');
+            $('#resultado-analisis-ia').hide();
+
+            $.ajax({
+                url: 'procesar_analisis_ia.php', type: 'POST', dataType: 'json',
+                data: new FormData(this), contentType: false, processData: false,
+                success: function(res) {
+                    if (res.status !== 'success') {
+                        Swal.fire('No se pudo subir', res.message || 'Error desconocido', 'error');
+                        return;
+                    }
+                    var h = '<div class="alert alert-success mb-2"><b><i class="fas fa-check-circle"></i> ' +
+                            escOt(res.archivo) + '</b> guardado en Analisis BI.';
+                    if (res.reemplazado) {
+                        h += '<br><span class="text-warning-emphasis"><b>Se reemplazó el archivo anterior con ese nombre.</b></span>';
+                    }
+                    h += '</div>';
+                    $('#resultado-analisis-ia').html(h).show();
+                    Swal.fire({
+                        icon: 'success', title: 'Archivo subido',
+                        html: '<b>' + escOt(res.archivo) + '</b> guardado en Analisis BI.' +
+                              (res.reemplazado ? '<br><b>Se reemplazó el archivo anterior.</b>' : '')
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.'
+                                                          : 'Hubo un problema de comunicación con el servidor.', 'error');
+                },
+                complete: function() {
+                    $('#btn-analisis-ia').prop('disabled', false).html('<i class="fas fa-cloud-upload-alt"></i> Subir archivo');
                 }
             });
         });

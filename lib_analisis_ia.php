@@ -8,6 +8,11 @@
 // para sus filtros y gráficas, así que <script> inline o con src relativo /
 // messbook.com.mx está permitido; lo que se rechaza es el script que roba
 // sesión, sale del frame o carga código de un dominio externo.
+// <meta> y <link> también se permiten con condición: <meta> solo charset,
+// viewport o color-scheme; <link> solo rel stylesheet/icon/preconnect y
+// href relativo, data: (icono) o de fonts.googleapis.com, fonts.gstatic.com,
+// messbook.com.mx, cdn.jsdelivr.net o cdnjs.cloudflare.com. Un <meta>
+// http-equiv (p. ej. refresh) o un <link> a otro dominio se rechazan.
 //
 // Extensiones permitidas exactas: xls, csv, html (minúsculas). NO xlsx.
 // Tamaño máximo: 50 MB (lo verifica el endpoint y también esta lib).
@@ -109,6 +114,92 @@ function analisis_ia_scriptSrcPeligroso($src) {
     return '';
 }
 
+
+// Parsea los atributos de una etiqueta (<meta ...> / <link ...>) a
+// ['nombre' => 'valor'] en minúsculas. Atributos sin valor quedan en ''.
+function analisis_ia_parseAtributos($attrStr) {
+    $attrs = [];
+    if (preg_match_all('/([a-zA-Z_:][a-zA-Z0-9_:.\-]*)(?:\s*=\s*(?:"([^"]*)"|\'([^\']*)\'|([^\s>]+)))?/', (string)$attrStr, $m, PREG_SET_ORDER)) {
+        foreach ($m as $a) {
+            $v = '';
+            if (isset($a[2]) && $a[2] !== '') $v = $a[2];
+            elseif (isset($a[3]) && $a[3] !== '') $v = $a[3];
+            elseif (isset($a[4])) $v = $a[4];
+            $attrs[strtolower($a[1])] = $v;
+        }
+    }
+    return $attrs;
+}
+
+// Revisa un <meta> ya parseado. Devuelve el motivo o ''.
+// Permitido: charset, name="viewport" o name="color-scheme".
+function analisis_ia_metaMotivo($attrs) {
+    if (array_key_exists('charset', $attrs)) return '';
+    if (isset($attrs['http-equiv'])) {
+        return 'El <meta> con http-equiv="' . $attrs['http-equiv'] . '" no está permitido.';
+    }
+    if (isset($attrs['name'])) {
+        $n = strtolower(trim($attrs['name']));
+        if ($n === 'viewport' || $n === 'color-scheme') return '';
+        return 'El <meta name="' . $attrs['name'] . '"> no está permitido.';
+    }
+    return 'El <meta> no está permitido (solo charset, viewport y color-scheme).';
+}
+
+// ¿Es un host permitido para <link> (y para src con //)?
+function analisis_ia_linkHostPermitido($host) {
+    $host = strtolower(explode(':', (string)$host)[0]);
+    $permitidos = ['fonts.googleapis.com', 'fonts.gstatic.com', 'messbook.com.mx',
+                   'cdn.jsdelivr.net', 'cdnjs.cloudflare.com'];
+    if (in_array($host, $permitidos, true)) return true;
+    if (substr($host, -16) === '.messbook.com.mx') return true;
+    return false;
+}
+
+// ¿Es un href permitido para <link>? Relativo, data: de icono/imagen, o
+// https:// de un host permitido. Nada de javascript: ni data:text/html.
+function analisis_ia_linkHrefPermitido($href) {
+    $href = trim((string)$href);
+    if ($href === '') return false;
+    $h = strtolower($href);
+    if (strpos($h, 'javascript:') === 0) return false;
+    if (strpos($h, 'data:text/html') === 0) return false;
+    if (strpos($h, 'data:') === 0) {
+        return (bool)preg_match('#^data:(,|image/)#i', $href);
+    }
+    if (strpos($h, '//') === 0) {
+        if (preg_match('~^//([^/?#]+)~', $h, $m)) {
+            return analisis_ia_linkHostPermitido($m[1]);
+        }
+        return false;
+    }
+    if (preg_match('~^https?://([^/?#]+)~i', $href, $m)) {
+        return analisis_ia_linkHostPermitido($m[1]);
+    }
+    if (preg_match('#^[a-z][a-z0-9+.\-]*:#i', $href)) return false;
+    return true;
+}
+
+// Revisa un <link> ya parseado. Devuelve el motivo o ''.
+function analisis_ia_linkMotivo($attrs) {
+    $rel = isset($attrs['rel']) ? strtolower(trim($attrs['rel'])) : '';
+    if ($rel === '') return 'El <link> sin rel no está permitido.';
+    $rels = preg_split('/\s+/', $rel, -1, PREG_SPLIT_NO_EMPTY);
+    $permitidos = ['stylesheet', 'icon', 'preconnect'];
+    foreach ($rels as $r) {
+        if (!in_array($r, $permitidos, true)) {
+            return 'El <link rel="' . $attrs['rel'] . '"> no está permitido.';
+        }
+    }
+    if (!isset($attrs['href']) || trim($attrs['href']) === '') {
+        return 'El <link> sin href no está permitido.';
+    }
+    if (!analisis_ia_linkHrefPermitido($attrs['href'])) {
+        return 'El <link> apunta a una URL no permitida (' . $attrs['href'] . ').';
+    }
+    return '';
+}
+
 // Valida un archivo ya recibido en $rutaTmp.
 // $nombre es el nombre completo (sanitizado) del archivo; la extensión se
 // deriva de él. $contenido, si se pasa, se usa en vez de leer el archivo
@@ -184,12 +275,30 @@ function validarArchivoAnalisisIA($rutaTmp, $nombre, $contenido = null) {
     // <script> inline o con src relativo / messbook.com.mx está permitido
     // (los reportes lo necesitan para filtros y gráficas); se rechaza el
     // script que roba sesión, sale del frame o carga código externo.
-    // Etiquetas peligrosas: script ya NO está en esta lista.
-    $etiquetasPeligrosas = ['iframe', 'object', 'embed', 'form', 'meta', 'link', 'base'];
+    // <meta> y <link>: validación COMPARTIDA por regex sobre el contenido
+    // original, antes de la ruta DOM o fallback. Así ambas rutas coinciden
+    // y no depende de lo que el parser DOM inserte por su cuenta.
+    // <meta> solo charset / viewport / color-scheme; <link> solo rel
+    // stylesheet/icon/preconnect con href permitido (ver helpers).
+    if (preg_match_all('/<\s*meta\b([^>]*)>/i', $contenido, $metas, PREG_SET_ORDER)) {
+        foreach ($metas as $t) {
+            $mot = analisis_ia_metaMotivo(analisis_ia_parseAtributos($t[1]));
+            if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+        }
+    }
+    if (preg_match_all('/<\s*link\b([^>]*)>/i', $contenido, $links, PREG_SET_ORDER)) {
+        foreach ($links as $t) {
+            $mot = analisis_ia_linkMotivo(analisis_ia_parseAtributos($t[1]));
+            if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+        }
+    }
+    // Etiquetas peligrosas: script ya NO está en esta lista, y meta/link
+    // ya se validaron arriba con condición, así que tampoco están aquí.
+    $etiquetasPeligrosas = ['iframe', 'object', 'embed', 'form', 'base'];
     // Fallback si el servidor no tiene la extensión php-xml (DOMDocument):
     // mismo rechazo, por regex, sin morir con un fatal.
     if (!class_exists('DOMDocument')) {
-        if (preg_match('/<\s*(iframe|object|embed|form|meta|link|base)\b/i', $contenido, $m)) {
+        if (preg_match('/<\s*(iframe|object|embed|form|base)\b/i', $contenido, $m)) {
             return ['ok' => false, 'motivo' => 'El HTML contiene una etiqueta no permitida <' . strtolower($m[1]) . '>.'];
         }
         // Scripts: revisa cada <script> (src y contenido).
@@ -234,6 +343,10 @@ function validarArchivoAnalisisIA($rutaTmp, $nombre, $contenido = null) {
     }
     foreach ($doc->getElementsByTagName('*') as $el) {
         $tag = strtolower($el->tagName);
+        if ($tag === 'meta' || $tag === 'link') {
+            // Ya validados arriba desde el texto original (con condición).
+            continue;
+        }
         if ($tag === 'script') {
             // Script permitido, pero revisado: src externo o contenido peligroso.
             if ($el->hasAttribute('src')) {

@@ -44,13 +44,13 @@
                 
                 <div class="container-fluid">
                     <div class="row justify-content-center">
-                        <div class="col-xl-10">
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3">
+                        <div class="col-xl-12">
+                            <div class="card shadow mb-3">
+                                <div class="card-header py-2">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-file-upload"></i> Generador de Sábana Operativa (2 Archivos)</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-4">Sube los archivos maestros para cruzar la información y actualizar la base de datos.</p>
+                                    <p class="text-muted mb-2">Sube los 3 archivos maestros para generar la sábana.</p>
                                     
                                     <form id="form-sabana" enctype="multipart/form-data">
                                         <div class="row mb-3">
@@ -69,15 +69,15 @@
                                             </div>
                                         </div>
                                         
-                                        <div class="text-center mt-4">
-                                            <button type="submit" id="btn-procesar" class="btn btn-primary btn-lg px-5">
+                                        <div class="text-center mt-3">
+                                            <button type="submit" id="btn-procesar" class="btn btn-primary btn-md px-4">
                                                 <i class="fas fa-cogs"></i> Procesar y Generar Sábana
                                             </button>
                                         </div>
                                     </form>
 
                                     <!-- Contenedor de la Barra de Progreso -->
-                                    <div id="contenedor-progreso" class="mt-5 text-center" style="display: none;">
+                                    <div id="contenedor-progreso" class="mt-3 text-center" style="display: none;">
                                         <h5 id="texto-progreso" class="font-weight-bold text-start text-dark">Preparando archivos en el servidor... <span class="float-end">0%</span></h5>
                                         <div class="progress mb-2" style="height: 25px;">
                                             <div id="barra-progreso" class="progress-bar bg-success progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%; font-size: 1rem;"></div>
@@ -87,21 +87,19 @@
                                 </div>
                             </div>
 
+                            <div class="row g-3">
+                                <div class="col-xl-6">
                             <!-- ============ REPORTE DE OT INTERNAS (SERV INTERNOS) ============ -->
                             <!-- Proceso independiente del de la sábana: otro archivo, otra tabla y otro
                                  destino. Alimenta las celdas moradas "OT interna" del tablero de
                                  Disponibilidad de Ingenieros. Recargar NO duplica (UPSERT por orderCode). -->
-                            <div class="card shadow mb-4">
-                                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <div class="card shadow mb-3">
+                                <div class="card-header py-2 d-flex justify-content-between align-items-center">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-clipboard-list"></i> Reporte de OT internas (Servicios internos)</h6>
                                     <a href="disponibilidadIngenieros" class="small"><i class="fas fa-user-clock"></i> Ver tablero</a>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-3">
-                                        Es lo que pinta las celdas moradas <b>"OT interna"</b> en Disponibilidad de Ingenieros.
-                                        Sube el CSV tal cual sale del sistema de OTs; volver a cargarlo <b>no duplica</b>:
-                                        actualiza las que ya existen y agrega las nuevas.
-                                    </p>
+                                    <p class="text-muted mb-2">Pinta las celdas moradas <b>"OT interna"</b> en Disponibilidad de Ingenieros. Volver a cargarlo <b>no duplica</b> (UPSERT por orderCode).</p>
 
                                     <?php
                                         $claseOt = 'border-left: 4px solid #4e73df; background:#f8f9fc;';
@@ -131,12 +129,12 @@
 
                                     <form id="form-ot" enctype="multipart/form-data">
                                         <div class="row align-items-end">
-                                            <div class="col-md-8 mb-3">
+                                            <div class="col-12 mb-2">
                                                 <label class="form-label font-weight-bold text-primary">Archivo de OT internas (SERV INTERNOS)</label>
                                                 <input class="form-control" type="file" id="archivo_ot" name="archivo" accept=".csv" required>
                                                 <small class="text-muted">Encabezados en inglés: <code>orderCode</code>, <code>status</code>, <code>Engineers</code>, <code>startDate</code>, <code>dueDate</code>…</small>
                                             </div>
-                                            <div class="col-md-4 mb-3">
+                                            <div class="col-12 mb-2">
                                                 <button type="submit" id="btn-ot" class="btn btn-primary w-100">
                                                     <i class="fas fa-cloud-upload-alt"></i> Cargar OT internas
                                                 </button>
@@ -145,6 +143,33 @@
                                     </form>
 
                                     <div id="resultado-ot" class="mt-2" style="display:none;"></div>
+                                </div>
+                            </div>
+                                </div>
+                                <div class="col-xl-6">
+                            <!-- ============ ANÁLISIS DE SERVICIOS IA (SOLO INTERFAZ) ============ -->
+                            <!-- TODO: conectar a backend cuando se defina -->
+                            <div class="card shadow mb-3 h-100">
+                                <div class="card-header py-2">
+                                    <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-robot"></i> Análisis de servicios IA</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-muted mb-2">Solo interfaz por ahora: aún no procesa nada.</p>
+                                    <form id="form-analisis-ia" enctype="multipart/form-data">
+                                        <div class="row align-items-end">
+                                            <div class="col-12 mb-2">
+                                                <label class="form-label font-weight-bold text-primary">Archivo para análisis</label>
+                                                <input class="form-control" type="file" id="archivo_analisis_ia" name="archivo_analisis_ia">
+                                            </div>
+                                            <div class="col-12 mb-2">
+                                                <button type="button" id="btn-analisis-ia" class="btn btn-primary w-100">
+                                                    <i class="fas fa-cloud-upload-alt"></i> Subir archivo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
                                 </div>
                             </div>
 

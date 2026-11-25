@@ -3,8 +3,9 @@ header('Content-Type: application/json');
 // Recibe el archivo de "Análisis de servicios IA" subido desde la tarjeta
 // de `carga_sabana.php` y lo guarda en la carpeta hermana "Analisis BI"
 // (al mismo nivel que este repo, fuera del repo, sin versionar).
-// Modo RECHAZAR: un HTML con código peligroso no se guarda; se responde
-// con el motivo. No hay historial ni sufijos: si ya existe un archivo con
+// Modo RECHAZAR lo peligroso, scripts internos permitidos: un HTML con
+// código peligroso no se guarda; se responde con el motivo. El <script>
+// inline o de messbook.com.mx sí pasa (los reportes lo necesitan). No hay historial ni sufijos: si ya existe un archivo con
 // ese mismo nombre sanitizado, SE REEMPLAZA (el historial vive en otro repo).
 // El archivo subido NUNCA se incluye, se requiere ni se sirve inline.
 
@@ -94,8 +95,12 @@ if (!file_exists($htaccess)) {
     $lineas[] = '<FilesMatch "\.(php|phtml|phar|cgi|pl|py|sh|exe|com|bat)$">';
     $lineas[] = '  Require all denied';
     $lineas[] = '</FilesMatch>';
+    // CSP sandbox allow-scripts (SIN allow-same-origin): los reportes de
+    // BI necesitan JS para filtros y gráficas, así que el script sí corre,
+    // pero el documento queda aislado de loginMaster (no toca su sesión
+    // ni puede salirse del frame). La subida ya rechaza el script peligroso.
     $lineas[] = '<FilesMatch "\.html?$">';
-    $lineas[] = '  Header set Content-Security-Policy "sandbox"';
+    $lineas[] = '  Header set Content-Security-Policy "sandbox allow-scripts"';
     $lineas[] = '  Header set X-Content-Type-Options "nosniff"';
     $lineas[] = '</FilesMatch>';
     @file_put_contents($htaccess, implode("\n", $lineas) . "\n");

@@ -1,8 +1,13 @@
 <?php
 // Funciones puras para la subida de "Análisis de servicios IA".
 // Sin BD, sin sesión, sin salida: testeables por CLI con php -l / php.
-// Modo RECHAZAR: si un HTML trae código peligroso, no se guarda nada;
-// validarArchivoAnalisisIA() devuelve ok=false con el motivo, sin el contenido.
+// Modo RECHAZAR lo peligroso, scripts internos permitidos: un HTML con
+// código peligroso no se guarda nada; validarArchivoAnalisisIA()
+// devuelve ok=false con el motivo, sin el contenido. Los reportes de BI
+// (p. ej. tablero-de-capacidad-de-laboratorios.html) necesitan <script>
+// para sus filtros y gráficas, así que <script> inline o con src relativo /
+// messbook.com.mx está permitido; lo que se rechaza es el script que roba
+// sesión, sale del frame o carga código de un dominio externo.
 //
 // Extensiones permitidas exactas: xls, csv, html (minúsculas). NO xlsx.
 // Tamaño máximo: 50 MB (lo verifica el endpoint y también esta lib).
@@ -38,6 +43,70 @@ function sanitizarNombreArchivo($nombre) {
         return '';
     }
     return $nombre;
+}
+
+
+// ¿Es una URL externa a messbook.com.mx? Relativa = interna.
+// "//evil.example/x" y "http(s)://otro-dominio/..." = externa.
+// "https://messbook.com.mx/..." y subdominios = interna.
+function analisis_ia_esUrlExterna($url) {
+    $url = trim((string)$url);
+    if ($url === '') return false;
+    $u = strtolower($url);
+    if (strpos($u, 'javascript:') === 0 || strpos($u, 'data:') === 0) return true;
+    if (strpos($u, '//') === 0) return true;
+    if (preg_match('~^https?://([^/?#]+)~', $u, $m)) {
+        $host = strtolower($m[1]);
+        $host = explode(':', $host)[0];
+        if ($host === 'messbook.com.mx') return false;
+        if (substr($host, -16) === '.messbook.com.mx') return false;
+        return true;
+    }
+    return false;
+}
+
+// Revisa el contenido de un <script>. Devuelve el motivo o ''.
+// Patrones peligrosos (insensible a mayúsculas, con espacios):
+// robo de sesión, salida del frame, eval/Function, popups, y
+// llamadas de red a URLs externas (fetch / XHR / import / location).
+function analisis_ia_scriptPeligroso($js) {
+    $js = (string)$js;
+    $reglas = [
+        ['/document\.cookie/i', 'document.cookie'],
+        ['/\b(localStorage|sessionStorage)\b/i', 'acceso a almacenamiento del navegador (localStorage / sessionStorage)'],
+        ['/\b(window\.top|top\.location|parent\.location|parent\.document|window\.parent)\b/i', 'acceso al frame padre (window.top / parent)'],
+        ['/\beval\s*\(/i', 'eval()'],
+        ['/\bnew\s+Function\s*\(/i', 'new Function()'],
+        ['/\bwindow\.open\s*\(/i', 'window.open()'],
+        ['/\bfetch\s*\(\s*[\'"]\s*(https?:)?\/\//i', 'fetch() a una URL externa'],
+        ['/\.open\s*\(\s*[\'"][A-Z]+[\'"]\s*,\s*[\'"]\s*(https?:)?\/\//i', 'petición (XMLHttpRequest) a una URL externa'],
+        ['/\bimport\s*\(\s*[\'"]\s*(https?:)?\/\//i', 'import() de una URL externa'],
+        ['/(?:location|window\.location|top\.location)\s*\.\s*href\s*=\s*[\'"]\s*(https?:)?\/\//i', 'redirección (location.href) a una URL externa'],
+        ['/location\s*\.\s*(?:assign|replace)\s*\(\s*[\'"]\s*(https?:)?\/\//i', 'redirección (location.assign/replace) a una URL externa'],
+        ['/document\.write\s*\([^)]*(https?:)?\/\//i', 'document.write() con una URL externa'],
+    ];
+    foreach ($reglas as $r) {
+        if (preg_match($r[0], $js)) {
+            return 'El script contiene código peligroso (' . $r[1] . ').';
+        }
+    }
+    return '';
+}
+
+// Revisa el src de un <script>. Devuelve el motivo o ''.
+function analisis_ia_scriptSrcPeligroso($src) {
+    $src = trim((string)$src);
+    if ($src === '') return '';
+    if (stripos($src, 'javascript:') === 0) {
+        return 'El <script> usa un src javascript:.';
+    }
+    if (stripos($src, 'data:') === 0) {
+        return 'El <script> usa un src data:.';
+    }
+    if (analisis_ia_esUrlExterna($src)) {
+        return 'El <script> carga código de un dominio externo (' . $src . ').';
+    }
+    return '';
 }
 
 // Valida un archivo ya recibido en $rutaTmp.
@@ -111,17 +180,35 @@ function validarArchivoAnalisisIA($rutaTmp, $nombre, $contenido = null) {
         return ['ok' => true, 'motivo' => ''];
     }
 
-    // html: modo RECHAZAR. Cualquier cosa peligrosa rechaza el archivo
-    // completo; no se limpia ni se guarda una versión modificada.
-    if (stripos($contenido, '<script') !== false) {
-        return ['ok' => false, 'motivo' => 'El HTML contiene una etiqueta <script>.'];
-    }
-    $etiquetasPeligrosas = ['script', 'iframe', 'object', 'embed', 'form', 'meta', 'link', 'base'];
+    // html: modo RECHAZAR lo peligroso, scripts internos permitidos.
+    // <script> inline o con src relativo / messbook.com.mx está permitido
+    // (los reportes lo necesitan para filtros y gráficas); se rechaza el
+    // script que roba sesión, sale del frame o carga código externo.
+    // Etiquetas peligrosas: script ya NO está en esta lista.
+    $etiquetasPeligrosas = ['iframe', 'object', 'embed', 'form', 'meta', 'link', 'base'];
     // Fallback si el servidor no tiene la extensión php-xml (DOMDocument):
     // mismo rechazo, por regex, sin morir con un fatal.
     if (!class_exists('DOMDocument')) {
-        if (preg_match('/<\s*(script|iframe|object|embed|form|meta|link|base)\b/i', $contenido, $m)) {
+        if (preg_match('/<\s*(iframe|object|embed|form|meta|link|base)\b/i', $contenido, $m)) {
             return ['ok' => false, 'motivo' => 'El HTML contiene una etiqueta no permitida <' . strtolower($m[1]) . '>.'];
+        }
+        // Scripts: revisa cada <script> (src y contenido).
+        if (preg_match_all('/<script\b([^>]*)>(.*?)<\/script\s*>/is', $contenido, $bloques, PREG_SET_ORDER)) {
+            foreach ($bloques as $b) {
+                if (preg_match('/\bsrc\s*=\s*[\'"]([^\'"]*)[\'"]/i', $b[1], $s)) {
+                    $mot = analisis_ia_scriptSrcPeligroso($s[1]);
+                    if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+                }
+                $mot = analisis_ia_scriptPeligroso($b[2]);
+                if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+            }
+        }
+        // <script src="..."> sin cierre (también hay que revisarlo).
+        if (preg_match_all('/<script\b[^>]*\bsrc\s*=\s*[\'"]([^\'"]*)[\'"]/i', $contenido, $srcs)) {
+            foreach ($srcs[1] as $s) {
+                $mot = analisis_ia_scriptSrcPeligroso($s);
+                if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+            }
         }
         if (preg_match('/\s(on\w+)\s*=/i', $contenido, $m)) {
             return ['ok' => false, 'motivo' => 'El HTML contiene un atributo de evento no permitido (' . strtolower($m[1]) . ').'];
@@ -147,6 +234,16 @@ function validarArchivoAnalisisIA($rutaTmp, $nombre, $contenido = null) {
     }
     foreach ($doc->getElementsByTagName('*') as $el) {
         $tag = strtolower($el->tagName);
+        if ($tag === 'script') {
+            // Script permitido, pero revisado: src externo o contenido peligroso.
+            if ($el->hasAttribute('src')) {
+                $mot = analisis_ia_scriptSrcPeligroso($el->getAttribute('src'));
+                if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+            }
+            $mot = analisis_ia_scriptPeligroso($el->textContent);
+            if ($mot !== '') return ['ok' => false, 'motivo' => $mot];
+            continue;
+        }
         if (in_array($tag, $etiquetasPeligrosas, true)) {
             return ['ok' => false, 'motivo' => 'El HTML contiene una etiqueta no permitida <' . $tag . '>.'];
         }

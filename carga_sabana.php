@@ -150,14 +150,15 @@
                             <!-- ============ ANÁLISIS DE SERVICIOS IA ============ -->
                             <!-- Se guarda en ../Analisis BI/ (carpeta hermana del repo) con el
                                  nombre del archivo subido. Solo .xls, .csv y .html (50 MB).
-                                 El HTML con código peligroso se RECHAZA, no se guarda.
+                                 Se permiten los scripts internos del reporte (filtros y
+                                 gráficas); el HTML con código peligroso se RECHAZA, no se guarda.
                                  Sin historial: si el nombre ya existe, se reemplaza. -->
                             <div class="card shadow mb-3 h-100">
                                 <div class="card-header py-2">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-robot"></i> Análisis de servicios IA</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-2">Se guarda en la carpeta Analisis BI, fuera del repo. Solo .xls, .csv y .html (50 MB).</p>
+                                    <p class="text-muted mb-2">Se guarda en la carpeta Analisis BI, fuera del repo. Solo .xls, .csv y .html (50 MB). Se permiten los scripts internos del reporte; el código peligroso se rechaza.</p>
                                     <form id="form-analisis-ia" enctype="multipart/form-data">
                                         <div class="row align-items-end">
                                             <div class="col-12 mb-2">
@@ -300,8 +301,9 @@
 
         // ============ ANÁLISIS DE SERVICIOS IA ============
         // Sube un solo archivo (.xls/.csv/.html) a procesar_analisis_ia.php,
-        // que lo guarda en ../Analisis BI/ con su nombre. Si el HTML trae
-        // código peligroso el endpoint lo rechaza y no guarda nada.
+        // que lo guarda en ../Analisis BI/ con su nombre. Los scripts internos
+        // del reporte sí pasan; si el HTML trae código peligroso el endpoint
+        // lo rechaza y no guarda nada.
         $('#form-analisis-ia').on('submit', function(e) {
             e.preventDefault();
             var btn = $('#btn-analisis-ia').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Subiendo...');

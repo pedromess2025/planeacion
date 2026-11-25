@@ -147,27 +147,32 @@
                             </div>
                                 </div>
                                 <div class="col-xl-6">
-                            <!-- ============ ANÁLISIS DE SERVICIOS IA (SOLO INTERFAZ) ============ -->
-                            <!-- TODO: conectar a backend cuando se defina -->
+                            <!-- ============ ANÁLISIS DE SERVICIOS IA ============ -->
+                            <!-- Se guarda en ../Analisis BI/ (carpeta hermana del repo) con el
+                                 nombre del archivo subido. Solo .xls, .csv y .html (50 MB).
+                                 El HTML con código peligroso se RECHAZA, no se guarda.
+                                 Sin historial: si el nombre ya existe, se reemplaza. -->
                             <div class="card shadow mb-3 h-100">
                                 <div class="card-header py-2">
                                     <h6 class="m-0 font-weight-bold text-primary"><i class="fas fa-robot"></i> Análisis de servicios IA</h6>
                                 </div>
                                 <div class="card-body">
-                                    <p class="text-muted mb-2">Solo interfaz por ahora: aún no procesa nada.</p>
+                                    <p class="text-muted mb-2">Se guarda en la carpeta Analisis BI, fuera del repo. Solo .xls, .csv y .html (50 MB).</p>
                                     <form id="form-analisis-ia" enctype="multipart/form-data">
                                         <div class="row align-items-end">
                                             <div class="col-12 mb-2">
                                                 <label class="form-label font-weight-bold text-primary">Archivo para análisis</label>
-                                                <input class="form-control" type="file" id="archivo_analisis_ia" name="archivo_analisis_ia">
+                                                <input class="form-control" type="file" id="archivo_analisis_ia" name="archivo_analisis_ia" accept=".xls,.csv,.html" required>
                                             </div>
                                             <div class="col-12 mb-2">
-                                                <button type="button" id="btn-analisis-ia" class="btn btn-primary w-100">
+                                                <button type="submit" id="btn-analisis-ia" class="btn btn-primary w-100">
                                                     <i class="fas fa-cloud-upload-alt"></i> Subir archivo
                                                 </button>
                                             </div>
                                         </div>
                                     </form>
+
+                                    <div id="resultado-analisis-ia" class="mt-2" style="display:none;"></div>
                                 </div>
                             </div>
                                 </div>
@@ -289,6 +294,46 @@
                 },
                 complete: function() {
                     $('#btn-ot').prop('disabled', false).html('<i class="fas fa-cloud-upload-alt"></i> Cargar OT internas');
+                }
+            });
+        });
+
+        // ============ ANÁLISIS DE SERVICIOS IA ============
+        // Sube un solo archivo (.xls/.csv/.html) a procesar_analisis_ia.php,
+        // que lo guarda en ../Analisis BI/ con su nombre. Si el HTML trae
+        // código peligroso el endpoint lo rechaza y no guarda nada.
+        $('#form-analisis-ia').on('submit', function(e) {
+            e.preventDefault();
+            var btn = $('#btn-analisis-ia').prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Subiendo...');
+            $('#resultado-analisis-ia').hide();
+
+            $.ajax({
+                url: 'procesar_analisis_ia.php', type: 'POST', dataType: 'json',
+                data: new FormData(this), contentType: false, processData: false,
+                success: function(res) {
+                    if (res.status !== 'success') {
+                        Swal.fire('No se pudo subir', res.message || 'Error desconocido', 'error');
+                        return;
+                    }
+                    var h = '<div class="alert alert-success mb-2"><b><i class="fas fa-check-circle"></i> ' +
+                            escOt(res.archivo) + '</b> guardado en Analisis BI.';
+                    if (res.reemplazado) {
+                        h += '<br><span class="text-warning-emphasis"><b>Se reemplazó el archivo anterior con ese nombre.</b></span>';
+                    }
+                    h += '</div>';
+                    $('#resultado-analisis-ia').html(h).show();
+                    Swal.fire({
+                        icon: 'success', title: 'Archivo subido',
+                        html: '<b>' + escOt(res.archivo) + '</b> guardado en Analisis BI.' +
+                              (res.reemplazado ? '<br><b>Se reemplazó el archivo anterior.</b>' : '')
+                    });
+                },
+                error: function(xhr) {
+                    Swal.fire('Error', xhr.status === 401 ? 'Tu sesión expiró. Vuelve a iniciar sesión.'
+                                                          : 'Hubo un problema de comunicación con el servidor.', 'error');
+                },
+                complete: function() {
+                    $('#btn-analisis-ia').prop('disabled', false).html('<i class="fas fa-cloud-upload-alt"></i> Subir archivo');
                 }
             });
         });
